@@ -10,9 +10,10 @@ Living record of design decisions. Update it whenever a mockup round settles som
 
 1. **Phone first.** Family and crew log from the field. Every screen has to work one-handed at about 400 px wide. On phones, the big green **Log** button in the bottom bar opens the log form as a sheet.
 2. **Every unit has an icon, a title and a one-line description.** Nobody should have to guess what a card is for.
-3. **One icon per event type,** shown everywhere that type appears: in the form, the lists and the calendar.
-4. **Colour carries meaning, never decoration.** Green is for actions. Event types and years each get their own colour. Amber pills warn (for example, rain the day before a spray).
-5. **Quiet surfaces.** White cards with a hairline border on a pale green-grey background. No shadows, except on the phone log sheet.
+3. **Pick, don't type.** Anything entered more than once (chemicals, fields, crops, clients) comes from a saved list that can be edited in place. Typing is only for new entries and notes.
+4. **One icon per event type,** shown everywhere that type appears: in the form, the lists and the calendar.
+5. **Colour carries meaning, never decoration.** Green is for actions. Event types and years each get their own colour. Amber pills warn (for example, rain the day before a spray).
+6. **Quiet surfaces.** White cards with a hairline border on a pale green-grey background. No shadows, except on the phone log sheet.
 
 ## Tokens
 
@@ -56,6 +57,8 @@ The tokens sit at the top of the mockup's `<style>` block. They will move to `fr
 - Farm logo or initials, instead of the sprout icon?
 
 ## Changelog
+
+- **Round 1c (2026-09-23):** the log form's first field is now a dropdown of saved items for the chosen type (chemicals for Spray, fertilizers for Nutrient, clients for Pickup, and so on). Type to filter, pick one to fill in its saved rate and re-entry time, save a new one, or remove one with ×. Fields and Crops are tap-to-select lists with an "Edit list" button for adding and removing entries. You can pick several fields.
 
 - **Round 1b (2026-09-23):** the Calendar, History and Notes buttons now open working screens. Calendar is a month grid (icons only on phones) and shows the selected day's events below it. History lists every event, filterable by year, type and crop, with imported records marked. Notes has an add-note form with a reminder month, and lets you mark notes resolved.
 

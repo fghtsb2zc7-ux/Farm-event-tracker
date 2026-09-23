@@ -83,6 +83,14 @@ All collections live in PocketBase. Fields marked * are required.
 - color*, icon
 - `extra_fields` (JSON): optional type-specific fields. For example, Spray gets *product, rate, area, REI/PHI days* and Planting gets *variety, rows, seed lot*. Defining these as data means new types need no code changes.
 
+**saved_items** (the pick lists behind the log form's first field, editable from the form)
+- name*, event_type* → event_types (Spray → chemicals, Nutrient → fertilizers, Pickup → clients, and so on)
+- defaults (JSON): details filled in when the item is picked, e.g. rate and re-entry interval for a chemical
+- archived (bool): removing an item hides it from the list but keeps it on past events
+
+**fields**
+- name*, area (acres), notes, archived. Added and removed from the log form; events can have several.
+
 **tags** (crops and groupings)
 - name* (Strawberries, Cucumbers, Garlic, Garden, Fall Produce…), color, group (e.g. "Crop", "Field", "Client")
 
@@ -91,7 +99,7 @@ All collections live in PocketBase. Fields marked * are required.
 
 **events**
 - title*, event_type* → event_types, start_date*, end_date, all_day
-- description, tags → tags (many), location/field
+- description, tags → tags (many), fields → fields (many), item → saved_items
 - status: planned / done / skipped
 - `extra` (JSON): values for the type's extra fields
 - attachments (photos, labels)

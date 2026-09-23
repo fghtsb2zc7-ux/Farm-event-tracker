@@ -171,10 +171,33 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; color: var(--ink-2); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-.extra { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.extra { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
 .extra .field input { background: var(--surface); }
 .extra-title { grid-column: 1 / -1; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .sheet-close { display: none; }
+.combo { position: relative; }
+.combo-box { position: relative; }
+.combo-box input { padding-right: 40px; }
+.combo-toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: none; color: var(--muted); padding: 6px; cursor: pointer; border-radius: 6px; display: grid; }
+.combo-list { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; z-index: 15; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: 0 10px 28px rgb(0 0 0 / .12); max-height: 280px; overflow-y: auto; padding: 4px; }
+.opt { display: flex; align-items: center; border-radius: 6px; }
+.opt.active, .opt:hover { background: var(--surface-2); }
+.opt-pick { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 1px; }
+.opt-pick b { font-weight: 500; }
+.opt-pick small { font-size: 12px; color: var(--muted); }
+.opt-del { border: 0; background: none; color: var(--muted); padding: 8px; cursor: pointer; border-radius: 6px; display: grid; }
+.opt-del:hover { color: var(--ink); background: var(--line); }
+.opt-add { width: 100%; text-align: left; border: 0; border-top: 1px solid var(--line); background: none; padding: 10px; cursor: pointer; color: var(--accent); font-weight: 500; display: flex; gap: 6px; align-items: center; }
+.opt-add.active, .opt-add:hover { background: var(--accent-soft); }
+.opt-empty { padding: 10px; font-size: 13px; color: var(--muted); }
+.label-row { display: flex; align-items: baseline; justify-content: space-between; }
+.label-row .label { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.link-btn { border: 0; background: none; color: var(--accent); font-size: 13px; font-weight: 500; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px; }
+.chip .x { display: inline-grid; margin: -2px -5px -2px 4px; vertical-align: middle; }
+.chips.editing .chip { background: var(--surface-2); border-style: dashed; color: var(--ink); }
+.chip-add { display: inline-flex; gap: 4px; }
+.chip-add input { width: 130px; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 3px 11px; font-size: 13px; }
+.chip-add button { border: 0; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 3px 11px; font-size: 13px; font-weight: 500; cursor: pointer; }
 
 /* ── Upcoming + forecast ───────────────────────────────────────────── */
 .forecast { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
@@ -343,17 +366,22 @@ tr:last-child td { border-bottom: 0; }
         <span class="label" id="typeLabel">Type</span>
         <div class="type-picker" role="group" aria-labelledby="typeLabel" id="typePicker"></div>
       </div>
-      <div class="field">
-        <label for="f-title">What</label>
-        <input id="f-title" placeholder="e.g. Fungicide on strawberries" autocomplete="off">
-      </div>
-      <div class="two">
-        <div class="field"><label for="f-date">Date</label><input id="f-date" type="date" value="2026-09-23"></div>
-        <div class="field"><label for="f-field">Field</label><input id="f-field" placeholder="e.g. North field" autocomplete="off"></div>
+      <div class="field combo" id="whatCombo">
+        <label for="f-title" id="whatLabel">Chemical</label>
+        <div class="combo-box">
+          <input id="f-title" role="combobox" aria-expanded="false" aria-controls="whatList" aria-autocomplete="list" autocomplete="off">
+          <button type="button" class="combo-toggle" id="whatToggle" tabindex="-1" aria-label="Show saved list"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-down"></svg></button>
+        </div>
+        <div class="combo-list" id="whatList" role="listbox" aria-labelledby="whatLabel" hidden></div>
       </div>
       <div class="extra" id="extra"></div>
+      <div class="field"><label for="f-date">Date</label><input id="f-date" type="date" value="2026-09-23"></div>
       <div class="field">
-        <span class="label" id="cropLabel">Crops</span>
+        <div class="label-row"><span class="label" id="fieldLabel">Fields</span><button type="button" class="link-btn" data-edit="fields"></button></div>
+        <div class="chips" role="group" aria-labelledby="fieldLabel" id="fieldPicker"></div>
+      </div>
+      <div class="field">
+        <div class="label-row"><span class="label" id="cropLabel">Crops</span><button type="button" class="link-btn" data-edit="crops"></button></div>
         <div class="chips" role="group" aria-labelledby="cropLabel" id="cropPicker"></div>
       </div>
       <div class="field">
@@ -498,27 +526,38 @@ tr:last-child td { border-bottom: 0; }
 <div class="toast" id="toast" role="status"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg><span id="toastText">Event logged</span></div>
 
 <script>
-const ICONS={"chevron-left":"<path d=\"m15 18-6-6 6-6\" />","spray-can":"<path d=\"M3 3h.01\" /><path d=\"M7 5h.01\" /><path d=\"M11 7h.01\" /><path d=\"M3 7h.01\" /><path d=\"M7 9h.01\" /><path d=\"M3 11h.01\" /><rect width=\"4\" height=\"4\" x=\"15\" y=\"5\" /><path d=\"m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2\" /><path d=\"m13 14 8-2\" /><path d=\"m13 19 8-2\" />","sprout":"<path d=\"M7 20h10\" /><path d=\"M10 20c5.5-2.5.8-6.4 3-10\" /><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z\" /><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z\" />","shovel":"<path d=\"M2 22v-5l5-5 5 5-5 5z\" /><path d=\"M9.5 14.5 16 8\" /><path d=\"m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2\" />","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\" /><path d=\"M8.5 2h7\" /><path d=\"M7 16h10\" />","truck":"<path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\" /><path d=\"M15 18H9\" /><path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14\" /><circle cx=\"17\" cy=\"18\" r=\"2\" /><circle cx=\"7\" cy=\"18\" r=\"2\" />","wheat":"<path d=\"M2 22 16 8\" /><path d=\"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z\" /><path d=\"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" />","cloud-rain":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M16 14v6\" /><path d=\"M8 14v6\" /><path d=\"M12 16v6\" />","notebook-pen":"<path d=\"M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4\" /><path d=\"M2 6h4\" /><path d=\"M2 10h4\" /><path d=\"M2 14h4\" /><path d=\"M2 18h4\" /><path d=\"M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z\" />","thermometer":"<path d=\"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z\" />","plus":"<path d=\"M5 12h14\" /><path d=\"M12 5v14\" />","calendar-days":"<path d=\"M8 2v4\" /><path d=\"M16 2v4\" /><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /><path d=\"M3 10h18\" /><path d=\"M8 14h.01\" /><path d=\"M12 14h.01\" /><path d=\"M16 14h.01\" /><path d=\"M8 18h.01\" /><path d=\"M12 18h.01\" /><path d=\"M16 18h.01\" />","history":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /><path d=\"M3 3v5h5\" /><path d=\"M12 7v5l4 2\" />","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\" /><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\" />","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\" /><path d=\"M12 2v2\" /><path d=\"M12 20v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"m17.66 17.66 1.41 1.41\" /><path d=\"M2 12h2\" /><path d=\"M20 12h2\" /><path d=\"m6.34 17.66-1.41 1.41\" /><path d=\"m19.07 4.93-1.41 1.41\" />","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\" />","cloud-sun":"<path d=\"M12 2v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"M20 12h2\" /><path d=\"m19.07 4.93-1.41 1.41\" /><path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /><path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />","check":"<path d=\"M20 6 9 17l-5-5\" />","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /><circle cx=\"12\" cy=\"10\" r=\"3\" />","chevron-right":"<path d=\"m9 18 6-6-6-6\" />","leaf":"<path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\" /><path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\" />","cloud-drizzle":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M8 19v1\" /><path d=\"M8 14v1\" /><path d=\"M16 19v1\" /><path d=\"M16 14v1\" /><path d=\"M12 21v1\" /><path d=\"M12 16v1\" />","x":"<path d=\"M18 6 6 18\" /><path d=\"m6 6 12 12\" />","user":"<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /><circle cx=\"12\" cy=\"7\" r=\"4\" />"};
+const ICONS={"chevron-down":"<path d=\"m6 9 6 6 6-6\" />","pencil":"<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\" /><path d=\"m15 5 4 4\" />","chevron-left":"<path d=\"m15 18-6-6 6-6\" />","spray-can":"<path d=\"M3 3h.01\" /><path d=\"M7 5h.01\" /><path d=\"M11 7h.01\" /><path d=\"M3 7h.01\" /><path d=\"M7 9h.01\" /><path d=\"M3 11h.01\" /><rect width=\"4\" height=\"4\" x=\"15\" y=\"5\" /><path d=\"m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2\" /><path d=\"m13 14 8-2\" /><path d=\"m13 19 8-2\" />","sprout":"<path d=\"M7 20h10\" /><path d=\"M10 20c5.5-2.5.8-6.4 3-10\" /><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z\" /><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z\" />","shovel":"<path d=\"M2 22v-5l5-5 5 5-5 5z\" /><path d=\"M9.5 14.5 16 8\" /><path d=\"m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2\" />","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\" /><path d=\"M8.5 2h7\" /><path d=\"M7 16h10\" />","truck":"<path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\" /><path d=\"M15 18H9\" /><path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14\" /><circle cx=\"17\" cy=\"18\" r=\"2\" /><circle cx=\"7\" cy=\"18\" r=\"2\" />","wheat":"<path d=\"M2 22 16 8\" /><path d=\"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z\" /><path d=\"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" />","cloud-rain":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M16 14v6\" /><path d=\"M8 14v6\" /><path d=\"M12 16v6\" />","notebook-pen":"<path d=\"M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4\" /><path d=\"M2 6h4\" /><path d=\"M2 10h4\" /><path d=\"M2 14h4\" /><path d=\"M2 18h4\" /><path d=\"M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z\" />","thermometer":"<path d=\"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z\" />","plus":"<path d=\"M5 12h14\" /><path d=\"M12 5v14\" />","calendar-days":"<path d=\"M8 2v4\" /><path d=\"M16 2v4\" /><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /><path d=\"M3 10h18\" /><path d=\"M8 14h.01\" /><path d=\"M12 14h.01\" /><path d=\"M16 14h.01\" /><path d=\"M8 18h.01\" /><path d=\"M12 18h.01\" /><path d=\"M16 18h.01\" />","history":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /><path d=\"M3 3v5h5\" /><path d=\"M12 7v5l4 2\" />","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\" /><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\" />","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\" /><path d=\"M12 2v2\" /><path d=\"M12 20v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"m17.66 17.66 1.41 1.41\" /><path d=\"M2 12h2\" /><path d=\"M20 12h2\" /><path d=\"m6.34 17.66-1.41 1.41\" /><path d=\"m19.07 4.93-1.41 1.41\" />","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\" />","cloud-sun":"<path d=\"M12 2v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"M20 12h2\" /><path d=\"m19.07 4.93-1.41 1.41\" /><path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /><path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />","check":"<path d=\"M20 6 9 17l-5-5\" />","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /><circle cx=\"12\" cy=\"10\" r=\"3\" />","chevron-right":"<path d=\"m9 18 6-6-6-6\" />","leaf":"<path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\" /><path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\" />","cloud-drizzle":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M8 19v1\" /><path d=\"M8 14v1\" /><path d=\"M16 19v1\" /><path d=\"M16 14v1\" /><path d=\"M12 21v1\" /><path d=\"M12 16v1\" />","x":"<path d=\"M18 6 6 18\" /><path d=\"m6 6 12 12\" />","user":"<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /><circle cx=\"12\" cy=\"7\" r=\"4\" />"};
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const ico = (n, cls = "icon") => `<svg class="${cls}" viewBox="0 0 24 24">${ICONS[n] || ""}</svg>`;
 function paintIcons(root = document) { root.querySelectorAll("svg[data-i]").forEach(s => { s.innerHTML = ICONS[s.dataset.i] || ""; s.removeAttribute("data-i"); }); }
 
 /* ── Reference data ───────────────────────────────────────────────── */
+// "what" names the saved list behind the first field for each type. Picking an item fills in its saved details.
 const TYPES = {
-  spray:    { name: "Spray",    icon: "spray-can",     c: "var(--t-spray)",
-              extra: [["Product", "e.g. Captan 80"], ["Rate", "e.g. 1.9 kg/ha"], ["Re-entry", "e.g. 24 h"]] },
-  planting: { name: "Planting", icon: "sprout",        c: "var(--t-planting)",
-              extra: [["Variety", "e.g. Music"], ["Amount", "e.g. 4 beds"], ["Seed lot", "optional"]] },
-  nutrient: { name: "Nutrient", icon: "flask-conical", c: "var(--t-nutrient)",
-              extra: [["Product", "e.g. Calcium nitrate"], ["Rate", "e.g. 30 lb N/ac"], ["Method", "e.g. Fertigation"]] },
-  harvest:  { name: "Harvest",  icon: "wheat",         c: "var(--t-harvest)",
-              extra: [["Amount", "e.g. 40 bins"], ["Grade", "optional"], ["Destination", "optional"]] },
-  pickup:   { name: "Pickup",   icon: "truck",         c: "var(--t-pickup)",
-              extra: [["Client", "e.g. Hillside Market"], ["Order", "e.g. 60 bins"], ["Time", "e.g. 9:00"]] },
-  garden:   { name: "Garden",   icon: "shovel",        c: "var(--t-garden)", extra: [] },
+  spray:    { name: "Spray",    icon: "spray-can",     c: "var(--t-spray)",    what: "Chemical",
+              extra: [["Rate", "e.g. 1.9 kg/ha"], ["Re-entry", "e.g. 24 h"]],
+              saved: [{ name: "Captan 80 WDG", Rate: "1.9 kg/ha", "Re-entry": "24 h" }, { name: "Bravo ZN", Rate: "2.4 L/ha", "Re-entry": "12 h" },
+                      { name: "Kocide 3000 (copper)", Rate: "1.1 kg/ha", "Re-entry": "48 h" }, { name: "Nova 40W", Rate: "340 g/ha", "Re-entry": "24 h" },
+                      { name: "Pristine WG", Rate: "1.3 kg/ha", "Re-entry": "12 h" }] },
+  planting: { name: "Planting", icon: "sprout",        c: "var(--t-planting)", what: "Crop and variety",
+              extra: [["Amount", "e.g. 4 beds"], ["Seed lot", "optional"]],
+              saved: [{ name: "Garlic, Music" }, { name: "Strawberries, Albion" }, { name: "Cucumbers, Marketmore 76" }, { name: "Fall rye cover crop", Amount: "100 lb/ac" }] },
+  nutrient: { name: "Nutrient", icon: "flask-conical", c: "var(--t-nutrient)", what: "Fertilizer",
+              extra: [["Rate", "e.g. 30 lb N/ac"], ["Method", "e.g. Fertigation"]],
+              saved: [{ name: "Calcium nitrate", Rate: "30 lb N/ac", Method: "Fertigation" }, { name: "Urea 46-0-0", Rate: "40 lb N/ac", Method: "Broadcast" },
+                      { name: "Potash 0-0-60", Rate: "60 lb/ac", Method: "Broadcast" }, { name: "Compost", Rate: "10 t/ac", Method: "Spread" }] },
+  harvest:  { name: "Harvest",  icon: "wheat",         c: "var(--t-harvest)",  what: "Crop",
+              extra: [["Amount", "e.g. 40 bins"], ["Destination", "optional"]],
+              saved: [{ name: "Acorn squash" }, { name: "Pumpkins" }, { name: "Pickling cucumbers" }, { name: "Strawberries" }, { name: "Garlic" }] },
+  pickup:   { name: "Pickup",   icon: "truck",         c: "var(--t-pickup)",   what: "Client",
+              extra: [["Order", "e.g. 60 bins"], ["Time", "e.g. 9:00"]],
+              saved: [{ name: "Hillside Market", Time: "9:00" }, { name: "St. Thomas grocer" }, { name: "Farmers co-op" }] },
+  garden:   { name: "Garden",   icon: "shovel",        c: "var(--t-garden)",   what: "Task", extra: [],
+              saved: [{ name: "Weeding" }, { name: "Mulching" }, { name: "Pull and clear beds" }, { name: "Spread compost" }] },
 };
 const CROPS = ["Strawberries", "Cucumbers", "Garlic", "Garden", "Fall Produce"];
+const FIELDS = ["North field", "South field", "Hillside", "Strawberry block", "Garden beds", "Home orchard"];
 
 const FORECAST = [
   ["Today", "sun", 21, 9, 0], ["Thu", "cloud-sun", 19, 10, 0], ["Fri", "cloud-rain", 16, 11, 0.42],
@@ -557,32 +596,114 @@ let RECENT = [
 ];
 
 /* ── Quick log ────────────────────────────────────────────────────── */
-let selType = "spray", selCrops = new Set(["Strawberries"]);
+let selType = "spray";
 function renderTypes() {
   $("#typePicker").innerHTML = Object.entries(TYPES).map(([k, t]) =>
     `<button type="button" class="type-opt" style="--c:${t.c}" data-k="${k}" aria-pressed="${k === selType}">${ico(t.icon)}${t.name}</button>`).join("");
   const t = TYPES[selType], ex = $("#extra");
+  $("#whatLabel").textContent = t.what;
+  $("#f-title").placeholder = "Choose from your list or type a new one";
   ex.hidden = !t.extra.length;
   ex.innerHTML = `<div class="extra-title">${t.name} details</div>` + t.extra.map(([l, ph], i) =>
-    `<div class="field"><label for="x-${i}">${l}</label><input id="x-${i}" placeholder="${esc(ph)}" autocomplete="off"></div>`).join("");
+    `<div class="field"><label for="x-${i}">${l}</label><input id="x-${i}" data-x="${esc(l)}" placeholder="${esc(ph)}" autocomplete="off"></div>`).join("");
 }
-function renderCrops() {
-  $("#cropPicker").innerHTML = CROPS.map(c => `<button type="button" class="chip" data-c="${esc(c)}" aria-pressed="${selCrops.has(c)}">${esc(c)}</button>`).join("");
+$("#typePicker").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b && b.dataset.k !== selType) { selType = b.dataset.k; $("#f-title").value = ""; renderTypes(); } });
+
+/* Saved-list dropdown for the first field: pick, add or remove items */
+let comboIdx = -1;
+const whatIn = $("#f-title"), whatList = $("#whatList");
+const comboItems = () => { const q = whatIn.value.trim().toLowerCase(); return TYPES[selType].saved.filter(o => o.name.toLowerCase().includes(q)); };
+const comboMeta = o => TYPES[selType].extra.map(([l]) => o[l]).filter(Boolean).join(" · ");
+function renderCombo() {
+  const t = TYPES[selType], q = whatIn.value.trim(), items = comboItems();
+  const exact = t.saved.some(o => o.name.toLowerCase() === q.toLowerCase());
+  const n = items.length + (q && !exact ? 1 : 0);
+  if (comboIdx >= n) comboIdx = n - 1;
+  whatList.innerHTML = (items.length ? items.map((o, i) => `<div class="opt${i === comboIdx ? " active" : ""}" role="option" aria-selected="${i === comboIdx}">
+      <button type="button" class="opt-pick" data-pick="${esc(o.name)}"><b>${esc(o.name)}</b>${comboMeta(o) ? `<small>${esc(comboMeta(o))}</small>` : ""}</button>
+      <button type="button" class="opt-del" data-del="${esc(o.name)}" aria-label="Remove ${esc(o.name)} from the list">${ico("x", "icon sm")}</button></div>`).join("")
+    : `<div class="opt-empty">${q ? `No saved ${t.what.toLowerCase()} matches.` : `No saved ${t.what.toLowerCase()} yet.`}</div>`)
+    + (q && !exact ? `<button type="button" class="opt-add${comboIdx === items.length ? " active" : ""}" data-add="1">${ico("plus", "icon sm")}Save "${esc(q)}" to the list</button>` : "");
 }
-$("#typePicker").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) { selType = b.dataset.k; renderTypes(); } });
-$("#cropPicker").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return; const c = b.dataset.c; selCrops.has(c) ? selCrops.delete(c) : selCrops.add(c); renderCrops(); });
+function openCombo() { whatList.hidden = false; whatIn.setAttribute("aria-expanded", "true"); renderCombo(); }
+function closeCombo() { whatList.hidden = true; whatIn.setAttribute("aria-expanded", "false"); comboIdx = -1; }
+function pickWhat(name) {
+  const o = TYPES[selType].saved.find(x => x.name === name); whatIn.value = name;
+  document.querySelectorAll("#extra [data-x]").forEach(i => { if (o && o[i.dataset.x]) i.value = o[i.dataset.x]; });
+  closeCombo();
+}
+function addWhat() {
+  const t = TYPES[selType], name = whatIn.value.trim(); if (!name) return;
+  const o = { name }; document.querySelectorAll("#extra [data-x]").forEach(i => { if (i.value.trim()) o[i.dataset.x] = i.value.trim(); });
+  t.saved.push(o); closeCombo(); toast(`Saved to your ${t.what.toLowerCase()} list`);
+}
+whatIn.addEventListener("focus", openCombo);
+whatIn.addEventListener("input", () => { comboIdx = -1; openCombo(); });
+whatIn.addEventListener("keydown", e => {
+  if (e.key === "Escape") return closeCombo();
+  if (whatList.hidden && e.key === "ArrowDown") return openCombo();
+  const items = comboItems(), n = whatList.querySelectorAll(".opt, .opt-add").length;
+  if (!n) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); comboIdx = (comboIdx + (e.key === "ArrowDown" ? 1 : -1) + n) % n; renderCombo(); }
+  if (e.key === "Enter" && comboIdx >= 0) { e.preventDefault(); comboIdx < items.length ? pickWhat(items[comboIdx].name) : addWhat(); }
+});
+$("#whatToggle").addEventListener("click", () => { if (whatList.hidden) { whatIn.focus(); openCombo(); } else closeCombo(); });
+whatList.addEventListener("mousedown", e => e.preventDefault());
+whatList.addEventListener("click", e => {
+  const pick = e.target.closest("[data-pick]"), del = e.target.closest("[data-del]"), add = e.target.closest("[data-add]");
+  if (pick) pickWhat(pick.dataset.pick);
+  else if (add) addWhat();
+  else if (del) { const t = TYPES[selType]; t.saved = t.saved.filter(o => o.name !== del.dataset.del); renderCombo(); toast(`Removed ${del.dataset.del}`); }
+});
+document.addEventListener("click", e => { if (!e.target.closest("#whatCombo")) closeCombo(); });
+
+/* Editable chip lists (fields and crops): tap to select, "Edit list" to add or remove */
+const CHIP_LISTS = {
+  fields: { list: FIELDS, sel: new Set(), el: "#fieldPicker", noun: "field", editing: false },
+  crops:  { list: CROPS,  sel: new Set(["Strawberries"]), el: "#cropPicker", noun: "crop", editing: false },
+};
+function renderChips(key) {
+  const c = CHIP_LISTS[key], box = $(c.el);
+  box.classList.toggle("editing", c.editing);
+  document.querySelector(`[data-edit="${key}"]`).innerHTML = c.editing ? `${ico("check", "icon sm")}Done` : `${ico("pencil", "icon sm")}Edit list`;
+  box.innerHTML = c.list.map(v => c.editing
+      ? `<button type="button" class="chip" data-rm="${esc(v)}" aria-label="Remove ${esc(v)}">${esc(v)}<span class="x">${ico("x", "icon sm")}</span></button>`
+      : `<button type="button" class="chip" data-v="${esc(v)}" aria-pressed="${c.sel.has(v)}">${esc(v)}</button>`).join("")
+    + (c.editing ? `<span class="chip-add"><input id="add-${key}" placeholder="New ${c.noun}" autocomplete="off" aria-label="New ${c.noun}"><button type="button" data-addchip="1">Add</button></span>` : "");
+}
+function addChip(key) {
+  const c = CHIP_LISTS[key], inp = $("#add-" + key), v = inp.value.trim();
+  if (!v || c.list.includes(v)) { inp.focus(); return; }
+  c.list.push(v); c.sel.add(v); renderChips(key); $("#add-" + key).focus(); toast(`Added ${v}`);
+}
+function refreshCropMenus() {
+  if (typeof renderFilterMenus === "function") renderFilterMenus();
+}
+Object.keys(CHIP_LISTS).forEach(key => {
+  const c = CHIP_LISTS[key], box = $(c.el);
+  box.addEventListener("click", e => {
+    const v = e.target.closest("[data-v]"), rm = e.target.closest("[data-rm]"), add = e.target.closest("[data-addchip]");
+    if (v) { c.sel.has(v.dataset.v) ? c.sel.delete(v.dataset.v) : c.sel.add(v.dataset.v); renderChips(key); }
+    else if (rm) { c.list.splice(c.list.indexOf(rm.dataset.rm), 1); c.sel.delete(rm.dataset.rm); renderChips(key); refreshCropMenus(); }
+    else if (add) { addChip(key); refreshCropMenus(); }
+  });
+  box.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "add-" + key) { e.preventDefault(); addChip(key); refreshCropMenus(); } });
+  document.querySelector(`[data-edit="${key}"]`).addEventListener("click", () => { c.editing = !c.editing; renderChips(key); if (c.editing) $("#add-" + key).focus(); });
+});
+const renderCrops = () => { renderChips("fields"); renderChips("crops"); };
 $("#logForm").addEventListener("submit", e => {
   e.preventDefault();
-  const title = $("#f-title").value.trim() || `${TYPES[selType].name} event`;
-  RECENT.unshift({ t: selType, title, crops: [...selCrops], who: "You", when: "Just now" });
-  ALL.push({ date: $("#f-date").value || "2026-09-23", t: selType, title, crops: [...selCrops], who: "You" });
+  const what = $("#f-title").value.trim(), fields = [...CHIP_LISTS.fields.sel], crops = [...CHIP_LISTS.crops.sel];
+  const title = (what || `${TYPES[selType].name} event`) + (fields.length ? ` · ${fields.join(", ")}` : "");
+  RECENT.unshift({ t: selType, title, crops, who: "You", when: "Just now" });
+  ALL.push({ date: $("#f-date").value || "2026-09-23", t: selType, title, crops, who: "You" });
   renderRecent(); renderCalendar(); renderHistory();
-  $("#f-title").value = ""; $("#f-desc").value = ""; $("#f-field").value = "";
+  $("#f-title").value = ""; $("#f-desc").value = ""; CHIP_LISTS.fields.sel.clear(); renderChips("fields");
   document.querySelectorAll("#extra input").forEach(i => i.value = "");
   document.body.classList.remove("sheet-open");
   toast("Event logged");
 });
-const openSheet = () => { document.body.classList.add("sheet-open"); setTimeout(() => $("#f-title").focus(), 50); };
+const openSheet = () => document.body.classList.add("sheet-open");
 const closeSheet = () => document.body.classList.remove("sheet-open");
 $("#openSheet").addEventListener("click", openSheet);
 $("#closeSheet").addEventListener("click", closeSheet);
@@ -765,7 +886,12 @@ $("#calNext").addEventListener("click", () => { calM++; if (calM > 11) { calM = 
 let hYear = "All";
 $("#hYear").innerHTML = ["All", "2026", "2025", "2024"].map(y => `<button type="button" data-y="${y}" aria-pressed="${y === hYear}">${y}</button>`).join("");
 $("#hType").innerHTML = `<option value="">All types</option>` + Object.entries(TYPES).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join("");
-$("#hCrop").innerHTML = `<option value="">All crops</option>` + CROPS.map(c => `<option>${esc(c)}</option>`).join("");
+function renderFilterMenus() {
+  const cur = $("#hCrop").value;
+  $("#hCrop").innerHTML = `<option value="">All crops</option>` + CROPS.map(c => `<option${c === cur ? " selected" : ""}>${esc(c)}</option>`).join("");
+  $("#n-crop").innerHTML = CROPS.map(c => `<option>${esc(c)}</option>`).join("");
+}
+renderFilterMenus();
 function renderHistory() {
   const t = $("#hType").value, c = $("#hCrop").value;
   const list = ALL.filter(e => !e.planned && (hYear === "All" || e.date.startsWith(hYear)) && (!t || e.t === t) && (!c || e.crops.includes(c))).sort((a, b) => b.date.localeCompare(a.date));
@@ -779,7 +905,6 @@ $("#hType").addEventListener("change", renderHistory);
 $("#hCrop").addEventListener("change", renderHistory);
 
 /* Notes view */
-$("#n-crop").innerHTML = CROPS.map(c => `<option>${esc(c)}</option>`).join("");
 $("#noteForm").addEventListener("submit", e => {
   e.preventDefault();
   const text = $("#n-text").value.trim();
