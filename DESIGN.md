@@ -4,7 +4,7 @@ Living record of design decisions. Update it whenever a mockup round settles som
 
 **Direction (from you):** clean and minimalist, with clear and simple iconography, titles and descriptions.
 
-**Current mockup:** `design/mockups/dashboard.html`. Open it in any browser. It uses example data and saves nothing.
+**Current mockup:** `design/mockups/dashboard.html`. Open it in any browser. It has four screens (Dashboard, Calendar, History, Notes), uses example data and saves nothing.
 
 ## Principles
 
@@ -56,5 +56,7 @@ The tokens sit at the top of the mockup's `<style>` block. They will move to `fr
 - Farm logo or initials, instead of the sprout icon?
 
 ## Changelog
+
+- **Round 1b (2026-09-23):** the Calendar, History and Notes buttons now open working screens. Calendar is a month grid (icons only on phones) and shows the selected day's events below it. History lists every event, filterable by year, type and crop, with imported records marked. Notes has an add-note form with a reminder month, and lets you mark notes resolved.
 
 - **Round 1 (2026-09-23):** first dashboard mockup with all six units, light and dark themes, a phone layout and working log form interactions.

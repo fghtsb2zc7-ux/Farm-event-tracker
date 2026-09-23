@@ -77,6 +77,7 @@
 
 /* ── Base ──────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   background: var(--bg);
   color: var(--ink);
@@ -241,6 +242,39 @@ tr:last-child td { border-bottom: 0; }
 .tabbar { display: none; }
 .scrim { display: none; }
 
+/* ── Views ─────────────────────────────────────────────────────────── */
+.view { max-width: 1240px; margin: 0 auto; padding-bottom: 40px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.month-nav { display: flex; align-items: center; gap: 4px; }
+.month-nav h3 { font-size: 16px; min-width: 150px; text-align: center; }
+.type-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-2); }
+.type-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.type-legend .icon { color: var(--c); width: 15px; height: 15px; }
+.cal-scroll { overflow-x: auto; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.cal .dow { font-size: 12px; color: var(--muted); font-weight: 500; padding: 6px 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-transform: uppercase; letter-spacing: .06em; }
+.cal .day { min-height: 96px; padding: 6px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); text-align: left; display: flex; flex-direction: column; gap: 3px; cursor: pointer; border-top: 0; border-left: 0; min-width: 0; }
+.cal .day:hover { background: var(--surface-2); }
+.cal .day.out { background: var(--bg); color: var(--muted); }
+.cal .day[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--accent); }
+.cal .num { font-size: 13px; font-weight: 500; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; }
+.cal .day.today .num { background: var(--accent); color: var(--accent-ink); }
+.cal-ev { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 1.3; padding: 1px 5px; border-radius: 5px; background: color-mix(in srgb, var(--c) 12%, transparent); color: var(--ink); min-width: 0; }
+.cal-ev .icon { width: 12px; height: 12px; color: var(--c); }
+.cal-ev span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal .evs { display: contents; }
+.cal-more { font-size: 11.5px; color: var(--muted); padding-left: 5px; }
+.day-list h3 { font-size: 15px; margin-bottom: 8px; }
+.filters { display: flex; gap: 10px; flex-wrap: wrap; }
+.filters .field { flex-direction: row; align-items: center; gap: 8px; }
+.filters select, .field select { border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: 7px 10px; }
+.month-group h3 { font-size: 13px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; padding-block: 16px 6px; }
+.month-group:first-child h3 { padding-top: 0; }
+.src { font-size: 11.5px; color: var(--muted); border: 1px dashed var(--line); border-radius: 999px; padding: 0 7px; }
+.notes-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--gap); align-items: start; }
+.note .btn.ghost { align-self: flex-start; font-size: 13px; }
+.empty { color: var(--muted); font-size: 14px; padding-block: 12px; }
+
 @media (max-width: 980px) {
   .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "log up" "wx wx" "notes past" "recent recent"; }
 }
@@ -258,6 +292,15 @@ tr:last-child td { border-bottom: 0; }
   body.sheet-open .scrim { display: block; position: fixed; inset: 0; background: rgb(0 0 0 / .35); z-index: 24; }
   .sheet-close { display: inline-flex; }
   .toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .notes-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .cal .day { min-height: 54px; padding: 4px; align-items: center; }
+  .cal .dow { padding: 4px 0; text-align: center; font-size: 11px; }
+  .cal-ev { padding: 0; background: none; }
+  .cal-ev span, .cal-more { display: none; }
+  .cal .evs { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+  .cal-ev .icon { width: 13px; height: 13px; }
+  .filters .field { flex: 1; }
+  .filters select { flex: 1; min-width: 0; }
   .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); }
   .tabbar a, .tabbar button { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 500; color: var(--muted); text-decoration: none; background: none; border: 0; padding: 4px 0; cursor: pointer; }
   .tabbar a[aria-current] { color: var(--accent); }
@@ -276,16 +319,16 @@ tr:last-child td { border-bottom: 0; }
     </div>
   </div>
   <nav class="nav" aria-label="Main">
-    <a href="#" aria-current="page"><svg class="icon sm" viewBox="0 0 24 24" data-i="house"></svg>Dashboard</a>
-    <a href="#"><svg class="icon sm" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
-    <a href="#"><svg class="icon sm" viewBox="0 0 24 24" data-i="history"></svg>History</a>
-    <a href="#"><svg class="icon sm" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
+    <a href="#dashboard" data-view="dashboard" aria-current="page"><svg class="icon sm" viewBox="0 0 24 24" data-i="house"></svg>Dashboard</a>
+    <a href="#calendar" data-view="calendar"><svg class="icon sm" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+    <a href="#history" data-view="history"><svg class="icon sm" viewBox="0 0 24 24" data-i="history"></svg>History</a>
+    <a href="#notes" data-view="notes"><svg class="icon sm" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
   </nav>
   <div class="avatar" title="Signed in">YOU</div>
 </header>
 <p class="mock-note">Design mockup with example data. Nothing here is saved.</p>
 
-<main class="grid">
+<main class="grid" id="v-dashboard">
 
   <!-- Quick log -->
   <section class="unit" id="u-log" aria-labelledby="h-log">
@@ -374,18 +417,88 @@ tr:last-child td { border-bottom: 0; }
   </section>
 </main>
 
+<!-- Calendar -->
+<section class="view" id="v-calendar" hidden>
+  <div class="unit">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>
+      <div><h2>Calendar</h2><p>Everything planned and logged. Select a day to see its events.</p></div>
+    </div>
+    <div class="toolbar">
+      <div class="month-nav">
+        <button class="btn ghost" type="button" id="calPrev" aria-label="Previous month"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-left"></svg></button>
+        <h3 id="calLabel"></h3>
+        <button class="btn ghost" type="button" id="calNext" aria-label="Next month"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-right"></svg></button>
+      </div>
+      <div class="type-legend" id="calLegend"></div>
+    </div>
+    <div class="cal-scroll"><div class="cal" id="cal"></div></div>
+    <div id="calDay"></div>
+  </div>
+</section>
+
+<!-- History -->
+<section class="view" id="v-history" hidden>
+  <div class="unit">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>
+      <div><h2>History</h2><p>Every event from this and past seasons. Filter by year, type or crop.</p></div>
+    </div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Season" id="hYear"></div>
+      <div class="filters">
+        <div class="field"><label for="hType">Type</label><select id="hType"></select></div>
+        <div class="field"><label for="hCrop">Crop</label><select id="hCrop"></select></div>
+      </div>
+    </div>
+    <p class="meta" id="hCount"></p>
+    <div id="hList"></div>
+  </div>
+</section>
+
+<!-- Notes -->
+<section class="view" id="v-notes" hidden>
+  <div class="notes-layout">
+    <div class="unit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
+        <div><h2>Add a note</h2><p>Something to change or remember next season.</p></div>
+      </div>
+      <form class="form" id="noteForm" novalidate>
+        <div class="field"><label for="n-text">Note</label><textarea id="n-text" placeholder="e.g. Order garlic seed by August. We ran short in 2026."></textarea></div>
+        <div class="two">
+          <div class="field"><label for="n-crop">Crop</label><select id="n-crop"></select></div>
+          <div class="field"><label for="n-due">Remind me</label><input id="n-due" type="month" value="2027-03"></div>
+        </div>
+        <button class="btn primary" type="submit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save note</button>
+      </form>
+    </div>
+    <div class="unit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>
+        <div><h2>All notes</h2><p>Mark a note resolved once you've made the change.</p></div>
+        <span class="spacer"></span>
+        <div class="seg" role="group" aria-label="Show" id="nFilter">
+          <button type="button" data-f="open" aria-pressed="true">Open</button><button type="button" data-f="done" aria-pressed="false">Resolved</button>
+        </div>
+      </div>
+      <div id="nList"></div>
+    </div>
+  </div>
+</section>
+
 <div class="scrim" id="scrim"></div>
 <nav class="tabbar" aria-label="Main">
-  <a href="#" aria-current="page"><svg class="icon" viewBox="0 0 24 24" data-i="house"></svg>Home</a>
-  <a href="#"><svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+  <a href="#dashboard" data-view="dashboard" aria-current="page"><svg class="icon" viewBox="0 0 24 24" data-i="house"></svg>Home</a>
+  <a href="#calendar" data-view="calendar"><svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
   <button class="add" type="button" id="openSheet"><span class="plus"><svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg></span>Log</button>
-  <a href="#"><svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>History</a>
-  <a href="#"><svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
+  <a href="#history" data-view="history"><svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>History</a>
+  <a href="#notes" data-view="notes"><svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
 </nav>
 <div class="toast" id="toast" role="status"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg><span id="toastText">Event logged</span></div>
 
 <script>
-const ICONS={"spray-can":"<path d=\"M3 3h.01\" /><path d=\"M7 5h.01\" /><path d=\"M11 7h.01\" /><path d=\"M3 7h.01\" /><path d=\"M7 9h.01\" /><path d=\"M3 11h.01\" /><rect width=\"4\" height=\"4\" x=\"15\" y=\"5\" /><path d=\"m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2\" /><path d=\"m13 14 8-2\" /><path d=\"m13 19 8-2\" />","sprout":"<path d=\"M7 20h10\" /><path d=\"M10 20c5.5-2.5.8-6.4 3-10\" /><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z\" /><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z\" />","shovel":"<path d=\"M2 22v-5l5-5 5 5-5 5z\" /><path d=\"M9.5 14.5 16 8\" /><path d=\"m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2\" />","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\" /><path d=\"M8.5 2h7\" /><path d=\"M7 16h10\" />","truck":"<path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\" /><path d=\"M15 18H9\" /><path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14\" /><circle cx=\"17\" cy=\"18\" r=\"2\" /><circle cx=\"7\" cy=\"18\" r=\"2\" />","wheat":"<path d=\"M2 22 16 8\" /><path d=\"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z\" /><path d=\"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" />","cloud-rain":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M16 14v6\" /><path d=\"M8 14v6\" /><path d=\"M12 16v6\" />","notebook-pen":"<path d=\"M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4\" /><path d=\"M2 6h4\" /><path d=\"M2 10h4\" /><path d=\"M2 14h4\" /><path d=\"M2 18h4\" /><path d=\"M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z\" />","thermometer":"<path d=\"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z\" />","plus":"<path d=\"M5 12h14\" /><path d=\"M12 5v14\" />","calendar-days":"<path d=\"M8 2v4\" /><path d=\"M16 2v4\" /><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /><path d=\"M3 10h18\" /><path d=\"M8 14h.01\" /><path d=\"M12 14h.01\" /><path d=\"M16 14h.01\" /><path d=\"M8 18h.01\" /><path d=\"M12 18h.01\" /><path d=\"M16 18h.01\" />","history":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /><path d=\"M3 3v5h5\" /><path d=\"M12 7v5l4 2\" />","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\" /><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\" />","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\" /><path d=\"M12 2v2\" /><path d=\"M12 20v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"m17.66 17.66 1.41 1.41\" /><path d=\"M2 12h2\" /><path d=\"M20 12h2\" /><path d=\"m6.34 17.66-1.41 1.41\" /><path d=\"m19.07 4.93-1.41 1.41\" />","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\" />","cloud-sun":"<path d=\"M12 2v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"M20 12h2\" /><path d=\"m19.07 4.93-1.41 1.41\" /><path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /><path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />","check":"<path d=\"M20 6 9 17l-5-5\" />","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /><circle cx=\"12\" cy=\"10\" r=\"3\" />","chevron-right":"<path d=\"m9 18 6-6-6-6\" />","leaf":"<path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\" /><path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\" />","cloud-drizzle":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M8 19v1\" /><path d=\"M8 14v1\" /><path d=\"M16 19v1\" /><path d=\"M16 14v1\" /><path d=\"M12 21v1\" /><path d=\"M12 16v1\" />","x":"<path d=\"M18 6 6 18\" /><path d=\"m6 6 12 12\" />","user":"<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /><circle cx=\"12\" cy=\"7\" r=\"4\" />"};
+const ICONS={"chevron-left":"<path d=\"m15 18-6-6 6-6\" />","spray-can":"<path d=\"M3 3h.01\" /><path d=\"M7 5h.01\" /><path d=\"M11 7h.01\" /><path d=\"M3 7h.01\" /><path d=\"M7 9h.01\" /><path d=\"M3 11h.01\" /><rect width=\"4\" height=\"4\" x=\"15\" y=\"5\" /><path d=\"m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2\" /><path d=\"m13 14 8-2\" /><path d=\"m13 19 8-2\" />","sprout":"<path d=\"M7 20h10\" /><path d=\"M10 20c5.5-2.5.8-6.4 3-10\" /><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z\" /><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z\" />","shovel":"<path d=\"M2 22v-5l5-5 5 5-5 5z\" /><path d=\"M9.5 14.5 16 8\" /><path d=\"m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2\" />","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\" /><path d=\"M8.5 2h7\" /><path d=\"M7 16h10\" />","truck":"<path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\" /><path d=\"M15 18H9\" /><path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14\" /><circle cx=\"17\" cy=\"18\" r=\"2\" /><circle cx=\"7\" cy=\"18\" r=\"2\" />","wheat":"<path d=\"M2 22 16 8\" /><path d=\"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z\" /><path d=\"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" />","cloud-rain":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M16 14v6\" /><path d=\"M8 14v6\" /><path d=\"M12 16v6\" />","notebook-pen":"<path d=\"M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4\" /><path d=\"M2 6h4\" /><path d=\"M2 10h4\" /><path d=\"M2 14h4\" /><path d=\"M2 18h4\" /><path d=\"M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z\" />","thermometer":"<path d=\"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z\" />","plus":"<path d=\"M5 12h14\" /><path d=\"M12 5v14\" />","calendar-days":"<path d=\"M8 2v4\" /><path d=\"M16 2v4\" /><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /><path d=\"M3 10h18\" /><path d=\"M8 14h.01\" /><path d=\"M12 14h.01\" /><path d=\"M16 14h.01\" /><path d=\"M8 18h.01\" /><path d=\"M12 18h.01\" /><path d=\"M16 18h.01\" />","history":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /><path d=\"M3 3v5h5\" /><path d=\"M12 7v5l4 2\" />","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\" /><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\" />","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\" /><path d=\"M12 2v2\" /><path d=\"M12 20v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"m17.66 17.66 1.41 1.41\" /><path d=\"M2 12h2\" /><path d=\"M20 12h2\" /><path d=\"m6.34 17.66-1.41 1.41\" /><path d=\"m19.07 4.93-1.41 1.41\" />","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\" />","cloud-sun":"<path d=\"M12 2v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"M20 12h2\" /><path d=\"m19.07 4.93-1.41 1.41\" /><path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /><path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />","check":"<path d=\"M20 6 9 17l-5-5\" />","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /><circle cx=\"12\" cy=\"10\" r=\"3\" />","chevron-right":"<path d=\"m9 18 6-6-6-6\" />","leaf":"<path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\" /><path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\" />","cloud-drizzle":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M8 19v1\" /><path d=\"M8 14v1\" /><path d=\"M16 19v1\" /><path d=\"M16 14v1\" /><path d=\"M12 21v1\" /><path d=\"M12 16v1\" />","x":"<path d=\"M18 6 6 18\" /><path d=\"m6 6 12 12\" />","user":"<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /><circle cx=\"12\" cy=\"7\" r=\"4\" />"};
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const ico = (n, cls = "icon") => `<svg class="${cls}" viewBox="0 0 24 24">${ICONS[n] || ""}</svg>`;
@@ -421,10 +534,12 @@ const UPCOMING = [
   { d: "Oct 8",  t: "pickup",   title: "Thanksgiving order, St. Thomas grocer", crops: ["Fall Produce", "Garlic"], meta: "Squash, garlic, apples" },
 ];
 
-const NOTES = [
-  { crop: "Garlic", due: "Due now", dueCls: "warn", text: "Plant by Oct 5. The Oct 14 planting in 2025 came up uneven and scapes were late." },
-  { crop: "Strawberries", due: "Nov 2026", text: "Wait to mulch until the soil is near −2 °C. Mulched too early in 2025 and saw crown rot." },
-  { crop: "Cucumbers", due: "Jun 2027", text: "Start powdery mildew sprays in early July. The first spray on Jul 20, 2025 was too late." },
+let NOTES = [
+  { crop: "Garlic", due: "2026-09", text: "Plant by Oct 5. The Oct 14 planting in 2025 came up uneven and scapes were late." },
+  { crop: "Strawberries", due: "2026-11", text: "Wait to mulch until the soil is near −2 °C. Mulched too early in 2025 and saw crown rot." },
+  { crop: "Cucumbers", due: "2027-06", text: "Start powdery mildew sprays in early July. The first spray on Jul 20, 2025 was too late." },
+  { crop: "Fall Produce", due: "2027-05", text: "Hillside Market wants 80 bins of pumpkins next year, up from 60. Plant two more rows." },
+  { crop: "Garden", due: "2026-08", done: true, text: "Stake tomatoes before the first truss sets. Done in 2026 and it worked well." },
 ];
 
 const PAST = [
@@ -460,7 +575,8 @@ $("#logForm").addEventListener("submit", e => {
   e.preventDefault();
   const title = $("#f-title").value.trim() || `${TYPES[selType].name} event`;
   RECENT.unshift({ t: selType, title, crops: [...selCrops], who: "You", when: "Just now" });
-  renderRecent();
+  ALL.push({ date: $("#f-date").value || "2026-09-23", t: selType, title, crops: [...selCrops], who: "You" });
+  renderRecent(); renderCalendar(); renderHistory();
   $("#f-title").value = ""; $("#f-desc").value = ""; $("#f-field").value = "";
   document.querySelectorAll("#extra input").forEach(i => i.value = "");
   document.body.classList.remove("sheet-open");
@@ -495,8 +611,22 @@ $("#upcoming").addEventListener("click", e => {
   if (on) toast("Marked done. Weather saved with it.");
 });
 
-$("#notes").innerHTML = NOTES.map(n =>
-  `<div class="note"><div class="row-tags"><span class="tag">${esc(n.crop)}</span><span class="pill ${n.dueCls || ""}" style="${n.dueCls ? "" : "color:var(--muted)"}">${n.dueCls ? ico("calendar-days", "icon sm") : ""}${n.due}</span></div><p>${esc(n.text)}</p></div>`).join("");
+const NOW_MONTH = "2026-09";
+const monthName = ym => { const [y, m] = ym.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString("en-CA", { month: "short", year: "numeric" }); };
+const noteHtml = (n, i, withAction) => {
+  const due = !n.done && n.due <= NOW_MONTH;
+  const pill = n.done ? `<span class="pill ok">${ico("check", "icon sm")}Resolved</span>`
+    : due ? `<span class="pill warn">${ico("calendar-days", "icon sm")}Due now</span>` : `<span class="pill" style="color:var(--muted)">${monthName(n.due)}</span>`;
+  const act = withAction ? `<button class="btn ghost" type="button" data-n="${i}">${ico(n.done ? "history" : "check", "icon sm")}${n.done ? "Reopen" : "Mark resolved"}</button>` : "";
+  return `<div class="note"><div class="row-tags"><span class="tag">${esc(n.crop)}</span>${pill}</div><p>${esc(n.text)}</p>${act}</div>`;
+};
+let noteFilter = "open";
+function renderNotes() {
+  const open = NOTES.map((n, i) => [n, i]).filter(([n]) => !n.done).sort((a, b) => a[0].due.localeCompare(b[0].due));
+  $("#notes").innerHTML = open.slice(0, 3).map(([n, i]) => noteHtml(n, i, false)).join("");
+  const list = NOTES.map((n, i) => [n, i]).filter(([n]) => noteFilter === "done" ? n.done : !n.done).sort((a, b) => a[0].due.localeCompare(b[0].due));
+  $("#nList").innerHTML = list.length ? list.map(([n, i]) => noteHtml(n, i, true)).join("") : `<p class="empty">No ${noteFilter === "done" ? "resolved" : "open"} notes.</p>`;
+}
 
 function renderPast() { $("#past").innerHTML = PAST.map(p =>
   `<div class="year"><div class="year-head"><h3>${p.y}</h3><span class="meta">${Math.round(YEARS.find(Y => Y.y === p.y).gddTo).toLocaleString()} GDD by Sep 23</span></div>
@@ -582,6 +712,98 @@ function drawChart() {
   hit.addEventListener("pointermove", move); hit.addEventListener("pointerdown", move); hit.addEventListener("pointerleave", leave);
 }
 
-paintIcons(); renderTypes(); renderCrops(); renderRecent(); renderPast(); drawChart();
+/* ── All events (example data) for Calendar and History ───────────── */
+const iso = (y, doy) => { const d = new Date(y, 0, doy); return `${y}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const KIND = { "Transplanted": "planting", "Planted": "planting", "First harvest": "harvest", "First pick": "harvest", "Harvested": "harvest", "First mildew spray": "spray", "First bloom": "garden", "Renovated": "garden", "Scapes cut": "garden" };
+const WHO = ["You", "Jordan", "Sam"];
+const ALL = [
+  ...UPCOMING.map(u => ({ date: "2026-" + ({ Sep: "09", Oct: "10" })[u.d.split(" ")[0]] + "-" + u.d.split(" ")[1].padStart(2, "0"), t: u.t, title: u.title, crops: u.crops, planned: true })),
+  ...RECENT.map((r, i) => ({ date: ["2026-09-23", "2026-09-22", "2026-09-21", "2026-09-20"][i], t: r.t, title: r.title, crops: r.crops, who: r.who })),
+  ...Object.entries(EVENTS).flatMap(([crop, byYear]) => Object.entries(byYear).flatMap(([y, evs]) => evs.map(([d, l], k) => ({ date: iso(+y, d), t: KIND[l], title: `${crop}: ${l.toLowerCase()}`, crops: [crop], who: WHO[(d + k) % 3], src: +y < 2026 ? "Imported" : "" })))),
+  ...PAST.flatMap(p => p.ev.map(([t, title], k) => ({ date: `${p.y}-09-${22 + k}`, t, title, crops: [], who: WHO[k % 3], src: "Imported" }))),
+  { date: "2026-09-02", t: "harvest", title: "Pickling cucumbers, last pick", crops: ["Cucumbers"], who: "Sam" },
+  { date: "2026-09-08", t: "spray", title: "Bravo on pumpkins, 2.4 L/ha", crops: ["Fall Produce"], who: "You" },
+  { date: "2026-09-10", t: "pickup", title: "Hillside Market: cucumbers and peppers", crops: ["Cucumbers"], who: "Jordan" },
+  { date: "2026-09-15", t: "nutrient", title: "Potash on strawberry beds, 60 lb/ac", crops: ["Strawberries"], who: "You" },
+  { date: "2026-09-17", t: "harvest", title: "Pumpkins, first 30 bins", crops: ["Fall Produce"], who: "Jordan" },
+  { date: "2026-10-12", t: "garden", title: "Pull summer garden, spread compost", crops: ["Garden"], planned: true },
+  { date: "2026-10-20", t: "harvest", title: "Last squash before frost", crops: ["Fall Produce"], planned: true },
+  { date: "2025-10-14", t: "planting", title: "Garlic planted, 4 beds of Music", crops: ["Garlic"], who: "You", src: "Imported" },
+  { date: "2025-08-05", t: "spray", title: "Copper on cucumbers", crops: ["Cucumbers"], who: "Sam", src: "Imported" },
+  { date: "2024-08-12", t: "pickup", title: "Hillside Market: 50 bins of cucumbers", crops: ["Cucumbers"], who: "You", src: "Imported" },
+];
+const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const longDate = s => parse(s).toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+const evRow = e => `<div class="row">${typeDot(e.t)}<div class="row-main"><span class="row-title">${esc(e.title)}</span>
+  <div class="row-tags">${tags(e.crops)}${e.planned ? `<span class="pill ok">Planned</span>` : ""}${e.src ? `<span class="src">${e.src}</span>` : ""}</div></div>
+  <div style="text-align:right; flex:none"><div class="meta">${parse(e.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}</div>${e.who ? `<div class="meta" style="display:flex;gap:4px;align-items:center;justify-content:flex-end">${ico("user", "icon sm")}${esc(e.who)}</div>` : ""}</div></div>`;
+
+/* Calendar */
+let calY = 2026, calM = 8, calSel = "2026-09-23";
+$("#calLegend").innerHTML = Object.values(TYPES).map(t => `<span style="--c:${t.c}">${ico(t.icon)}${t.name}</span>`).join("");
+function renderCalendar() {
+  $("#calLabel").textContent = new Date(calY, calM, 1).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
+  const first = new Date(calY, calM, 1), start = new Date(calY, calM, 1 - first.getDay());
+  let h = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => `<div class="dow">${d}</div>`).join("");
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    if (i === 35 && d.getMonth() !== calM) break;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const evs = ALL.filter(e => e.date === key);
+    h += `<button type="button" class="day${d.getMonth() !== calM ? " out" : ""}${key === "2026-09-23" ? " today" : ""}" data-d="${key}" aria-pressed="${key === calSel}" aria-label="${longDate(key)}, ${evs.length} events">
+      <span class="num">${d.getDate()}</span><span class="evs">${evs.slice(0, 3).map(e => `<span class="cal-ev" style="--c:${TYPES[e.t].c}">${ico(TYPES[e.t].icon)}<span>${esc(e.title)}</span></span>`).join("")}</span>${evs.length > 3 ? `<span class="cal-more">+${evs.length - 3} more</span>` : ""}</button>`;
+  }
+  $("#cal").innerHTML = h;
+  const sel = ALL.filter(e => e.date === calSel);
+  $("#calDay").innerHTML = `<div class="day-list"><h3>${longDate(calSel)}</h3>${sel.length ? `<div class="row-list">${sel.map(evRow).join("")}</div>` : `<p class="empty">Nothing logged or planned.</p>`}</div>`;
+}
+$("#cal").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (b) { calSel = b.dataset.d; renderCalendar(); } });
+$("#calPrev").addEventListener("click", () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCalendar(); });
+$("#calNext").addEventListener("click", () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCalendar(); });
+
+/* History */
+let hYear = "All";
+$("#hYear").innerHTML = ["All", "2026", "2025", "2024"].map(y => `<button type="button" data-y="${y}" aria-pressed="${y === hYear}">${y}</button>`).join("");
+$("#hType").innerHTML = `<option value="">All types</option>` + Object.entries(TYPES).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join("");
+$("#hCrop").innerHTML = `<option value="">All crops</option>` + CROPS.map(c => `<option>${esc(c)}</option>`).join("");
+function renderHistory() {
+  const t = $("#hType").value, c = $("#hCrop").value;
+  const list = ALL.filter(e => !e.planned && (hYear === "All" || e.date.startsWith(hYear)) && (!t || e.t === t) && (!c || e.crops.includes(c))).sort((a, b) => b.date.localeCompare(a.date));
+  $("#hCount").textContent = `${list.length} event${list.length === 1 ? "" : "s"}`;
+  const groups = {};
+  list.forEach(e => (groups[e.date.slice(0, 7)] ||= []).push(e));
+  $("#hList").innerHTML = list.length ? Object.entries(groups).map(([ym, evs]) => `<div class="month-group"><h3>${parse(ym + "-01").toLocaleDateString("en-CA", { month: "long", year: "numeric" })}</h3><div class="row-list">${evs.map(evRow).join("")}</div></div>`).join("") : `<p class="empty">No events match these filters.</p>`;
+}
+$("#hYear").addEventListener("click", e => { const b = e.target.closest("[data-y]"); if (!b) return; hYear = b.dataset.y; $("#hYear").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderHistory(); });
+$("#hType").addEventListener("change", renderHistory);
+$("#hCrop").addEventListener("change", renderHistory);
+
+/* Notes view */
+$("#n-crop").innerHTML = CROPS.map(c => `<option>${esc(c)}</option>`).join("");
+$("#noteForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const text = $("#n-text").value.trim();
+  if (!text) { $("#n-text").focus(); toast("Write the note first"); return; }
+  NOTES.push({ crop: $("#n-crop").value, due: $("#n-due").value || "2027-03", text });
+  $("#n-text").value = ""; noteFilter = "open";
+  $("#nFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "open"));
+  renderNotes(); toast("Note saved");
+});
+$("#nList").addEventListener("click", e => { const b = e.target.closest("[data-n]"); if (!b) return; const n = NOTES[+b.dataset.n]; n.done = !n.done; renderNotes(); toast(n.done ? "Note resolved" : "Note reopened"); });
+$("#nFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; noteFilter = b.dataset.f; $("#nFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderNotes(); });
+
+/* Navigation */
+const VIEWS = ["dashboard", "calendar", "history", "notes"];
+function show(v) {
+  if (!VIEWS.includes(v)) v = "dashboard";
+  VIEWS.forEach(x => $("#v-" + x).hidden = x !== v);
+  document.querySelectorAll("[data-view]").forEach(a => a.dataset.view === v ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  if (v === "dashboard") drawChart();
+  scrollTo(0, 0);
+}
+document.addEventListener("click", e => { const a = e.target.closest("[data-view]"); if (!a) return; e.preventDefault(); show(a.dataset.view); });
+
+paintIcons(); renderTypes(); renderCrops(); renderRecent(); renderPast(); renderNotes(); drawChart(); renderCalendar(); renderHistory();
+show(location.hash.slice(1));
 let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawChart, 120); });
 </script>
