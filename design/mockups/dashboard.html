@@ -1,0 +1,587 @@
+<title>Farm Log Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* ── Design tokens: edit these to restyle everything ───────────────── */
+:root {
+  --bg: #f5f7f4;
+  --surface: #ffffff;
+  --surface-2: #eef2ed;
+  --ink: #17201a;
+  --ink-2: #4b5850;
+  --muted: #76827a;
+  --line: #e1e6e0;
+  --accent: #2d6a4f;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4efe8;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0dc;
+
+  /* Event types (users can change these in Settings) */
+  --t-spray: #2a78d6;
+  --t-harvest: #eb6834;
+  --t-planting: #1baf7a;
+  --t-nutrient: #c98500;
+  --t-pickup: #d55181;
+  --t-garden: #008300;
+
+  /* Chart series: one colour per year */
+  --y2026: #2a78d6;
+  --y2025: #eb6834;
+  --y2024: #1baf7a;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --gap: 16px;
+  --font: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #101412;
+    --surface: #181e1a;
+    --surface-2: #212923;
+    --ink: #edf2ee;
+    --ink-2: #b6c1ba;
+    --muted: #87938b;
+    --line: #2a332d;
+    --accent: #5fb38a;
+    --accent-ink: #0d1a13;
+    --accent-soft: #1d2f25;
+    --warn: #e0a54a;
+    --warn-soft: #33271a;
+    --t-spray: #3987e5; --t-harvest: #d95926; --t-planting: #199e70;
+    --t-nutrient: #c98500; --t-pickup: #d55181; --t-garden: #2f9a3a;
+    --y2026: #3987e5; --y2025: #d95926; --y2024: #199e70;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #101412;
+  --surface: #181e1a;
+  --surface-2: #212923;
+  --ink: #edf2ee;
+  --ink-2: #b6c1ba;
+  --muted: #87938b;
+  --line: #2a332d;
+  --accent: #5fb38a;
+  --accent-ink: #0d1a13;
+  --accent-soft: #1d2f25;
+  --warn: #e0a54a;
+  --warn-soft: #33271a;
+  --t-spray: #3987e5; --t-harvest: #d95926; --t-planting: #199e70;
+  --t-nutrient: #c98500; --t-pickup: #d55181; --t-garden: #2f9a3a;
+  --y2026: #3987e5; --y2025: #d95926; --y2024: #199e70;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--font);
+  padding: 0 16px;
+  font-variant-numeric: tabular-nums;
+}
+h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.icon { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.icon.sm { width: 15px; height: 15px; }
+
+/* ── Top bar ───────────────────────────────────────────────────────── */
+.topbar {
+  max-width: 1240px; margin: 0 auto;
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding-block: 20px 12px;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.brand h1 { font-size: 17px; line-height: 1.2; }
+.brand p { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.nav { display: flex; gap: 4px; margin-left: auto; }
+.nav a { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; color: var(--ink-2); text-decoration: none; font-size: 14px; font-weight: 500; }
+.nav a[aria-current] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+.nav a:hover { color: var(--ink); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); color: var(--ink-2); display: grid; place-items: center; font-size: 12px; font-weight: 600; flex: none; }
+.mock-note { max-width: 1240px; margin: 0 auto 12px; font-size: 12.5px; color: var(--muted); }
+
+/* ── Dashboard grid ────────────────────────────────────────────────── */
+.grid {
+  max-width: 1240px; margin: 0 auto; padding-bottom: 40px;
+  display: grid; gap: var(--gap);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    "log log log log log up up up up up up up"
+    "wx wx wx wx wx wx wx wx notes notes notes notes"
+    "past past past past past past recent recent recent recent recent recent";
+}
+.unit { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px 20px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.unit-head { display: flex; align-items: flex-start; gap: 10px; }
+.unit-head .icon { margin-top: 2px; color: var(--accent); }
+.unit-head h2 { font-size: 16px; line-height: 1.3; }
+.unit-head p { font-size: 13px; color: var(--muted); }
+.unit-head .spacer { flex: 1; }
+#u-log { grid-area: log; }
+#u-up { grid-area: up; }
+#u-wx { grid-area: wx; }
+#u-notes { grid-area: notes; }
+#u-past { grid-area: past; }
+#u-recent { grid-area: recent; }
+
+/* ── Shared bits ───────────────────────────────────────────────────── */
+.type-dot { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); }
+.tag { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+.meta { font-size: 13px; color: var(--muted); }
+.row-list { display: flex; flex-direction: column; }
+.row { display: flex; gap: 12px; align-items: flex-start; padding-block: 10px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; padding-top: 0; }
+.row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.row-title { font-weight: 500; line-height: 1.35; }
+.row-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.date-col { width: 44px; flex: none; text-align: center; line-height: 1.1; }
+.date-col b { display: block; font-size: 18px; font-weight: 600; }
+.date-col span { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 1px 8px; border-radius: 999px; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.ok { background: var(--accent-soft); color: var(--accent); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: var(--radius-sm); padding: 10px 16px; font-weight: 600; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--ink-2); padding: 6px 8px; }
+.btn.ghost:hover { background: var(--surface-2); }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+
+/* ── Quick log ─────────────────────────────────────────────────────── */
+.form { display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label, .field > .label { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.field input, .field textarea, .field select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: 9px 11px; }
+.field textarea { resize: vertical; min-height: 64px; }
+.field input:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.type-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.type-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 8px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--ink-2); }
+.type-opt .icon { color: var(--c); width: 20px; height: 20px; }
+.type-opt[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 9%, var(--surface)); color: var(--ink); box-shadow: inset 0 0 0 1px var(--c); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; color: var(--ink-2); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.extra { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.extra .field input { background: var(--surface); }
+.extra-title { grid-column: 1 / -1; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.sheet-close { display: none; }
+
+/* ── Upcoming + forecast ───────────────────────────────────────────── */
+.forecast { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.fc { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px; border-radius: var(--radius-sm); font-size: 12.5px; }
+.fc .d { color: var(--muted); font-weight: 500; }
+.fc .icon { width: 20px; height: 20px; color: var(--ink-2); }
+.fc .hi { font-weight: 600; font-size: 14px; }
+.fc .lo { color: var(--muted); }
+.fc .rain { color: var(--t-spray); font-weight: 500; }
+.fc.today { background: var(--surface-2); }
+.fc.wet .icon { color: var(--t-spray); }
+.check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); display: grid; place-items: center; cursor: pointer; flex: none; color: transparent; margin-top: 3px; }
+.check[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.row.done .row-title { text-decoration: line-through; color: var(--muted); }
+.hint { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 6px; align-items: flex-start; }
+.hint .icon { color: var(--accent); margin-top: 2px; }
+
+/* ── Weather chart ─────────────────────────────────────────────────── */
+.chart-wrap { position: relative; }
+.chart-wrap svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart-wrap .grid-line { stroke: var(--line); stroke-width: 1; }
+.chart-wrap .axis-text { fill: var(--muted); font-size: 11.5px; }
+.chart-wrap .end-label { font-size: 12px; font-weight: 600; fill: var(--ink); }
+.chart-wrap .end-sub { font-size: 11.5px; fill: var(--muted); }
+.chart-wrap .xhair { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; }
+.tip { position: absolute; top: 0; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 18px rgb(0 0 0 / .08); min-width: 150px; }
+.tip b { display: block; margin-bottom: 4px; }
+.tip .tr { display: flex; align-items: center; gap: 6px; }
+.tip .tr i { width: 10px; height: 2px; border-radius: 1px; background: var(--c); }
+.tip .tr span:last-child { margin-left: auto; font-weight: 600; }
+.tip .ev { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); color: var(--ink-2); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 2px; border-radius: 1px; background: var(--c); }
+.legend .mk { width: 9px; height: 9px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink-2); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: right; font-weight: 500; color: var(--muted); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; padding-left: 0; }
+td:first-child { font-weight: 600; }
+td:first-child i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-right: 8px; }
+tr:last-child td { border-bottom: 0; }
+
+/* ── Notes ─────────────────────────────────────────────────────────── */
+.note { display: flex; flex-direction: column; gap: 6px; padding-block: 12px; border-top: 1px solid var(--line); }
+.note:first-child { border-top: 0; padding-top: 0; }
+.note p { font-size: 14px; }
+.note .row-tags { justify-content: space-between; }
+
+/* ── Past years ────────────────────────────────────────────────────── */
+.years { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.year { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.year-head { display: flex; align-items: baseline; justify-content: space-between; }
+.year-head h3 { font-size: 15px; }
+.wx-strip { display: flex; gap: 12px; font-size: 12.5px; color: var(--ink-2); flex-wrap: wrap; }
+.wx-strip span { display: inline-flex; align-items: center; gap: 4px; }
+.mini { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; line-height: 1.35; }
+.mini .type-dot { width: 22px; height: 22px; border-radius: 6px; }
+.mini .type-dot .icon { width: 13px; height: 13px; }
+
+/* ── Toast + bottom nav (phone) ────────────────────────────────────── */
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 500; display: flex; gap: 8px; align-items: center; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 30; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.tabbar { display: none; }
+.scrim { display: none; }
+
+@media (max-width: 980px) {
+  .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "log up" "wx wx" "notes past" "recent recent"; }
+}
+@media (max-width: 720px) {
+  body { padding-bottom: 88px; }
+  .nav { display: none; }
+  .topbar { padding-block: 14px 8px; }
+  .topbar .avatar { margin-left: auto; }
+  .grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "up" "past" "wx" "notes" "recent"; gap: 12px; }
+  .unit { padding: 16px; }
+  .years { grid-template-columns: 1fr; }
+  .fc { padding: 6px 0; font-size: 12px; }
+  #u-log { display: none; }
+  body.sheet-open #u-log { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; max-height: 88%; overflow-y: auto; border-radius: 18px 18px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -10px 30px rgb(0 0 0 / .18); }
+  body.sheet-open .scrim { display: block; position: fixed; inset: 0; background: rgb(0 0 0 / .35); z-index: 24; }
+  .sheet-close { display: inline-flex; }
+  .toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); }
+  .tabbar a, .tabbar button { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 500; color: var(--muted); text-decoration: none; background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  .tabbar a[aria-current] { color: var(--accent); }
+  .tabbar .add span.plus { width: 46px; height: 46px; margin-top: -18px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; box-shadow: 0 4px 12px rgb(0 0 0 / .18); }
+  .tabbar .add { color: var(--ink); }
+}
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark"><svg class="icon" viewBox="0 0 24 24" data-i="sprout"></svg></div>
+    <div>
+      <h1>Farm Log</h1>
+      <p><svg class="icon sm" viewBox="0 0 24 24" data-i="map-pin"></svg>Corinth, ON · Wed Sep 23, 2026</p>
+    </div>
+  </div>
+  <nav class="nav" aria-label="Main">
+    <a href="#" aria-current="page"><svg class="icon sm" viewBox="0 0 24 24" data-i="house"></svg>Dashboard</a>
+    <a href="#"><svg class="icon sm" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+    <a href="#"><svg class="icon sm" viewBox="0 0 24 24" data-i="history"></svg>History</a>
+    <a href="#"><svg class="icon sm" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
+  </nav>
+  <div class="avatar" title="Signed in">YOU</div>
+</header>
+<p class="mock-note">Design mockup with example data. Nothing here is saved.</p>
+
+<main class="grid">
+
+  <!-- Quick log -->
+  <section class="unit" id="u-log" aria-labelledby="h-log">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
+      <div><h2 id="h-log">Log an event</h2><p>Record what happened or plan what's next.</p></div>
+      <span class="spacer"></span>
+      <button class="btn ghost sheet-close" type="button" id="closeSheet" aria-label="Close"><svg class="icon" viewBox="0 0 24 24" data-i="x"></svg></button>
+    </div>
+    <form class="form" id="logForm" novalidate>
+      <div class="field">
+        <span class="label" id="typeLabel">Type</span>
+        <div class="type-picker" role="group" aria-labelledby="typeLabel" id="typePicker"></div>
+      </div>
+      <div class="field">
+        <label for="f-title">What</label>
+        <input id="f-title" placeholder="e.g. Fungicide on strawberries" autocomplete="off">
+      </div>
+      <div class="two">
+        <div class="field"><label for="f-date">Date</label><input id="f-date" type="date" value="2026-09-23"></div>
+        <div class="field"><label for="f-field">Field</label><input id="f-field" placeholder="e.g. North field" autocomplete="off"></div>
+      </div>
+      <div class="extra" id="extra"></div>
+      <div class="field">
+        <span class="label" id="cropLabel">Crops</span>
+        <div class="chips" role="group" aria-labelledby="cropLabel" id="cropPicker"></div>
+      </div>
+      <div class="field">
+        <label for="f-desc">Description</label>
+        <textarea id="f-desc" placeholder="Details, conditions, who was there"></textarea>
+      </div>
+      <button class="btn primary" type="submit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save event</button>
+    </form>
+  </section>
+
+  <!-- Upcoming -->
+  <section class="unit" id="u-up" aria-labelledby="h-up">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>
+      <div><h2 id="h-up">Next 14 days</h2><p>Planned work with the 7-day forecast for Corinth.</p></div>
+    </div>
+    <div class="forecast" id="forecast"></div>
+    <div class="row-list" id="upcoming"></div>
+  </section>
+
+  <!-- Weather history -->
+  <section class="unit" id="u-wx" aria-labelledby="h-wx">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="thermometer"></svg>
+      <div><h2 id="h-wx">Season heat by year</h2><p>Growing degree days (base 10 °C) since April 1, with crop events marked.</p></div>
+      <span class="spacer"></span>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between">
+      <div class="seg" role="group" aria-label="Crop events to mark" id="cropSeg"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="chart-wrap" id="chart"></div>
+    <div class="table-wrap"><table id="wxTable"></table></div>
+  </section>
+
+  <!-- Notes -->
+  <section class="unit" id="u-notes" aria-labelledby="h-notes">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>
+      <div><h2 id="h-notes">Notes for next time</h2><p>Changes you planned to make this year.</p></div>
+    </div>
+    <div id="notes"></div>
+  </section>
+
+  <!-- This week in past years -->
+  <section class="unit" id="u-past" aria-labelledby="h-past">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>
+      <div><h2 id="h-past">This week in past years</h2><p>Sep 21–27 in earlier seasons, with that week's weather.</p></div>
+    </div>
+    <div class="years" id="past"></div>
+  </section>
+
+  <!-- Recent -->
+  <section class="unit" id="u-recent" aria-labelledby="h-recent">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="leaf"></svg>
+      <div><h2 id="h-recent">Recently logged</h2><p>The latest entries from family and crew.</p></div>
+    </div>
+    <div class="row-list" id="recent"></div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<nav class="tabbar" aria-label="Main">
+  <a href="#" aria-current="page"><svg class="icon" viewBox="0 0 24 24" data-i="house"></svg>Home</a>
+  <a href="#"><svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+  <button class="add" type="button" id="openSheet"><span class="plus"><svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg></span>Log</button>
+  <a href="#"><svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>History</a>
+  <a href="#"><svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
+</nav>
+<div class="toast" id="toast" role="status"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg><span id="toastText">Event logged</span></div>
+
+<script>
+const ICONS={"spray-can":"<path d=\"M3 3h.01\" /><path d=\"M7 5h.01\" /><path d=\"M11 7h.01\" /><path d=\"M3 7h.01\" /><path d=\"M7 9h.01\" /><path d=\"M3 11h.01\" /><rect width=\"4\" height=\"4\" x=\"15\" y=\"5\" /><path d=\"m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2\" /><path d=\"m13 14 8-2\" /><path d=\"m13 19 8-2\" />","sprout":"<path d=\"M7 20h10\" /><path d=\"M10 20c5.5-2.5.8-6.4 3-10\" /><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z\" /><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z\" />","shovel":"<path d=\"M2 22v-5l5-5 5 5-5 5z\" /><path d=\"M9.5 14.5 16 8\" /><path d=\"m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2\" />","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\" /><path d=\"M8.5 2h7\" /><path d=\"M7 16h10\" />","truck":"<path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\" /><path d=\"M15 18H9\" /><path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14\" /><circle cx=\"17\" cy=\"18\" r=\"2\" /><circle cx=\"7\" cy=\"18\" r=\"2\" />","wheat":"<path d=\"M2 22 16 8\" /><path d=\"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z\" /><path d=\"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" />","cloud-rain":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M16 14v6\" /><path d=\"M8 14v6\" /><path d=\"M12 16v6\" />","notebook-pen":"<path d=\"M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4\" /><path d=\"M2 6h4\" /><path d=\"M2 10h4\" /><path d=\"M2 14h4\" /><path d=\"M2 18h4\" /><path d=\"M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z\" />","thermometer":"<path d=\"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z\" />","plus":"<path d=\"M5 12h14\" /><path d=\"M12 5v14\" />","calendar-days":"<path d=\"M8 2v4\" /><path d=\"M16 2v4\" /><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /><path d=\"M3 10h18\" /><path d=\"M8 14h.01\" /><path d=\"M12 14h.01\" /><path d=\"M16 14h.01\" /><path d=\"M8 18h.01\" /><path d=\"M12 18h.01\" /><path d=\"M16 18h.01\" />","history":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /><path d=\"M3 3v5h5\" /><path d=\"M12 7v5l4 2\" />","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\" /><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\" />","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\" /><path d=\"M12 2v2\" /><path d=\"M12 20v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"m17.66 17.66 1.41 1.41\" /><path d=\"M2 12h2\" /><path d=\"M20 12h2\" /><path d=\"m6.34 17.66-1.41 1.41\" /><path d=\"m19.07 4.93-1.41 1.41\" />","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\" />","cloud-sun":"<path d=\"M12 2v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"M20 12h2\" /><path d=\"m19.07 4.93-1.41 1.41\" /><path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /><path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />","check":"<path d=\"M20 6 9 17l-5-5\" />","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /><circle cx=\"12\" cy=\"10\" r=\"3\" />","chevron-right":"<path d=\"m9 18 6-6-6-6\" />","leaf":"<path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\" /><path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\" />","cloud-drizzle":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M8 19v1\" /><path d=\"M8 14v1\" /><path d=\"M16 19v1\" /><path d=\"M16 14v1\" /><path d=\"M12 21v1\" /><path d=\"M12 16v1\" />","x":"<path d=\"M18 6 6 18\" /><path d=\"m6 6 12 12\" />","user":"<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /><circle cx=\"12\" cy=\"7\" r=\"4\" />"};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ico = (n, cls = "icon") => `<svg class="${cls}" viewBox="0 0 24 24">${ICONS[n] || ""}</svg>`;
+function paintIcons(root = document) { root.querySelectorAll("svg[data-i]").forEach(s => { s.innerHTML = ICONS[s.dataset.i] || ""; s.removeAttribute("data-i"); }); }
+
+/* ── Reference data ───────────────────────────────────────────────── */
+const TYPES = {
+  spray:    { name: "Spray",    icon: "spray-can",     c: "var(--t-spray)",
+              extra: [["Product", "e.g. Captan 80"], ["Rate", "e.g. 1.9 kg/ha"], ["Re-entry", "e.g. 24 h"]] },
+  planting: { name: "Planting", icon: "sprout",        c: "var(--t-planting)",
+              extra: [["Variety", "e.g. Music"], ["Amount", "e.g. 4 beds"], ["Seed lot", "optional"]] },
+  nutrient: { name: "Nutrient", icon: "flask-conical", c: "var(--t-nutrient)",
+              extra: [["Product", "e.g. Calcium nitrate"], ["Rate", "e.g. 30 lb N/ac"], ["Method", "e.g. Fertigation"]] },
+  harvest:  { name: "Harvest",  icon: "wheat",         c: "var(--t-harvest)",
+              extra: [["Amount", "e.g. 40 bins"], ["Grade", "optional"], ["Destination", "optional"]] },
+  pickup:   { name: "Pickup",   icon: "truck",         c: "var(--t-pickup)",
+              extra: [["Client", "e.g. Hillside Market"], ["Order", "e.g. 60 bins"], ["Time", "e.g. 9:00"]] },
+  garden:   { name: "Garden",   icon: "shovel",        c: "var(--t-garden)", extra: [] },
+};
+const CROPS = ["Strawberries", "Cucumbers", "Garlic", "Garden", "Fall Produce"];
+
+const FORECAST = [
+  ["Today", "sun", 21, 9, 0], ["Thu", "cloud-sun", 19, 10, 0], ["Fri", "cloud-rain", 16, 11, 0.42],
+  ["Sat", "cloud-drizzle", 15, 8, 0.12], ["Sun", "sun", 17, 6, 0], ["Mon", "cloud-sun", 18, 7, 0], ["Tue", "cloud", 16, 9, 0.03],
+];
+
+const UPCOMING = [
+  { d: "Sep 24", t: "pickup",   title: "Hillside Market: pumpkins and squash", crops: ["Fall Produce"], meta: "60 bins · 9:00" },
+  { d: "Sep 26", t: "nutrient", title: "Fall nitrogen on strawberries", crops: ["Strawberries"], meta: "Rain Fri (0.42 in). Apply after it passes.", warn: "Rain day before" },
+  { d: "Sep 29", t: "spray",    title: "Copper on fall kale and broccoli", crops: ["Fall Produce"], meta: "Dry window Sun to Mon" , ok: "Dry window" },
+  { d: "Oct 1",  t: "planting", title: "Fall rye cover crop, cucumber field", crops: ["Cucumbers"], meta: "South field" },
+  { d: "Oct 3",  t: "planting", title: "Plant garlic, 4 beds of Music", crops: ["Garlic"], meta: "Note from 2025: plant by Oct 5" },
+  { d: "Oct 8",  t: "pickup",   title: "Thanksgiving order, St. Thomas grocer", crops: ["Fall Produce", "Garlic"], meta: "Squash, garlic, apples" },
+];
+
+const NOTES = [
+  { crop: "Garlic", due: "Due now", dueCls: "warn", text: "Plant by Oct 5. The Oct 14 planting in 2025 came up uneven and scapes were late." },
+  { crop: "Strawberries", due: "Nov 2026", text: "Wait to mulch until the soil is near −2 °C. Mulched too early in 2025 and saw crown rot." },
+  { crop: "Cucumbers", due: "Jun 2027", text: "Start powdery mildew sprays in early July. The first spray on Jul 20, 2025 was too late." },
+];
+
+const PAST = [
+  { y: 2025, c: "var(--y2025)", avg: 16.1, rain: 0.38, ev: [
+    ["planting", "Fall rye seeded in garden beds"], ["pickup", "Hillside Market, 60 bins of pumpkins"], ["nutrient", "Strawberries fall nitrogen, 30 lb N/ac"] ] },
+  { y: 2024, c: "var(--y2024)", avg: 17.8, rain: 1.31, ev: [
+    ["harvest", "Butternut squash, 1.2 t"], ["garden", "Cucumbers pulled, beds cleaned"], ["garden", "Garlic seed cloves separated"] ] },
+];
+
+let RECENT = [
+  { t: "harvest",  title: "Acorn squash, 40 bins", crops: ["Fall Produce"], who: "Jordan", when: "Today 7:40" },
+  { t: "spray",    title: "Bravo on pumpkins, 2.4 L/ha", crops: ["Fall Produce"], who: "You", when: "Yesterday" },
+  { t: "garden",   title: "Tomato cages pulled and stacked", crops: ["Garden"], who: "Sam", when: "Mon Sep 21" },
+  { t: "nutrient", title: "Soil samples sent to A&L Labs", crops: ["Strawberries", "Garlic"], who: "You", when: "Sun Sep 20" },
+];
+
+/* ── Quick log ────────────────────────────────────────────────────── */
+let selType = "spray", selCrops = new Set(["Strawberries"]);
+function renderTypes() {
+  $("#typePicker").innerHTML = Object.entries(TYPES).map(([k, t]) =>
+    `<button type="button" class="type-opt" style="--c:${t.c}" data-k="${k}" aria-pressed="${k === selType}">${ico(t.icon)}${t.name}</button>`).join("");
+  const t = TYPES[selType], ex = $("#extra");
+  ex.hidden = !t.extra.length;
+  ex.innerHTML = `<div class="extra-title">${t.name} details</div>` + t.extra.map(([l, ph], i) =>
+    `<div class="field"><label for="x-${i}">${l}</label><input id="x-${i}" placeholder="${esc(ph)}" autocomplete="off"></div>`).join("");
+}
+function renderCrops() {
+  $("#cropPicker").innerHTML = CROPS.map(c => `<button type="button" class="chip" data-c="${esc(c)}" aria-pressed="${selCrops.has(c)}">${esc(c)}</button>`).join("");
+}
+$("#typePicker").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) { selType = b.dataset.k; renderTypes(); } });
+$("#cropPicker").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return; const c = b.dataset.c; selCrops.has(c) ? selCrops.delete(c) : selCrops.add(c); renderCrops(); });
+$("#logForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const title = $("#f-title").value.trim() || `${TYPES[selType].name} event`;
+  RECENT.unshift({ t: selType, title, crops: [...selCrops], who: "You", when: "Just now" });
+  renderRecent();
+  $("#f-title").value = ""; $("#f-desc").value = ""; $("#f-field").value = "";
+  document.querySelectorAll("#extra input").forEach(i => i.value = "");
+  document.body.classList.remove("sheet-open");
+  toast("Event logged");
+});
+const openSheet = () => { document.body.classList.add("sheet-open"); setTimeout(() => $("#f-title").focus(), 50); };
+const closeSheet = () => document.body.classList.remove("sheet-open");
+$("#openSheet").addEventListener("click", openSheet);
+$("#closeSheet").addEventListener("click", closeSheet);
+$("#scrim").addEventListener("click", closeSheet);
+let toastTimer;
+function toast(msg) { $("#toastText").textContent = msg; $("#toast").classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 2200); }
+
+/* ── Lists ────────────────────────────────────────────────────────── */
+const typeDot = (k, cls = "icon sm") => `<span class="type-dot" style="--c:${TYPES[k].c}" title="${TYPES[k].name}">${ico(TYPES[k].icon, cls)}</span>`;
+const tags = crops => crops.map(c => `<span class="tag">${esc(c)}</span>`).join("");
+
+$("#forecast").innerHTML = FORECAST.map(([d, i, hi, lo, r], n) =>
+  `<div class="fc${n === 0 ? " today" : ""}${r >= 0.1 ? " wet" : ""}"><span class="d">${d}</span>${ico(i)}<span class="hi">${hi}°</span><span class="lo">${lo}°</span><span class="${r > 0 ? "rain" : "lo"}">${r > 0 ? r.toFixed(2) + " in" : "–"}</span></div>`).join("");
+
+$("#upcoming").innerHTML = UPCOMING.map((u, i) => {
+  const [mon, day] = u.d.split(" ");
+  const pill = u.warn ? `<span class="pill warn">${ico("cloud-rain", "icon sm")}${u.warn}</span>` : u.ok ? `<span class="pill ok">${ico("sun", "icon sm")}${u.ok}</span>` : "";
+  return `<div class="row"><div class="date-col"><b>${day}</b><span>${mon}</span></div>${typeDot(u.t)}
+    <div class="row-main"><span class="row-title">${esc(u.title)}</span><div class="row-tags">${tags(u.crops)}${pill}</div><span class="meta">${esc(u.meta)}</span></div>
+    <button class="check" type="button" aria-pressed="false" aria-label="Mark done" data-i2="${i}">${ico("check", "icon sm")}</button></div>`;
+}).join("");
+$("#upcoming").addEventListener("click", e => {
+  const b = e.target.closest(".check"); if (!b) return;
+  const on = b.getAttribute("aria-pressed") !== "true";
+  b.setAttribute("aria-pressed", on); b.closest(".row").classList.toggle("done", on);
+  if (on) toast("Marked done. Weather saved with it.");
+});
+
+$("#notes").innerHTML = NOTES.map(n =>
+  `<div class="note"><div class="row-tags"><span class="tag">${esc(n.crop)}</span><span class="pill ${n.dueCls || ""}" style="${n.dueCls ? "" : "color:var(--muted)"}">${n.dueCls ? ico("calendar-days", "icon sm") : ""}${n.due}</span></div><p>${esc(n.text)}</p></div>`).join("");
+
+function renderPast() { $("#past").innerHTML = PAST.map(p =>
+  `<div class="year"><div class="year-head"><h3>${p.y}</h3><span class="meta">${Math.round(YEARS.find(Y => Y.y === p.y).gddTo).toLocaleString()} GDD by Sep 23</span></div>
+   <div class="wx-strip"><span>${ico("thermometer", "icon sm")}${p.avg} °C avg</span><span>${ico("cloud-rain", "icon sm")}${p.rain.toFixed(2)} in rain</span></div>
+   ${p.ev.map(([k, t]) => `<div class="mini">${typeDot(k)}<span>${esc(t)}</span></div>`).join("")}</div>`).join(""); }
+
+function renderRecent() {
+  $("#recent").innerHTML = RECENT.slice(0, 5).map(r =>
+    `<div class="row">${typeDot(r.t)}<div class="row-main"><span class="row-title">${esc(r.title)}</span><div class="row-tags">${tags(r.crops)}</div></div>
+     <div style="text-align:right; flex:none"><div class="meta">${esc(r.when)}</div><div class="meta" style="display:flex;gap:4px;align-items:center;justify-content:flex-end">${ico("user", "icon sm")}${esc(r.who)}</div></div></div>`).join("");
+}
+
+/* ── Weather chart (example data, shaped like a Corinth ON season) ── */
+function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
+const START = 91, END = 304, TODAY = 266; // Apr 1 … Oct 31, today = Sep 23
+const YEARS = [
+  { y: 2026, c: "--y2026", off: 0.35, seed: 11, last: TODAY },
+  { y: 2025, c: "--y2025", off: -0.25, seed: 23, last: END },
+  { y: 2024, c: "--y2024", off: 0.9,  seed: 37, last: END },
+];
+YEARS.forEach(Y => {
+  const r = rng(Y.seed); let g = 0, rain = 0, hot = 0; Y.gdd = []; Y.rainTo = 0; Y.hot = 0;
+  for (let d = START; d <= Y.last; d++) {
+    const mean = 8.2 + 13.6 * Math.sin(2 * Math.PI * (d - 110) / 365) + Y.off + (r() + r() + r() - 1.5) * 4;
+    g += Math.max(0, mean - 10);
+    if (mean + 6 >= 30) hot++;
+    if (r() < 0.31) rain += -Math.log(1 - r()) * 0.29;
+    Y.gdd.push(g);
+    if (d === TODAY) { Y.gddTo = g; Y.rainTo = rain; Y.hot = hot; }
+  }
+});
+const EVENTS = {
+  Cucumbers:    { 2026: [[146, "Transplanted"], [189, "First mildew spray"], [188, "First harvest"]], 2025: [[148, "Transplanted"], [190, "First harvest"], [201, "First mildew spray"]], 2024: [[143, "Transplanted"], [181, "First harvest"]] },
+  Strawberries: { 2026: [[134, "First bloom"], [162, "First pick"], [197, "Renovated"]], 2025: [[131, "First bloom"], [160, "First pick"], [195, "Renovated"]], 2024: [[127, "First bloom"], [155, "First pick"], [193, "Renovated"]] },
+  Garlic:       { 2026: [[172, "Scapes cut"], [199, "Harvested"]], 2025: [[175, "Scapes cut"], [203, "Harvested"], [287, "Planted"]], 2024: [[168, "Scapes cut"], [196, "Harvested"], [284, "Planted"]] },
+};
+let selCrop = "Cucumbers";
+$("#cropSeg").innerHTML = Object.keys(EVENTS).map(c => `<button type="button" data-c="${c}" aria-pressed="${c === selCrop}">${c}</button>`).join("");
+$("#cropSeg").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return; selCrop = b.dataset.c; $("#cropSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); drawChart(); });
+$("#legend").innerHTML = YEARS.map(Y => `<span style="--c:var(${Y.c})"><i></i>${Y.y}</span>`).join("") + `<span><i class="mk"></i>${"Crop event"}</span>`;
+$("#wxTable").innerHTML = `<thead><tr><th>Season</th><th>GDD to Sep 23</th><th>Rain since Apr 1</th><th>Days over 30 °C</th></tr></thead><tbody>` +
+  YEARS.map(Y => `<tr><td style="--c:var(${Y.c})"><i></i>${Y.y}</td><td>${Math.round(Y.gddTo).toLocaleString()}</td><td>${Y.rainTo.toFixed(1)} in</td><td>${Y.hot}</td></tr>`).join("") + `</tbody>`;
+
+const MONTHS = [[91, "Apr"], [121, "May"], [152, "Jun"], [182, "Jul"], [213, "Aug"], [244, "Sep"], [274, "Oct"]];
+const fmtDate = d => { const dt = new Date(2026, 0, d); return dt.toLocaleDateString("en-CA", { month: "short", day: "numeric" }); };
+function drawChart() {
+  const wrap = $("#chart"), W = Math.max(300, wrap.clientWidth), narrow = W < 520;
+  const H = narrow ? 230 : 280, m = { l: 40, r: narrow ? 44 : 58, t: 10, b: 26 };
+  const maxG = Math.ceil(Math.max(...YEARS.map(Y => Y.gdd[Y.gdd.length - 1])) / 250) * 250;
+  const x = d => m.l + (d - START) / (END - START) * (W - m.l - m.r);
+  const y = g => H - m.b - g / maxG * (H - m.t - m.b);
+  const cs = getComputedStyle(document.documentElement);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative growing degree days for 2024, 2025 and 2026">`;
+  for (let g = 0; g <= maxG; g += (narrow ? 500 : 250)) s += `<line class="grid-line" x1="${m.l}" x2="${W - m.r}" y1="${y(g)}" y2="${y(g)}"/><text class="axis-text" x="${m.l - 8}" y="${y(g) + 4}" text-anchor="end">${g.toLocaleString()}</text>`;
+  MONTHS.forEach(([d, l]) => s += `<text class="axis-text" x="${x(d)}" y="${H - 6}" text-anchor="start">${l}</text><line class="grid-line" x1="${x(d)}" x2="${x(d)}" y1="${H - m.b}" y2="${H - m.b + 4}"/>`);
+  s += `<line class="grid-line" x1="${x(TODAY)}" x2="${x(TODAY)}" y1="${m.t}" y2="${H - m.b}" stroke-dasharray="2 4"/><text class="axis-text" x="${x(TODAY) - 4}" y="${m.t + 10}" text-anchor="end">Today</text>`;
+  [...YEARS].reverse().forEach(Y => {
+    const pts = Y.gdd.map((g, i) => `${x(START + i).toFixed(1)},${y(g).toFixed(1)}`).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="var(${Y.c})" stroke-width="${Y.y === 2026 ? 2.5 : 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
+  });
+  // end labels, nudged apart so they never collide
+  const ends = YEARS.map(Y => ({ Y, ly: y(Y.gdd[Y.gdd.length - 1]), lx: x(Y.last) })).sort((a, b) => a.ly - b.ly);
+  for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 16) ends[i].ly = ends[i - 1].ly + 16;
+  ends.forEach(e => s += `<text class="end-label" x="${e.lx + 6}" y="${e.ly + 4}">${e.Y.y}</text>`);
+  YEARS.forEach(Y => (EVENTS[selCrop][Y.y] || []).forEach(([d]) => {
+    if (d > Y.last) return;
+    s += `<circle cx="${x(d)}" cy="${y(Y.gdd[d - START])}" r="4.5" fill="var(--surface)" stroke="var(${Y.c})" stroke-width="2.5"/>`;
+  }));
+  s += `<line class="xhair" id="xh" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" visibility="hidden"/><rect id="hit" x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H}" fill="transparent"/></svg><div class="tip" id="tip" hidden></div>`;
+  wrap.innerHTML = s;
+  const hit = $("#hit"), tip = $("#tip"), xh = $("#xh");
+  const move = ev => {
+    const rect = wrap.getBoundingClientRect(), px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
+    const d = Math.round(START + (px * W / rect.width - m.l) / (W - m.l - m.r) * (END - START));
+    if (d < START || d > END) return;
+    xh.setAttribute("x1", x(d)); xh.setAttribute("x2", x(d)); xh.setAttribute("visibility", "visible");
+    const evs = YEARS.flatMap(Y => (EVENTS[selCrop][Y.y] || []).filter(([ed]) => Math.abs(ed - d) <= 2 && ed <= Y.last).map(([ed, l]) => `${Y.y}: ${l} (${fmtDate(ed)})`));
+    tip.innerHTML = `<b>${fmtDate(d)}</b>` + YEARS.map(Y => `<div class="tr" style="--c:var(${Y.c})"><i></i><span>${Y.y}</span><span>${d <= Y.last ? Math.round(Y.gdd[d - START]).toLocaleString() : "–"}</span></div>`).join("") + (evs.length ? `<div class="ev">${evs.map(esc).join("<br>")}</div>` : "");
+    tip.hidden = false;
+    const tx = x(d) * rect.width / W; tip.style.left = (tx > rect.width / 2 ? tx - tip.offsetWidth - 12 : tx + 12) + "px";
+  };
+  const leave = () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); };
+  hit.addEventListener("pointermove", move); hit.addEventListener("pointerdown", move); hit.addEventListener("pointerleave", leave);
+}
+
+paintIcons(); renderTypes(); renderCrops(); renderRecent(); renderPast(); drawChart();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawChart, 120); });
+</script>

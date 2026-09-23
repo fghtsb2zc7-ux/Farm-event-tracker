@@ -1,6 +1,19 @@
 # Farm Event Tracker: Development Plan
 
-Status: **Draft for review.** No code yet. This plan sets the stack, the data model, and the build order, and it builds in a way to iterate on the design before the app is built.
+Status: **Approved direction, Phase 0 (design) in progress.** Decisions from review are in section 0. This plan sets the stack, the data model, and the build order, and it builds in a way to iterate on the design before the app is built.
+
+---
+
+## 0. Decisions from review (2026-09-23)
+
+| Question | Answer | What it changes |
+|---|---|---|
+| Location | Corinth, Ontario (Bayham, Elgin County) | Default weather point about 42.78° N, 80.87° W. Adjustable in Settings. |
+| Users | Family and crew, mostly on phones | **Mobile-first** layout. Each person gets a login and every event records who logged it. Installable to the home screen (PWA). Public access through **Tailscale Funnel** so crew don't need to install anything. |
+| Past records | Mostly handwritten notes, some spreadsheets | **Import moves to Phase 1.** A CSV template for spreadsheets, plus a workflow for handwritten notes: photograph pages, have Claude transcribe them into the CSV template, review, import. |
+| Google Calendar | One-way push is a good start | Phase 3 stays as written. |
+| Units | Temperature in °C, rain in inches | Open-Meteo is called with `temperature_unit=celsius&precipitation_unit=inch`. Growing degree days use base 10 °C. |
+| Style | Clean and minimalist, clear and simple icons, titles and descriptions | Lucide icon set (open source). One icon per event type. Plain-language titles with a one-line description on every unit. Details in `DESIGN.md`. |
 
 ---
 
@@ -47,7 +60,9 @@ Status: **Draft for review.** No code yet. This plan sets the stack, the data mo
 | Charts | **Recharts** (MIT) | Simple weather and timeline charts that match the design system. |
 | Weather | **[Open-Meteo](https://open-meteo.com)** (AGPL server, free API) | No API key. Historical daily data back to 1940, so you can backfill weather for past seasons you enter now. Also gives forecasts, soil temperature and evapotranspiration. |
 | Google Calendar | Google Calendar API via OAuth (your own free Google Cloud project) | The app is the source of truth and pushes to a dedicated "Farm" calendar, so events show on your phone. |
-| Remote access | **Tailscale** (free personal plan) | Private. Only your devices can reach the app, with no ports open to the internet. If you later want a shareable public link, add a Cloudflare Tunnel (also free). |
+| Remote access | **Tailscale Funnel** (free personal plan) | Gives the Mac mini a stable public HTTPS address (`https://farm-mini.<your-tailnet>.ts.net`). Crew open it in their phone browser and log in; nothing to install. No router ports opened. PocketBase logins protect the data. |
+| Icons | **Lucide** (ISC) | Clean line icons, one per event type. |
+| Offline logging | PWA with a local queue | Phones in the field with weak signal save the event locally and send it when back in range (Phase 5). |
 | Hosting | **launchd** service on the Mac mini | Starts at boot and restarts on crash. No Docker Desktop overhead. |
 
 ### Alternatives considered
@@ -71,12 +86,17 @@ All collections live in PocketBase. Fields marked * are required.
 **tags** (crops and groupings)
 - name* (Strawberries, Cucumbers, Garlic, Garden, Fall Produce…), color, group (e.g. "Crop", "Field", "Client")
 
+**users** (PocketBase built-in)
+- name, email, role: owner / family / crew. Crew can add and edit their own events; owners manage types, tags and settings.
+
 **events**
 - title*, event_type* → event_types, start_date*, end_date, all_day
 - description, tags → tags (many), location/field
 - status: planned / done / skipped
 - `extra` (JSON): values for the type's extra fields
 - attachments (photos, labels)
+- logged_by → users (set automatically)
+- source: app / import-spreadsheet / import-handwritten
 - gcal_event_id, gcal_synced_at
 - weather_snapshot (JSON): conditions copied onto the event when it's marked done, so the record survives even if the weather cache is rebuilt
 
@@ -127,7 +147,7 @@ This is the part you asked to spend time on. It has three loops, from fastest to
 **Loop C: real use**
 - Use the app for a few weeks, then log friction as GitHub issues. Claude sessions can pick those up directly.
 
-**On the style links:** the Pinterest link (`pin.it/5s62nNpci`) couldn't be opened from this environment, and the Behance link goes to the site's home page, not a specific project. Before Loop A, please either describe the pin, or save a screenshot to `design/reference/` in this repo, or paste the image into chat. Links to specific Behance projects would also help.
+**Style direction (from review):** clean and minimalist, with clear and simple iconography, titles and descriptions. The first mockup is `design/mockups/dashboard.html`; decisions are recorded in `DESIGN.md`.
 
 ---
 
@@ -144,11 +164,11 @@ This is the part you asked to spend time on. It has three loops, from fastest to
 | Phase | Scope | Result |
 |---|---|---|
 | **0. Design** | Loop A mockups, then lock `DESIGN.md` and tokens | You've approved how it looks before it's built |
-| **1. Core MVP** | Repo scaffold, PocketBase schema, login, event CRUD, custom types and tags, calendar view, notes, style guide page | Usable for daily logging |
+| **1. Core MVP** | Repo scaffold, PocketBase schema, logins for family and crew, mobile-first event logging, custom types and tags, calendar view, notes, style guide page, **CSV import** (spreadsheets and transcribed handwritten notes) | Everyone can log from their phone; past records loaded |
 | **2. Weather** | Set farm location; daily job for forecast and archive; one-click backfill of past years; historical weather unit with event overlay | Weather context on every event |
 | **3. Google Calendar** | OAuth setup page, one-way push, sync status on each event | Events on your phone |
 | **4. History and analytics** | "This week last year", year-over-year strip, crop timing and GDD stats, notes-to-review | The planning payoff |
-| **5. Hardening** | CSV import (backfill old records from spreadsheets or notebooks), CSV export, automatic backups, launchd service, Tailscale setup guide, update script | Runs unattended on the Mac mini |
+| **5. Hardening** | Offline logging queue, CSV export, automatic backups, launchd service, Tailscale setup guide, update script | Runs unattended on the Mac mini |
 
 Each phase is a separate PR, so you can review and try each one before the next starts.
 
@@ -159,7 +179,7 @@ Each phase is a separate PR, so you can review and try each one before the next 
 - **Install:** download the PocketBase binary and clone this repo. `./scripts/build.sh` builds the frontend into PocketBase's `pb_public/`. A `launchd` plist starts it at boot.
 - **Update:** `./scripts/update.sh` pulls the latest code, rebuilds and restarts. Database migrations run automatically, because PocketBase migrations are committed to the repo.
 - **Backup:** PocketBase's scheduled backup writes nightly zips to a folder synced by iCloud or Google Drive. Time Machine covers the rest.
-- **Access:** install Tailscale on the Mac mini and on your laptop and phone. Then open `http://farm-mini:8090` (or similar) from anywhere.
+- **Access:** install Tailscale on the Mac mini and turn on Funnel for the app's port. Everyone uses `https://farm-mini.<your-tailnet>.ts.net` from any phone or computer and logs in. Add it to the phone home screen for an app-like icon.
 - **Mac settings:** turn on "Prevent automatic sleeping" and "Start up automatically after a power failure" in Energy settings.
 
 ---
@@ -183,11 +203,15 @@ Farm-event-tracker/
 
 ---
 
-## 10. Open questions for you
+## 10. Importing past records
 
-1. **Location:** what's the farm's approximate location (town or lat/long)? This sets the weather. Is there more than one site?
-2. **Users:** is this just you, or will family or crew log events too? Will they use phones in the field? That decides whether mobile layout is Phase 1 or later.
-3. **History:** do you have past years' records (spreadsheets, notebooks, calendar entries) to import? If so, CSV import moves up to Phase 1.
-4. **Calendar direction:** is one-way push to Google Calendar enough to start?
-5. **Units:** °F and inches, or °C and mm?
-6. **Style reference:** a description or screenshot of the Pinterest pin (see section 5).
+**Spreadsheets:** save as CSV with these columns (extra columns are ignored, missing ones left blank):
+
+```
+date, end_date, type, title, crops, field, description, product, rate, notes
+2025-10-08, , Planting, Garlic planted, Garlic, North field, Music, 4 beds, , Planted a week late
+```
+
+`crops` takes several tags separated by `;`. Unknown types or tags are created during import after you confirm them.
+
+**Handwritten notes:** photograph the pages, then send them to Claude with "transcribe these into the Farm Event Tracker CSV template". Check the CSV, then import it. Imported events are marked `import-handwritten` so they're easy to find and fix later.
