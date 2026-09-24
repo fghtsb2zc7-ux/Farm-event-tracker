@@ -1,0 +1,4 @@
+# PocketBase data and local test files
+pb_data/
+*.db
+.DS_Store

@@ -4,6 +4,12 @@ Status: **Approved direction, Phase 0 (design) in progress.** Decisions from rev
 
 ---
 
+## Self-hosted version (in progress, from 2026-09-24)
+
+The Mac mini version is built in `server/`: PocketBase v0.40.4, the same screens as the beta as an installable web app (home-screen icon on iPhone and Android, sign-in, works offline and syncs later), daily weather from Open-Meteo, and nightly backups. Setup: [docs/MAC-MINI-SETUP.md](docs/MAC-MINI-SETUP.md). Team guide: [docs/TEAM-GUIDE.md](docs/TEAM-GUIDE.md). Public access is through the free Tailscale Funnel address.
+
+Not in the self-hosted version yet: reading handwritten pages with Claude (use Claude in chat to turn photos into a spreadsheet, then import it), Google Calendar push, and an in-app feedback button.
+
 ## Live beta (from 2026-09-24)
 
 Before the Mac mini build, the team tests a **live beta** published as a Claude artifact (`app-beta/farm-log.html`). It's a single page with the same screens as the mockup, and it saves to the artifact's shared database, so everyone sees the same data live. It starts blank.

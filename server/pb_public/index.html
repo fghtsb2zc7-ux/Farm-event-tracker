@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fehr Grown Farm Log</title>
+<meta name="description" content="Farm events, orders and notes for Fehr Grown Farms.">
+<meta name="theme-color" content="#f6f6f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Farm Log">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Questrial&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="signed-out">
+<div class="login" id="login" hidden>
+  <form class="login-card" id="loginForm" novalidate>
+    <span class="wordmark"><span class="wm-top">fehr grown</span><span class="wm-farms">FARMS</span></span>
+    <h1>Sign in to the Farm Log</h1>
+    <p>Use the email and password the farm set up for you. You'll stay signed in on this device.</p>
+    <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" autocomplete="username" inputmode="email" required></div>
+    <div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" autocomplete="current-password" required></div>
+    <button class="btn primary" type="submit">Sign in</button>
+    <p class="meta" id="loginMsg" role="status"></p>
+    <p class="meta">Forgot your password? Ask the farm owner to reset it.</p>
+  </form>
+</div>
+
+<div class="acct-menu" id="acctMenu" hidden>
+  <b id="acctName"></b>
+  <span class="meta" id="acctEmail"></span>
+  <p class="tip-install">To put the Farm Log on your home screen: on iPhone, tap Share then Add to Home Screen. On Android, tap the menu then Install app.</p>
+  <button class="btn outline sm" type="button" id="signOut">Sign out</button>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <a class="wordmark" href="#dashboard" data-view="dashboard" aria-label="Fehr Grown Farms, dashboard"><span class="wm-top">fehr grown</span><span class="wm-farms">FARMS</span></a>
+    <p class="brand-sub"><svg class="icon sm" viewBox="0 0 24 24" data-i="map-pin"></svg><span id="todayLabel">Corinth, ON</span></p>
+  </div>
+  <nav class="nav" aria-label="Main">
+    <a href="#dashboard" data-view="dashboard" aria-current="page"><svg class="icon sm" viewBox="0 0 24 24" data-i="house"></svg>Dashboard</a>
+    <a href="#calendar" data-view="calendar"><svg class="icon sm" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+    <a href="#orders" data-view="orders"><svg class="icon sm" viewBox="0 0 24 24" data-i="shopping-basket"></svg>Orders</a>
+    <a href="#history" data-view="history"><svg class="icon sm" viewBox="0 0 24 24" data-i="history"></svg>History</a>
+    <a href="#notes" data-view="notes"><svg class="icon sm" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
+    <a href="#import" data-view="import" class="write-only"><svg class="icon sm" viewBox="0 0 24 24" data-i="upload"></svg>Import</a>
+  </nav>
+  <button class="avatar" id="avatar" type="button" aria-label="Your account"><svg class="icon sm" viewBox="0 0 24 24" data-i="user"></svg></button>
+</header>
+
+<div class="beta-bar" id="betaBar">
+  <span class="status-dot" id="statusDot"></span>
+  <span id="statusText">Connecting…</span>
+  <span class="spacer"></span>
+  <button class="btn sm outline" type="button" id="feedbackBtn" hidden><svg class="icon sm" viewBox="0 0 24 24" data-i="message-square-plus"></svg>Give feedback</button>
+</div>
+
+<main class="grid" id="v-dashboard">
+
+  <!-- Log an event -->
+  <section class="unit write-only" id="u-log" aria-labelledby="h-log">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
+      <div><h2 id="h-log">Log an event</h2><p>Record what happened, or pick a future date to plan it.</p></div>
+      <span class="spacer"></span>
+      <button class="btn ghost sheet-close" type="button" id="closeSheet" aria-label="Close"><svg class="icon" viewBox="0 0 24 24" data-i="x"></svg></button>
+    </div>
+    <form class="form" id="logForm" novalidate>
+      <div class="field">
+        <span class="label" id="typeLabel">Type</span>
+        <div class="type-picker" role="group" aria-labelledby="typeLabel" id="typePicker"></div>
+      </div>
+      <div class="field combo" id="whatCombo">
+        <label for="f-title" id="whatLabel">Chemical</label>
+        <div class="combo-box">
+          <input id="f-title" role="combobox" aria-expanded="false" aria-controls="whatList" aria-autocomplete="list" autocomplete="off">
+          <button type="button" class="combo-toggle" id="whatToggle" tabindex="-1" aria-label="Show saved list"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-down"></svg></button>
+        </div>
+        <div class="combo-list" id="whatList" role="listbox" aria-labelledby="whatLabel" hidden></div>
+      </div>
+      <div class="extra" id="extra"></div>
+      <div class="field"><label for="f-date">Date</label><input id="f-date" type="date"></div>
+      <div class="field">
+        <div class="label-row"><span class="label" id="fieldLabel">Fields</span><button type="button" class="link-btn" data-edit="fields"></button></div>
+        <div class="chips" role="group" aria-labelledby="fieldLabel" id="fieldPicker"></div>
+      </div>
+      <div class="field">
+        <div class="label-row"><span class="label" id="cropLabel">Crops</span><button type="button" class="link-btn" data-edit="crops"></button></div>
+        <div class="chips" role="group" aria-labelledby="cropLabel" id="cropPicker"></div>
+      </div>
+      <div class="field">
+        <label for="f-desc">Description</label>
+        <textarea id="f-desc" placeholder="Details, conditions, who was there"></textarea>
+      </div>
+      <button class="btn primary" type="submit" id="logSubmit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save event</button>
+    </form>
+  </section>
+
+  <!-- Next 14 days -->
+  <section class="unit" id="u-up" aria-labelledby="h-up">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>
+      <div><h2 id="h-up">Next 14 days</h2><p>Planned work, with the 7-day forecast for Corinth.</p></div>
+    </div>
+    <div id="forecast"></div>
+    <div class="row-list" id="upcoming"></div>
+  </section>
+
+  <!-- This season vs past years -->
+  <section class="unit" id="u-cmp" aria-labelledby="h-cmp">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="chart-column"></svg>
+      <div><h2 id="h-cmp">This season vs past years</h2><p>Harvest, temperature, season heat and key dates, compared with the last two years.</p></div>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between">
+      <div class="seg" role="group" aria-label="Crop" id="cmpCrop"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="cmp-grid">
+      <div class="panel">
+        <h3>Harvest volume</h3>
+        <p class="meta" id="hvNote"></p>
+        <div class="hv" id="hv"></div>
+      </div>
+      <div class="panel">
+        <h3>Monthly average temperature</h3>
+        <p class="meta" id="tNote"></p>
+        <div class="chart-wrap" id="tchart"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Season heat</h3>
+      <p class="meta">Growing degree days (base 10 °C) since April 1, with this crop's key dates marked on each year's line.</p>
+      <div class="chart-wrap" id="chart"></div>
+      <div class="table-wrap"><table id="wxTable"></table></div>
+    </div>
+    <div class="panel">
+      <h3>Season timeline</h3>
+      <p class="meta">Every event for this crop by year. Key dates are labelled. Hover over or tap a mark for details.</p>
+      <div class="chart-wrap" id="tl"></div>
+      <div class="type-legend" id="tlLegend"></div>
+      <div class="table-wrap"><table id="keyTable"></table></div>
+    </div>
+  </section>
+
+  <!-- Order pickups -->
+  <section class="unit" id="u-orders" aria-labelledby="h-orders">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="shopping-basket"></svg>
+      <div><h2 id="h-orders">Order pickups</h2><p>Customers coming to the farm in the next 7 days.</p></div>
+      <span class="spacer"></span>
+      <a href="#orders" data-view="orders" class="link-btn">All orders<svg class="icon sm" viewBox="0 0 24 24" data-i="chevron-right"></svg></a>
+    </div>
+    <div class="row-list" id="ordersDash"></div>
+  </section>
+
+  <!-- This week in past years -->
+  <section class="unit" id="u-past" aria-labelledby="h-past">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>
+      <div><h2 id="h-past">This week in past years</h2><p id="pastSub">This week in earlier seasons.</p></div>
+    </div>
+    <div class="years" id="past"></div>
+  </section>
+
+  <!-- Notes for next time -->
+  <section class="unit" id="u-notes" aria-labelledby="h-notes">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>
+      <div><h2 id="h-notes">Notes for next time</h2><p>Changes planned for this season, soonest first.</p></div>
+      <span class="spacer"></span>
+      <a href="#notes" data-view="notes" class="link-btn">All notes<svg class="icon sm" viewBox="0 0 24 24" data-i="chevron-right"></svg></a>
+    </div>
+    <div id="notes"></div>
+  </section>
+
+  <!-- Recently logged -->
+  <section class="unit" id="u-recent" aria-labelledby="h-recent">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="leaf"></svg>
+      <div><h2 id="h-recent">Recently logged</h2><p>The latest entries from family and crew.</p></div>
+    </div>
+    <div class="row-list" id="recent"></div>
+  </section>
+</main>
+
+<!-- Calendar -->
+<section class="view" id="v-calendar" hidden>
+  <div class="unit">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>
+      <div><h2>Calendar</h2><p>Everything planned and logged, plus order pickups. Select a day to see its events.</p></div>
+    </div>
+    <div class="toolbar">
+      <div class="month-nav">
+        <button class="btn ghost" type="button" id="calPrev" aria-label="Previous month"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-left"></svg></button>
+        <h3 id="calLabel"></h3>
+        <button class="btn ghost" type="button" id="calNext" aria-label="Next month"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-right"></svg></button>
+      </div>
+      <div class="type-legend" id="calLegend"></div>
+    </div>
+    <div class="cal-scroll"><div class="cal" id="cal"></div></div>
+    <div id="calDay"></div>
+  </div>
+</section>
+
+<!-- Orders -->
+<section class="view" id="v-orders" hidden>
+  <div class="orders-layout">
+    <div class="unit write-only" id="oFormUnit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
+        <div><h2>New order</h2><p>Phone calls, Facebook messages and walk-ins.</p></div>
+      </div>
+      <form class="form" id="orderForm" novalidate>
+        <div class="two">
+          <div class="field"><label for="o-name">Name</label><input id="o-name" list="customers" autocomplete="off" placeholder="Customer name"></div>
+          <div class="field"><label for="o-phone">Phone</label><input id="o-phone" type="tel" autocomplete="off" placeholder="519-555-0100"></div>
+        </div>
+        <datalist id="customers"></datalist>
+        <div class="field"><label for="o-items">What they ordered</label><textarea id="o-items" placeholder="e.g. 2 bushels pickling cucumbers, 5 lb garlic"></textarea></div>
+        <div class="two">
+          <div class="field"><label for="o-date">Pickup date</label><input id="o-date" type="date"></div>
+          <div class="field"><label for="o-time">Pickup time</label><input id="o-time" type="time" value="10:00"></div>
+        </div>
+        <div class="two">
+          <div class="field"><label for="o-total">Order total ($)</label><input id="o-total" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+          <div class="field"><label for="o-paid">Paid so far ($)</label><input id="o-paid" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+        </div>
+        <button class="btn primary" type="submit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save order</button>
+      </form>
+    </div>
+    <div class="unit" id="oListUnit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="shopping-basket"></svg>
+        <div><h2>Orders</h2><p>Who's coming, what they ordered and who still owes.</p></div>
+      </div>
+      <div class="stats" id="oStats"></div>
+      <div class="seg" role="group" aria-label="Show" id="oFilter">
+        <button type="button" data-f="upcoming" aria-pressed="true">Upcoming</button><button type="button" data-f="unpaid" aria-pressed="false">Unpaid</button><button type="button" data-f="done" aria-pressed="false">Picked up</button>
+      </div>
+      <div id="oList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- History -->
+<section class="view" id="v-history" hidden>
+  <div class="unit">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>
+      <div><h2>History</h2><p>Every logged event. Filter by year, type or crop.</p></div>
+    </div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Season" id="hYear"></div>
+      <div class="filters">
+        <div class="field"><label for="hType">Type</label><select id="hType"></select></div>
+        <div class="field"><label for="hCrop">Crop</label><select id="hCrop"></select></div>
+      </div>
+    </div>
+    <p class="meta" id="hCount"></p>
+    <div id="hList"></div>
+  </div>
+</section>
+
+<!-- Notes -->
+<section class="view" id="v-notes" hidden>
+  <div class="notes-layout">
+    <div class="unit write-only">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
+        <div><h2>Add a note</h2><p>Something to change or remember next season.</p></div>
+      </div>
+      <form class="form" id="noteForm" novalidate>
+        <div class="field"><label for="n-text">Note</label><textarea id="n-text" placeholder="e.g. Order garlic seed by August."></textarea></div>
+        <div class="two">
+          <div class="field"><label for="n-crop">Crop</label><select id="n-crop"></select></div>
+          <div class="field"><label for="n-due">Remind me</label><input id="n-due" type="month"></div>
+        </div>
+        <button class="btn primary" type="submit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save note</button>
+      </form>
+    </div>
+    <div class="unit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>
+        <div><h2>All notes</h2><p>Mark a note resolved once you've made the change.</p></div>
+        <span class="spacer"></span>
+        <div class="seg" role="group" aria-label="Show" id="nFilter">
+          <button type="button" data-f="open" aria-pressed="true">Open</button><button type="button" data-f="done" aria-pressed="false">Resolved</button>
+        </div>
+      </div>
+      <div id="nList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Import -->
+<section class="view" id="v-import" hidden>
+  <div class="import-layout">
+    <div class="unit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="file-spreadsheet"></svg>
+        <div><h2>Import a spreadsheet</h2><p>Excel (.xlsx, .xls) or CSV. One row per event.</p></div>
+      </div>
+      <label class="drop" id="xlsDrop">
+        <svg class="icon" viewBox="0 0 24 24" data-i="upload"></svg>
+        <b>Choose a spreadsheet</b><span class="meta">or drop it here</span>
+        <input type="file" id="xlsFile" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+      </label>
+      <div id="xlsStep" hidden class="form">
+        <div class="two">
+          <div class="field"><label for="xlsSheet">Sheet</label><select id="xlsSheet"></select></div>
+          <div class="field"><label for="xlsType">Type for rows without one</label><select id="xlsType"></select></div>
+        </div>
+        <div class="field"><label for="xlsYear">Year for dates without one</label><input id="xlsYear" type="number" min="1990" max="2100"></div>
+        <p class="meta">Match your columns. The best guesses are already picked.</p>
+        <div class="map-grid" id="xlsMap"></div>
+        <div class="table-wrap"><table class="preview" id="xlsPreview"></table></div>
+        <p class="meta" id="xlsSummary"></p>
+        <button class="btn primary" type="button" id="xlsImport"><svg class="icon" viewBox="0 0 24 24" data-i="upload"></svg>Import</button>
+        <p class="progress" id="xlsProgress"></p>
+      </div>
+    </div>
+
+    <div class="unit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="camera"></svg>
+        <div><h2>Import handwritten notes</h2><p>Photograph the pages. Claude reads them, you check the result, then import.</p></div>
+      </div>
+      <div id="hwUnavailable" class="empty-box" hidden><svg class="icon sm" viewBox="0 0 24 24" data-i="info"></svg><span>Reading handwriting isn't built into this version yet. For now, send the photos to Claude in chat and ask for them as a spreadsheet using the Farm Log columns, then import that spreadsheet on the left.</span></div>
+      <div id="hwArea" class="form">
+        <label class="drop" id="hwDrop">
+          <svg class="icon" viewBox="0 0 24 24" data-i="image"></svg>
+          <b>Choose photos</b><span class="meta" id="hwLimit">JPEG or PNG, one page per photo</span>
+          <input type="file" id="hwFiles" accept="image/jpeg,image/png,image/webp" multiple>
+        </label>
+        <div class="thumbs" id="hwThumbs"></div>
+        <div class="two">
+          <div class="field"><label for="hwYear">Year these notes are from</label><input id="hwYear" type="number" min="1990" max="2100"></div>
+          <div class="field" style="justify-content:flex-end"><button class="btn primary" type="button" id="hwRead" disabled><svg class="icon" viewBox="0 0 24 24" data-i="camera"></svg>Read with Claude</button></div>
+        </div>
+        <p class="progress" id="hwProgress"></p>
+        <div class="hw-list" id="hwList"></div>
+        <button class="btn primary" type="button" id="hwImport" hidden><svg class="icon" viewBox="0 0 24 24" data-i="upload"></svg>Import checked rows</button>
+      </div>
+    </div>
+
+    <div class="unit wide">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="download"></svg>
+        <div><h2>Backup and move data</h2><p>Download everything as one file, or load a file downloaded from the beta or another Farm Log.</p></div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn outline" type="button" id="exportBtn"><svg class="icon" viewBox="0 0 24 24" data-i="download"></svg>Download all data</button>
+        <label class="btn outline" for="restoreFile"><svg class="icon" viewBox="0 0 24 24" data-i="upload"></svg>Load a Farm Log file</label>
+        <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+      </div>
+      <p class="progress" id="restoreProgress"></p>
+    </div>
+
+    <div class="unit wide">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>
+        <div><h2>Past imports</h2><p>Remove an import to undo it.</p></div>
+      </div>
+      <div id="impList"></div>
+    </div>
+  </div>
+</section>
+
+<div class="scrim" id="scrim"></div>
+<nav class="tabbar" aria-label="Main">
+  <a href="#dashboard" data-view="dashboard" aria-current="page"><svg class="icon" viewBox="0 0 24 24" data-i="house"></svg>Home</a>
+  <a href="#calendar" data-view="calendar"><svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+  <button class="add write-only" type="button" id="openSheet"><span class="plus"><svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg></span>Log</button>
+  <a href="#orders" data-view="orders"><svg class="icon" viewBox="0 0 24 24" data-i="shopping-basket"></svg>Orders</a>
+  <button type="button" id="moreBtn" aria-expanded="false" aria-controls="moreMenu"><svg class="icon" viewBox="0 0 24 24" data-i="ellipsis"></svg>More</button>
+</nav>
+<div class="more-menu" id="moreMenu" hidden>
+  <a href="#history" data-view="history"><svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>History</a>
+  <a href="#notes" data-view="notes"><svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
+  <a href="#import" data-view="import" class="write-only"><svg class="icon" viewBox="0 0 24 24" data-i="upload"></svg>Import</a>
+</div>
+<div class="toast" id="toast" role="status"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg><span id="toastText"></span></div>
+
+<script src="/vendor/pocketbase.umd.js"></script>
+<script src="/js/adapter.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
