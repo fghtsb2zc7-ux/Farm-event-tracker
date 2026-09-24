@@ -1,0 +1,1661 @@
+<title>Fehr Grown Farm Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Questrial&display=swap">
+<style>
+/* ── Design tokens: Fehr Grown Farms brand. Edit these to restyle everything ── */
+:root {
+  --brand-grey: #424244;
+  --brand-green: #8ec444;
+  --on-brand: #1d2a0e;
+
+  --bg: #f6f6f4;
+  --surface: #ffffff;
+  --surface-2: #efefec;
+  --ink: #2a2a2c;
+  --ink-2: #4f5054;
+  --muted: #76777b;
+  --line: #e3e3df;
+  --accent: #4d7f1e;
+  --accent-ink: #1d2a0e;
+  --accent-soft: #edf5e1;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0dc;
+
+  /* Event types (changeable later in Settings) */
+  --t-spray: #2a78d6;
+  --t-harvest: #eb6834;
+  --t-planting: #1baf7a;
+  --t-nutrient: #c98500;
+  --t-pickup: #d55181;
+  --t-garden: #008300;
+
+  /* Chart series: this year, last year, two years ago */
+  --y0: #2a78d6;
+  --y1: #eb6834;
+  --y2: #1baf7a;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --gap: 16px;
+  --font: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-brand: "Questrial", "Century Gothic", "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --brand-grey: #e6e6e8;
+    --bg: #141414;
+    --surface: #1c1c1d;
+    --surface-2: #262628;
+    --ink: #eeeeee;
+    --ink-2: #c2c2c6;
+    --muted: #8e8f94;
+    --line: #333336;
+    --accent: #a6d86a;
+    --accent-ink: #16200a;
+    --accent-soft: #26301a;
+    --warn: #e0a54a;
+    --warn-soft: #33271a;
+    --t-spray: #3987e5; --t-harvest: #d95926; --t-planting: #199e70;
+    --t-nutrient: #c98500; --t-pickup: #d55181; --t-garden: #2f9a3a;
+    --y0: #3987e5; --y1: #d95926; --y2: #199e70;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --brand-grey: #e6e6e8;
+  --bg: #141414;
+  --surface: #1c1c1d;
+  --surface-2: #262628;
+  --ink: #eeeeee;
+  --ink-2: #c2c2c6;
+  --muted: #8e8f94;
+  --line: #333336;
+  --accent: #a6d86a;
+  --accent-ink: #16200a;
+  --accent-soft: #26301a;
+  --warn: #e0a54a;
+  --warn-soft: #33271a;
+  --t-spray: #3987e5; --t-harvest: #d95926; --t-planting: #199e70;
+  --t-nutrient: #c98500; --t-pickup: #d55181; --t-garden: #2f9a3a;
+  --y0: #3987e5; --y1: #d95926; --y2: #199e70;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--font);
+  padding: 0 16px;
+  font-variant-numeric: tabular-nums;
+}
+h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.icon { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.icon.sm { width: 15px; height: 15px; }
+
+/* ── Top bar ───────────────────────────────────────────────────────── */
+.topbar {
+  max-width: 1240px; margin: 0 auto;
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding-block: 20px 12px;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.brand h1 { font-size: 17px; line-height: 1.2; }
+.brand p { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.nav { display: flex; gap: 4px; margin-left: auto; }
+.nav a { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; color: var(--ink-2); text-decoration: none; font-size: 14px; font-weight: 500; }
+.nav a[aria-current] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+.nav a:hover { color: var(--ink); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); color: var(--ink-2); display: grid; place-items: center; font-size: 12px; font-weight: 600; flex: none; }
+.mock-note { max-width: 1240px; margin: 0 auto 12px; font-size: 12.5px; color: var(--muted); }
+
+/* ── Dashboard grid ────────────────────────────────────────────────── */
+.grid {
+  max-width: 1240px; margin: 0 auto; padding-bottom: 40px;
+  display: grid; gap: var(--gap);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    "log log log log log up up up up up up up"
+    "cmp cmp cmp cmp cmp cmp cmp cmp cmp cmp cmp cmp"
+    "orders orders orders orders orders orders past past past past past past"
+    "notes notes notes notes notes notes recent recent recent recent recent recent";
+}
+.unit { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px 20px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.unit-head { display: flex; align-items: flex-start; gap: 10px; }
+.unit-head .icon { margin-top: 2px; color: var(--accent); }
+.unit-head h2 { font-size: 16px; line-height: 1.3; }
+.unit-head p { font-size: 13px; color: var(--muted); }
+.unit-head .spacer { flex: 1; }
+#u-log { grid-area: log; }
+#u-up { grid-area: up; }
+#u-cmp { grid-area: cmp; }
+#u-orders { grid-area: orders; }
+#u-notes { grid-area: notes; }
+#u-past { grid-area: past; }
+#u-recent { grid-area: recent; }
+
+/* ── Shared bits ───────────────────────────────────────────────────── */
+.type-dot { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); }
+.tag { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+.meta { font-size: 13px; color: var(--muted); }
+.row-list { display: flex; flex-direction: column; }
+.row { display: flex; gap: 12px; align-items: flex-start; padding-block: 10px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; padding-top: 0; }
+.row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.row-title { font-weight: 500; line-height: 1.35; }
+.row-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.date-col { width: 44px; flex: none; text-align: center; line-height: 1.1; }
+.date-col b { display: block; font-size: 18px; font-weight: 600; }
+.date-col span { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 1px 8px; border-radius: 999px; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.ok { background: var(--accent-soft); color: var(--accent); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: var(--radius-sm); padding: 10px 16px; font-weight: 600; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--ink-2); padding: 6px 8px; }
+.btn.ghost:hover { background: var(--surface-2); }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg { max-width: 100%; overflow-x: auto; }
+.seg button { white-space: nowrap; flex: none; border: 0; background: transparent; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+
+/* ── Quick log ─────────────────────────────────────────────────────── */
+.form { display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label, .field > .label { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.field input, .field textarea, .field select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: 9px 11px; }
+.field textarea { resize: vertical; min-height: 64px; }
+.field input:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.type-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.type-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 2px 8px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--ink-2); }
+.type-opt .icon { color: var(--c); width: 20px; height: 20px; }
+.type-opt[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 9%, var(--surface)); color: var(--ink); box-shadow: inset 0 0 0 1px var(--c); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; color: var(--ink-2); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.extra { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.extra .field input { background: var(--surface); }
+.extra-title { grid-column: 1 / -1; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.sheet-close { display: none; }
+.combo { position: relative; }
+.combo-box { position: relative; }
+.combo-box input { padding-right: 40px; }
+.combo-toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: none; color: var(--muted); padding: 6px; cursor: pointer; border-radius: 6px; display: grid; }
+.combo-list { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; z-index: 15; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: 0 10px 28px rgb(0 0 0 / .12); max-height: 280px; overflow-y: auto; padding: 4px; }
+.opt { display: flex; align-items: center; border-radius: 6px; }
+.opt.active, .opt:hover { background: var(--surface-2); }
+.opt-pick { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 1px; }
+.opt-pick b { font-weight: 500; }
+.opt-pick small { font-size: 12px; color: var(--muted); }
+.opt-del { border: 0; background: none; color: var(--muted); padding: 8px; cursor: pointer; border-radius: 6px; display: grid; }
+.opt-del:hover { color: var(--ink); background: var(--line); }
+.opt-add { width: 100%; text-align: left; border: 0; border-top: 1px solid var(--line); background: none; padding: 10px; cursor: pointer; color: var(--accent); font-weight: 500; display: flex; gap: 6px; align-items: center; }
+.opt-add.active, .opt-add:hover { background: var(--accent-soft); }
+.opt-empty { padding: 10px; font-size: 13px; color: var(--muted); }
+.label-row { display: flex; align-items: baseline; justify-content: space-between; }
+.label-row .label { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.link-btn { white-space: nowrap; text-decoration: none; border: 0; background: none; color: var(--accent); font-size: 13px; font-weight: 500; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px; }
+.chip .x { display: inline-grid; margin: -2px -5px -2px 4px; vertical-align: middle; }
+.chips.editing .chip { background: var(--surface-2); border-style: dashed; color: var(--ink); }
+.chip-add { display: inline-flex; gap: 4px; }
+.chip-add input { width: 130px; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 3px 11px; font-size: 13px; }
+.chip-add button { border: 0; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 3px 11px; font-size: 13px; font-weight: 500; cursor: pointer; }
+
+/* ── Upcoming + forecast ───────────────────────────────────────────── */
+.forecast { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.fc { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px; border-radius: var(--radius-sm); font-size: 12.5px; }
+.fc .d { color: var(--muted); font-weight: 500; }
+.fc .icon { width: 20px; height: 20px; color: var(--ink-2); }
+.fc .hi { font-weight: 600; font-size: 14px; }
+.fc .lo { color: var(--muted); }
+.fc .rain { color: var(--t-spray); font-weight: 500; }
+.fc.today { background: var(--surface-2); }
+.fc.wet .icon { color: var(--t-spray); }
+.check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); display: grid; place-items: center; cursor: pointer; flex: none; color: transparent; margin-top: 3px; }
+.check[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.row.done .row-title { text-decoration: line-through; color: var(--muted); }
+.hint { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 6px; align-items: flex-start; }
+.hint .icon { color: var(--accent); margin-top: 2px; }
+
+/* ── Weather chart ─────────────────────────────────────────────────── */
+.chart-wrap { position: relative; }
+.chart-wrap svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart-wrap .grid-line { stroke: var(--line); stroke-width: 1; }
+.chart-wrap .axis-text { fill: var(--muted); font-size: 11.5px; }
+.chart-wrap .end-label { font-size: 12px; font-weight: 600; fill: var(--ink); }
+.chart-wrap .end-sub { font-size: 11.5px; fill: var(--muted); }
+.chart-wrap .xhair { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; }
+.tip { position: absolute; top: 0; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 18px rgb(0 0 0 / .08); min-width: 150px; }
+.tip b { display: block; margin-bottom: 4px; }
+.tip .tr { display: flex; align-items: center; gap: 6px; }
+.tip .tr i { width: 10px; height: 2px; border-radius: 1px; background: var(--c); }
+.tip .tr span:last-child { margin-left: auto; font-weight: 600; }
+.tip .ev { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); color: var(--ink-2); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 2px; border-radius: 1px; background: var(--c); }
+.legend .mk { width: 9px; height: 9px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink-2); }
+.table-wrap { overflow-x: auto; }
+.cmp-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; }
+.panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.panel h3 { font-size: 14px; }
+.panel + .panel, .cmp-grid + .panel { border-top: 1px solid var(--line); padding-top: 16px; }
+.cmp-grid .panel + .panel { border-top: 0; padding-top: 0; }
+.hv { display: flex; flex-direction: column; gap: 14px; padding-top: 4px; }
+.hv-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 13.5px; }
+.hv-y { font-weight: 600; }
+.hv-track { position: relative; height: 16px; }
+.hv-bar, .hv-full { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; }
+.hv-bar { background: var(--c); }
+.hv-full { background: color-mix(in srgb, var(--c) 28%, transparent); }
+.hv-v { white-space: nowrap; text-align: right; min-width: 88px; }
+.tl-label { fill: var(--ink-2); font-size: 11.5px; font-weight: 600; }
+.tl-mk { cursor: pointer; outline: none; }
+.tl-mk:focus-visible .dot { stroke: var(--ink); }
+.type-legend i.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); display: inline-block; }
+.type-legend i.big { width: 14px; height: 14px; }
+.type-legend i.hollow { background: var(--surface); box-shadow: inset 0 0 0 2px var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: right; font-weight: 500; color: var(--muted); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; padding-left: 0; }
+td:first-child { font-weight: 600; }
+td:first-child i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-right: 8px; }
+tr:last-child td { border-bottom: 0; }
+
+/* ── Orders ────────────────────────────────────────────────────────── */
+.orders-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--gap); align-items: start; grid-template-areas: "form list"; }
+#oFormUnit { grid-area: form; }
+#oListUnit { grid-area: list; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat b { font-size: 20px; font-weight: 600; line-height: 1.2; }
+.stat span { font-size: 12.5px; color: var(--muted); }
+.day-head { font-size: 12.5px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; padding-top: 14px; }
+.day-head:first-child { padding-top: 0; }
+.order { display: flex; gap: 12px; padding-block: 12px; border-top: 1px solid var(--line); }
+.day-head + .order { border-top: 0; padding-top: 8px; }
+.order.done .row-title, .order.done .o-items { color: var(--muted); }
+.o-items { font-size: 14px; }
+.o-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.btn.sm { padding: 6px 12px; font-size: 13px; border-radius: 999px; }
+.btn.outline { background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.btn.outline:hover { background: var(--surface-2); }
+.pill.new { background: color-mix(in srgb, var(--t-spray) 14%, transparent); color: var(--t-spray); }
+.share { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 1px dashed var(--line); border-radius: var(--radius-sm); font-size: 13.5px; color: var(--ink-2); }
+.share .icon { color: var(--accent); margin-top: 2px; }
+.share div { flex: 1; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.more-menu { position: fixed; right: 8px; bottom: calc(72px + env(safe-area-inset-bottom, 0px)); z-index: 22; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 28px rgb(0 0 0 / .16); padding: 6px; display: flex; flex-direction: column; min-width: 170px; }
+.more-menu a { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 8px; color: var(--ink); text-decoration: none; font-weight: 500; }
+.more-menu a:hover, .more-menu a[aria-current] { background: var(--surface-2); }
+
+/* ── Notes ─────────────────────────────────────────────────────────── */
+.note { display: flex; flex-direction: column; gap: 6px; padding-block: 12px; border-top: 1px solid var(--line); }
+.note:first-child { border-top: 0; padding-top: 0; }
+.note p { font-size: 14px; }
+.note .row-tags { justify-content: space-between; }
+
+/* ── Past years ────────────────────────────────────────────────────── */
+.years { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.year { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.year-head { display: flex; align-items: baseline; justify-content: space-between; }
+.year-head h3 { font-size: 15px; }
+.wx-strip { display: flex; gap: 12px; font-size: 12.5px; color: var(--ink-2); flex-wrap: wrap; }
+.wx-strip span { display: inline-flex; align-items: center; gap: 4px; }
+.mini { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; line-height: 1.35; }
+.mini .type-dot { width: 22px; height: 22px; border-radius: 6px; }
+.mini .type-dot .icon { width: 13px; height: 13px; }
+
+/* ── Toast + bottom nav (phone) ────────────────────────────────────── */
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 500; display: flex; gap: 8px; align-items: center; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 30; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.tabbar { display: none; }
+.scrim { display: none; }
+
+/* ── Views ─────────────────────────────────────────────────────────── */
+.view { max-width: 1240px; margin: 0 auto; padding-bottom: 40px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.month-nav { display: flex; align-items: center; gap: 4px; }
+.month-nav h3 { font-size: 16px; min-width: 150px; text-align: center; }
+.type-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-2); }
+.type-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.type-legend .icon { color: var(--c); width: 15px; height: 15px; }
+.cal-scroll { overflow-x: auto; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.cal .dow { font-size: 12px; color: var(--muted); font-weight: 500; padding: 6px 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-transform: uppercase; letter-spacing: .06em; }
+.cal .day { min-height: 96px; padding: 6px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); text-align: left; display: flex; flex-direction: column; gap: 3px; cursor: pointer; border-top: 0; border-left: 0; min-width: 0; }
+.cal .day:hover { background: var(--surface-2); }
+.cal .day.out { background: var(--bg); color: var(--muted); }
+.cal .day[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--accent); }
+.cal .num { font-size: 13px; font-weight: 500; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; }
+.cal .day.today .num { background: var(--accent); color: var(--accent-ink); }
+.cal-ev { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 1.3; padding: 1px 5px; border-radius: 5px; background: color-mix(in srgb, var(--c) 12%, transparent); color: var(--ink); min-width: 0; }
+.cal-ev .icon { width: 12px; height: 12px; color: var(--c); }
+.cal-ev span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal .evs { display: contents; }
+.cal-more { font-size: 11.5px; color: var(--muted); padding-left: 5px; }
+.day-list h3 { font-size: 15px; margin-bottom: 8px; }
+.filters { display: flex; gap: 10px; flex-wrap: wrap; }
+.filters .field { flex-direction: row; align-items: center; gap: 8px; }
+.filters select, .field select { border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: 7px 10px; }
+.month-group h3 { font-size: 13px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; padding-block: 16px 6px; }
+.month-group:first-child h3 { padding-top: 0; }
+.src { font-size: 11.5px; color: var(--muted); border: 1px dashed var(--line); border-radius: 999px; padding: 0 7px; }
+.notes-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--gap); align-items: start; }
+.note .btn.ghost { align-self: flex-start; font-size: 13px; }
+.empty { color: var(--muted); font-size: 14px; padding-block: 12px; }
+
+@media (max-width: 980px) {
+  .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "log up" "cmp cmp" "orders past" "notes recent"; }
+}
+@media (max-width: 720px) {
+  body { padding-bottom: 88px; }
+  .nav { display: none; }
+  .topbar { padding-block: 14px 8px; }
+  .topbar .avatar { margin-left: auto; }
+  .grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "up" "orders" "past" "cmp" "notes" "recent"; gap: 12px; }
+  .cmp-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .cmp-grid .panel + .panel { border-top: 1px solid var(--line); padding-top: 16px; }
+  .orders-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "list" "form"; gap: 12px; }
+  .stat b { font-size: 17px; }
+  .unit { padding: 16px; }
+  .years { grid-template-columns: 1fr; }
+  .fc { padding: 6px 0; font-size: 12px; }
+  #u-log { display: none; }
+  body.sheet-open #u-log { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; max-height: 88%; overflow-y: auto; border-radius: 18px 18px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -10px 30px rgb(0 0 0 / .18); }
+  body.sheet-open .scrim { display: block; position: fixed; inset: 0; background: rgb(0 0 0 / .35); z-index: 24; }
+  .sheet-close { display: inline-flex; }
+  .toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .notes-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .cal .day { min-height: 54px; padding: 4px; align-items: center; }
+  .cal .dow { padding: 4px 0; text-align: center; font-size: 11px; }
+  .cal-ev { padding: 0; background: none; }
+  .cal-ev span, .cal-more { display: none; }
+  .cal .evs { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+  .cal-ev .icon { width: 13px; height: 13px; }
+  .filters .field { flex: 1; }
+  .filters select { flex: 1; min-width: 0; }
+  .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); }
+  .tabbar a, .tabbar button { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 500; color: var(--muted); text-decoration: none; background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  .tabbar a[aria-current] { color: var(--accent); }
+  .tabbar .add span.plus { width: 46px; height: 46px; margin-top: -18px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; box-shadow: 0 4px 12px rgb(0 0 0 / .18); }
+  .tabbar .add { color: var(--ink); }
+  .tabbar button[aria-current] { color: var(--accent); }
+}
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+
+/* ── Brand + beta additions ────────────────────────────────────────── */
+.wordmark { display: inline-flex; flex-direction: column; line-height: .95; font-family: var(--font-brand); color: var(--brand-grey); text-decoration: none; }
+.wordmark .wm-top { font-size: 24px; letter-spacing: -.01em; white-space: nowrap; }
+.wordmark .wm-farms { font-size: 13px; color: var(--brand-green); letter-spacing: .16em; align-self: flex-end; margin-top: 2px; }
+.brand { gap: 14px; }
+.brand-sub { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.unit-head h2, .view h2 { font-family: var(--font-brand); font-weight: 400; font-size: 18px; letter-spacing: .005em; }
+.btn.primary { background: var(--brand-green); color: var(--on-brand); }
+.btn.primary:hover { filter: brightness(.96); }
+.brand-mark, .mock-note { display: none; }
+.avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.beta-bar { max-width: 1240px; margin: 0 auto 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); background: var(--accent-soft); border-radius: var(--radius-sm); padding: 8px 12px; }
+.beta-bar .icon { color: var(--accent); }
+.beta-bar b { font-weight: 600; color: var(--ink); }
+.beta-bar .spacer { flex: 1; }
+.beta-bar.warn { background: var(--warn-soft); }
+.beta-bar.warn .icon { color: var(--warn); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.status-dot.live { background: var(--brand-green); }
+.empty-box { border: 1px dashed var(--line); border-radius: var(--radius-sm); padding: 14px; font-size: 13.5px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+.empty-box .icon { margin-top: 1px; }
+.pill.late { background: var(--warn-soft); color: var(--warn); }
+.del-btn { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 12.5px; padding: 4px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; }
+.del-btn:hover { background: var(--surface-2); color: var(--ink); }
+.del-btn.armed { color: #c0392b; background: color-mix(in srgb, #c0392b 10%, transparent); }
+body.readonly .write-only { display: none !important; }
+
+/* Import */
+.import-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.import-layout > .wide { grid-column: 1 / -1; }
+.drop { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 22px 14px; color: var(--ink-2); cursor: pointer; background: var(--bg); }
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop .icon { width: 26px; height: 26px; color: var(--accent); }
+.drop b { color: var(--ink); font-weight: 600; }
+.drop input { display: none; }
+.map-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.map-grid .field select, .field select { width: 100%; }
+.preview { font-size: 13px; }
+.preview td, .preview th { text-align: left; white-space: normal; }
+.preview td:first-child { font-weight: 500; }
+.bad { color: var(--warn); }
+.thumbs { display: flex; gap: 6px; flex-wrap: wrap; }
+.thumbs img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+.hw-list { display: flex; flex-direction: column; gap: 10px; }
+.hw-row { display: grid; grid-template-columns: 24px 140px 120px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.hw-row.unsure { border-color: var(--warn); }
+.hw-row input, .hw-row select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 6px 8px; font-size: 13.5px; }
+.hw-row .hw-desc { grid-column: 2 / -1; }
+.progress { font-size: 13px; color: var(--ink-2); }
+.imp-row { display: flex; gap: 10px; align-items: center; padding-block: 10px; border-top: 1px solid var(--line); }
+.imp-row:first-child { border-top: 0; }
+
+@media (max-width: 720px) {
+  .wordmark .wm-top { font-size: 20px; }
+  .brand-sub { font-size: 12px; }
+  .import-layout { grid-template-columns: minmax(0, 1fr); }
+  .hw-row { grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr); }
+  .hw-row .hw-what, .hw-row .hw-crops, .hw-row .hw-desc { grid-column: 2 / -1; }
+  .tabbar { grid-template-columns: repeat(5, 1fr); }
+}
+
+</style>
+
+<header class="topbar">
+  <div class="brand">
+    <a class="wordmark" href="#dashboard" data-view="dashboard" aria-label="Fehr Grown Farms, dashboard"><span class="wm-top">fehr grown</span><span class="wm-farms">FARMS</span></a>
+    <p class="brand-sub"><svg class="icon sm" viewBox="0 0 24 24" data-i="map-pin"></svg><span id="todayLabel">Corinth, ON</span></p>
+  </div>
+  <nav class="nav" aria-label="Main">
+    <a href="#dashboard" data-view="dashboard" aria-current="page"><svg class="icon sm" viewBox="0 0 24 24" data-i="house"></svg>Dashboard</a>
+    <a href="#calendar" data-view="calendar"><svg class="icon sm" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+    <a href="#orders" data-view="orders"><svg class="icon sm" viewBox="0 0 24 24" data-i="shopping-basket"></svg>Orders</a>
+    <a href="#history" data-view="history"><svg class="icon sm" viewBox="0 0 24 24" data-i="history"></svg>History</a>
+    <a href="#notes" data-view="notes"><svg class="icon sm" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
+    <a href="#import" data-view="import" class="write-only"><svg class="icon sm" viewBox="0 0 24 24" data-i="upload"></svg>Import</a>
+  </nav>
+  <div class="avatar" id="avatar" title="You"><svg class="icon sm" viewBox="0 0 24 24" data-i="user"></svg></div>
+</header>
+
+<div class="beta-bar" id="betaBar">
+  <span class="status-dot" id="statusDot"></span>
+  <span id="statusText"><b>Beta.</b> Connecting…</span>
+  <span class="spacer"></span>
+  <button class="btn sm outline" type="button" id="feedbackBtn" hidden><svg class="icon sm" viewBox="0 0 24 24" data-i="message-square-plus"></svg>Give feedback</button>
+</div>
+
+<main class="grid" id="v-dashboard">
+
+  <!-- Log an event -->
+  <section class="unit write-only" id="u-log" aria-labelledby="h-log">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
+      <div><h2 id="h-log">Log an event</h2><p>Record what happened, or pick a future date to plan it.</p></div>
+      <span class="spacer"></span>
+      <button class="btn ghost sheet-close" type="button" id="closeSheet" aria-label="Close"><svg class="icon" viewBox="0 0 24 24" data-i="x"></svg></button>
+    </div>
+    <form class="form" id="logForm" novalidate>
+      <div class="field">
+        <span class="label" id="typeLabel">Type</span>
+        <div class="type-picker" role="group" aria-labelledby="typeLabel" id="typePicker"></div>
+      </div>
+      <div class="field combo" id="whatCombo">
+        <label for="f-title" id="whatLabel">Chemical</label>
+        <div class="combo-box">
+          <input id="f-title" role="combobox" aria-expanded="false" aria-controls="whatList" aria-autocomplete="list" autocomplete="off">
+          <button type="button" class="combo-toggle" id="whatToggle" tabindex="-1" aria-label="Show saved list"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-down"></svg></button>
+        </div>
+        <div class="combo-list" id="whatList" role="listbox" aria-labelledby="whatLabel" hidden></div>
+      </div>
+      <div class="extra" id="extra"></div>
+      <div class="field"><label for="f-date">Date</label><input id="f-date" type="date"></div>
+      <div class="field">
+        <div class="label-row"><span class="label" id="fieldLabel">Fields</span><button type="button" class="link-btn" data-edit="fields"></button></div>
+        <div class="chips" role="group" aria-labelledby="fieldLabel" id="fieldPicker"></div>
+      </div>
+      <div class="field">
+        <div class="label-row"><span class="label" id="cropLabel">Crops</span><button type="button" class="link-btn" data-edit="crops"></button></div>
+        <div class="chips" role="group" aria-labelledby="cropLabel" id="cropPicker"></div>
+      </div>
+      <div class="field">
+        <label for="f-desc">Description</label>
+        <textarea id="f-desc" placeholder="Details, conditions, who was there"></textarea>
+      </div>
+      <button class="btn primary" type="submit" id="logSubmit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save event</button>
+    </form>
+  </section>
+
+  <!-- Next 14 days -->
+  <section class="unit" id="u-up" aria-labelledby="h-up">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>
+      <div><h2 id="h-up">Next 14 days</h2><p>Planned work, with the 7-day forecast for Corinth.</p></div>
+    </div>
+    <div id="forecast"></div>
+    <div class="row-list" id="upcoming"></div>
+  </section>
+
+  <!-- This season vs past years -->
+  <section class="unit" id="u-cmp" aria-labelledby="h-cmp">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="chart-column"></svg>
+      <div><h2 id="h-cmp">This season vs past years</h2><p>Harvest, temperature, season heat and key dates, compared with the last two years.</p></div>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between">
+      <div class="seg" role="group" aria-label="Crop" id="cmpCrop"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="cmp-grid">
+      <div class="panel">
+        <h3>Harvest volume</h3>
+        <p class="meta" id="hvNote"></p>
+        <div class="hv" id="hv"></div>
+      </div>
+      <div class="panel">
+        <h3>Monthly average temperature</h3>
+        <p class="meta" id="tNote"></p>
+        <div class="chart-wrap" id="tchart"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Season heat</h3>
+      <p class="meta">Growing degree days (base 10 °C) since April 1, with this crop's key dates marked on each year's line.</p>
+      <div class="chart-wrap" id="chart"></div>
+      <div class="table-wrap"><table id="wxTable"></table></div>
+    </div>
+    <div class="panel">
+      <h3>Season timeline</h3>
+      <p class="meta">Every event for this crop by year. Key dates are labelled. Hover over or tap a mark for details.</p>
+      <div class="chart-wrap" id="tl"></div>
+      <div class="type-legend" id="tlLegend"></div>
+      <div class="table-wrap"><table id="keyTable"></table></div>
+    </div>
+  </section>
+
+  <!-- Order pickups -->
+  <section class="unit" id="u-orders" aria-labelledby="h-orders">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="shopping-basket"></svg>
+      <div><h2 id="h-orders">Order pickups</h2><p>Customers coming to the farm in the next 7 days.</p></div>
+      <span class="spacer"></span>
+      <a href="#orders" data-view="orders" class="link-btn">All orders<svg class="icon sm" viewBox="0 0 24 24" data-i="chevron-right"></svg></a>
+    </div>
+    <div class="row-list" id="ordersDash"></div>
+  </section>
+
+  <!-- This week in past years -->
+  <section class="unit" id="u-past" aria-labelledby="h-past">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>
+      <div><h2 id="h-past">This week in past years</h2><p id="pastSub">This week in earlier seasons.</p></div>
+    </div>
+    <div class="years" id="past"></div>
+  </section>
+
+  <!-- Notes for next time -->
+  <section class="unit" id="u-notes" aria-labelledby="h-notes">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>
+      <div><h2 id="h-notes">Notes for next time</h2><p>Changes planned for this season, soonest first.</p></div>
+      <span class="spacer"></span>
+      <a href="#notes" data-view="notes" class="link-btn">All notes<svg class="icon sm" viewBox="0 0 24 24" data-i="chevron-right"></svg></a>
+    </div>
+    <div id="notes"></div>
+  </section>
+
+  <!-- Recently logged -->
+  <section class="unit" id="u-recent" aria-labelledby="h-recent">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="leaf"></svg>
+      <div><h2 id="h-recent">Recently logged</h2><p>The latest entries from family and crew.</p></div>
+    </div>
+    <div class="row-list" id="recent"></div>
+  </section>
+</main>
+
+<!-- Calendar -->
+<section class="view" id="v-calendar" hidden>
+  <div class="unit">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>
+      <div><h2>Calendar</h2><p>Everything planned and logged, plus order pickups. Select a day to see its events.</p></div>
+    </div>
+    <div class="toolbar">
+      <div class="month-nav">
+        <button class="btn ghost" type="button" id="calPrev" aria-label="Previous month"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-left"></svg></button>
+        <h3 id="calLabel"></h3>
+        <button class="btn ghost" type="button" id="calNext" aria-label="Next month"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-right"></svg></button>
+      </div>
+      <div class="type-legend" id="calLegend"></div>
+    </div>
+    <div class="cal-scroll"><div class="cal" id="cal"></div></div>
+    <div id="calDay"></div>
+  </div>
+</section>
+
+<!-- Orders -->
+<section class="view" id="v-orders" hidden>
+  <div class="orders-layout">
+    <div class="unit write-only" id="oFormUnit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
+        <div><h2>New order</h2><p>Phone calls, Facebook messages and walk-ins.</p></div>
+      </div>
+      <form class="form" id="orderForm" novalidate>
+        <div class="two">
+          <div class="field"><label for="o-name">Name</label><input id="o-name" list="customers" autocomplete="off" placeholder="Customer name"></div>
+          <div class="field"><label for="o-phone">Phone</label><input id="o-phone" type="tel" autocomplete="off" placeholder="519-555-0100"></div>
+        </div>
+        <datalist id="customers"></datalist>
+        <div class="field"><label for="o-items">What they ordered</label><textarea id="o-items" placeholder="e.g. 2 bushels pickling cucumbers, 5 lb garlic"></textarea></div>
+        <div class="two">
+          <div class="field"><label for="o-date">Pickup date</label><input id="o-date" type="date"></div>
+          <div class="field"><label for="o-time">Pickup time</label><input id="o-time" type="time" value="10:00"></div>
+        </div>
+        <div class="two">
+          <div class="field"><label for="o-total">Order total ($)</label><input id="o-total" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+          <div class="field"><label for="o-paid">Paid so far ($)</label><input id="o-paid" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+        </div>
+        <button class="btn primary" type="submit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save order</button>
+      </form>
+    </div>
+    <div class="unit" id="oListUnit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="shopping-basket"></svg>
+        <div><h2>Orders</h2><p>Who's coming, what they ordered and who still owes.</p></div>
+      </div>
+      <div class="stats" id="oStats"></div>
+      <div class="seg" role="group" aria-label="Show" id="oFilter">
+        <button type="button" data-f="upcoming" aria-pressed="true">Upcoming</button><button type="button" data-f="unpaid" aria-pressed="false">Unpaid</button><button type="button" data-f="done" aria-pressed="false">Picked up</button>
+      </div>
+      <div id="oList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- History -->
+<section class="view" id="v-history" hidden>
+  <div class="unit">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>
+      <div><h2>History</h2><p>Every logged event. Filter by year, type or crop.</p></div>
+    </div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Season" id="hYear"></div>
+      <div class="filters">
+        <div class="field"><label for="hType">Type</label><select id="hType"></select></div>
+        <div class="field"><label for="hCrop">Crop</label><select id="hCrop"></select></div>
+      </div>
+    </div>
+    <p class="meta" id="hCount"></p>
+    <div id="hList"></div>
+  </div>
+</section>
+
+<!-- Notes -->
+<section class="view" id="v-notes" hidden>
+  <div class="notes-layout">
+    <div class="unit write-only">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
+        <div><h2>Add a note</h2><p>Something to change or remember next season.</p></div>
+      </div>
+      <form class="form" id="noteForm" novalidate>
+        <div class="field"><label for="n-text">Note</label><textarea id="n-text" placeholder="e.g. Order garlic seed by August."></textarea></div>
+        <div class="two">
+          <div class="field"><label for="n-crop">Crop</label><select id="n-crop"></select></div>
+          <div class="field"><label for="n-due">Remind me</label><input id="n-due" type="month"></div>
+        </div>
+        <button class="btn primary" type="submit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save note</button>
+      </form>
+    </div>
+    <div class="unit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>
+        <div><h2>All notes</h2><p>Mark a note resolved once you've made the change.</p></div>
+        <span class="spacer"></span>
+        <div class="seg" role="group" aria-label="Show" id="nFilter">
+          <button type="button" data-f="open" aria-pressed="true">Open</button><button type="button" data-f="done" aria-pressed="false">Resolved</button>
+        </div>
+      </div>
+      <div id="nList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Import -->
+<section class="view" id="v-import" hidden>
+  <div class="import-layout">
+    <div class="unit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="file-spreadsheet"></svg>
+        <div><h2>Import a spreadsheet</h2><p>Excel (.xlsx, .xls) or CSV. One row per event.</p></div>
+      </div>
+      <label class="drop" id="xlsDrop">
+        <svg class="icon" viewBox="0 0 24 24" data-i="upload"></svg>
+        <b>Choose a spreadsheet</b><span class="meta">or drop it here</span>
+        <input type="file" id="xlsFile" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+      </label>
+      <div id="xlsStep" hidden class="form">
+        <div class="two">
+          <div class="field"><label for="xlsSheet">Sheet</label><select id="xlsSheet"></select></div>
+          <div class="field"><label for="xlsType">Type for rows without one</label><select id="xlsType"></select></div>
+        </div>
+        <div class="field"><label for="xlsYear">Year for dates without one</label><input id="xlsYear" type="number" min="1990" max="2100"></div>
+        <p class="meta">Match your columns. The best guesses are already picked.</p>
+        <div class="map-grid" id="xlsMap"></div>
+        <div class="table-wrap"><table class="preview" id="xlsPreview"></table></div>
+        <p class="meta" id="xlsSummary"></p>
+        <button class="btn primary" type="button" id="xlsImport"><svg class="icon" viewBox="0 0 24 24" data-i="upload"></svg>Import</button>
+        <p class="progress" id="xlsProgress"></p>
+      </div>
+    </div>
+
+    <div class="unit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="camera"></svg>
+        <div><h2>Import handwritten notes</h2><p>Photograph the pages. Claude reads them, you check the result, then import.</p></div>
+      </div>
+      <div id="hwUnavailable" class="empty-box" hidden><svg class="icon sm" viewBox="0 0 24 24" data-i="info"></svg><span>Reading photos isn't available in this view. Send the photos to Claude in your chat instead and they'll be loaded for you.</span></div>
+      <div id="hwArea" class="form">
+        <label class="drop" id="hwDrop">
+          <svg class="icon" viewBox="0 0 24 24" data-i="image"></svg>
+          <b>Choose photos</b><span class="meta" id="hwLimit">JPEG or PNG, one page per photo</span>
+          <input type="file" id="hwFiles" accept="image/jpeg,image/png,image/webp" multiple>
+        </label>
+        <div class="thumbs" id="hwThumbs"></div>
+        <div class="two">
+          <div class="field"><label for="hwYear">Year these notes are from</label><input id="hwYear" type="number" min="1990" max="2100"></div>
+          <div class="field" style="justify-content:flex-end"><button class="btn primary" type="button" id="hwRead" disabled><svg class="icon" viewBox="0 0 24 24" data-i="camera"></svg>Read with Claude</button></div>
+        </div>
+        <p class="progress" id="hwProgress"></p>
+        <div class="hw-list" id="hwList"></div>
+        <button class="btn primary" type="button" id="hwImport" hidden><svg class="icon" viewBox="0 0 24 24" data-i="upload"></svg>Import checked rows</button>
+      </div>
+    </div>
+
+    <div class="unit wide">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>
+        <div><h2>Past imports</h2><p>Remove an import to undo it. You can also send files to Claude in chat to load them for you.</p></div>
+      </div>
+      <div id="impList"></div>
+    </div>
+  </div>
+</section>
+
+<div class="scrim" id="scrim"></div>
+<nav class="tabbar" aria-label="Main">
+  <a href="#dashboard" data-view="dashboard" aria-current="page"><svg class="icon" viewBox="0 0 24 24" data-i="house"></svg>Home</a>
+  <a href="#calendar" data-view="calendar"><svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+  <button class="add write-only" type="button" id="openSheet"><span class="plus"><svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg></span>Log</button>
+  <a href="#orders" data-view="orders"><svg class="icon" viewBox="0 0 24 24" data-i="shopping-basket"></svg>Orders</a>
+  <button type="button" id="moreBtn" aria-expanded="false" aria-controls="moreMenu"><svg class="icon" viewBox="0 0 24 24" data-i="ellipsis"></svg>More</button>
+</nav>
+<div class="more-menu" id="moreMenu" hidden>
+  <a href="#history" data-view="history"><svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>History</a>
+  <a href="#notes" data-view="notes"><svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
+  <a href="#import" data-view="import" class="write-only"><svg class="icon" viewBox="0 0 24 24" data-i="upload"></svg>Import</a>
+</div>
+<div class="toast" id="toast" role="status"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg><span id="toastText"></span></div>
+
+<script>
+const ICONS={"calendar": "<path d=\"M8 2v4\" /><path d=\"M16 2v4\" /><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /><path d=\"M3 10h18\" />", "calendar-days": "<path d=\"M8 2v4\" /><path d=\"M16 2v4\" /><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /><path d=\"M3 10h18\" /><path d=\"M8 14h.01\" /><path d=\"M12 14h.01\" /><path d=\"M16 14h.01\" /><path d=\"M8 18h.01\" /><path d=\"M12 18h.01\" /><path d=\"M16 18h.01\" />", "camera": "<path d=\"M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z\" /><circle cx=\"12\" cy=\"13\" r=\"3\" />", "chart-column": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\" /><path d=\"M18 17V9\" /><path d=\"M13 17V5\" /><path d=\"M8 17v-3\" />", "check": "<path d=\"M20 6 9 17l-5-5\" />", "chevron-down": "<path d=\"m6 9 6 6 6-6\" />", "chevron-left": "<path d=\"m15 18-6-6 6-6\" />", "chevron-right": "<path d=\"m9 18 6-6-6-6\" />", "circle-alert": "<circle cx=\"12\" cy=\"12\" r=\"10\" /><line x1=\"12\" x2=\"12\" y1=\"8\" y2=\"12\" /><line x1=\"12\" x2=\"12.01\" y1=\"16\" y2=\"16\" />", "cloud": "<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\" />", "cloud-drizzle": "<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M8 19v1\" /><path d=\"M8 14v1\" /><path d=\"M16 19v1\" /><path d=\"M16 14v1\" /><path d=\"M12 21v1\" /><path d=\"M12 16v1\" />", "cloud-fog": "<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M16 17H7\" /><path d=\"M17 21H9\" />", "cloud-lightning": "<path d=\"M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973\" /><path d=\"m13 12-3 5h4l-3 5\" />", "cloud-off": "<path d=\"m2 2 20 20\" /><path d=\"M5.782 5.782A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.307-.193\" /><path d=\"M21.532 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7.008 7.008 0 0 0 10 5.07\" />", "cloud-rain": "<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M16 14v6\" /><path d=\"M8 14v6\" /><path d=\"M12 16v6\" />", "cloud-snow": "<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M8 15h.01\" /><path d=\"M8 19h.01\" /><path d=\"M12 17h.01\" /><path d=\"M12 21h.01\" /><path d=\"M16 15h.01\" /><path d=\"M16 19h.01\" />", "cloud-sun": "<path d=\"M12 2v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"M20 12h2\" /><path d=\"m19.07 4.93-1.41 1.41\" /><path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /><path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />", "crop": "<path d=\"M6 2v14a2 2 0 0 0 2 2h14\" /><path d=\"M18 22V8a2 2 0 0 0-2-2H2\" />", "delete": "<path d=\"M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z\" /><path d=\"m12 9 6 6\" /><path d=\"m18 9-6 6\" />", "dot": "<circle cx=\"12.1\" cy=\"12.1\" r=\"1\" />", "ellipsis": "<circle cx=\"12\" cy=\"12\" r=\"1\" /><circle cx=\"19\" cy=\"12\" r=\"1\" /><circle cx=\"5\" cy=\"12\" r=\"1\" />", "file-spreadsheet": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\" /><path d=\"M14 2v4a2 2 0 0 0 2 2h4\" /><path d=\"M8 13h2\" /><path d=\"M14 13h2\" /><path d=\"M8 17h2\" /><path d=\"M14 17h2\" />", "flask-conical": "<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\" /><path d=\"M8.5 2h7\" /><path d=\"M7 16h10\" />", "focus": "<circle cx=\"12\" cy=\"12\" r=\"3\" /><path d=\"M3 7V5a2 2 0 0 1 2-2h2\" /><path d=\"M17 3h2a2 2 0 0 1 2 2v2\" /><path d=\"M21 17v2a2 2 0 0 1-2 2h-2\" /><path d=\"M7 21H5a2 2 0 0 1-2-2v-2\" />", "history": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /><path d=\"M3 3v5h5\" /><path d=\"M12 7v5l4 2\" />", "house": "<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\" /><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\" />", "image": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" ry=\"2\" /><circle cx=\"9\" cy=\"9\" r=\"2\" /><path d=\"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\" />", "import": "<path d=\"M12 3v12\" /><path d=\"m8 11 4 4 4-4\" /><path d=\"M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4\" />", "info": "<circle cx=\"12\" cy=\"12\" r=\"10\" /><path d=\"M12 16v-4\" /><path d=\"M12 8h.01\" />", "leaf": "<path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\" /><path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\" />", "map-pin": "<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /><circle cx=\"12\" cy=\"10\" r=\"3\" />", "message-square-plus": "<path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\" /><path d=\"M12 7v6\" /><path d=\"M9 10h6\" />", "notebook-pen": "<path d=\"M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4\" /><path d=\"M2 6h4\" /><path d=\"M2 10h4\" /><path d=\"M2 14h4\" /><path d=\"M2 18h4\" /><path d=\"M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z\" />", "option": "<path d=\"M3 3h6l6 18h6\" /><path d=\"M14 3h7\" />", "pencil": "<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\" /><path d=\"m15 5 4 4\" />", "phone": "<path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\" />", "pill": "<path d=\"m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z\" /><path d=\"m8.5 8.5 7 7\" />", "plus": "<path d=\"M5 12h14\" /><path d=\"M12 5v14\" />", "shopping-basket": "<path d=\"m15 11-1 9\" /><path d=\"m19 11-4-7\" /><path d=\"M2 11h20\" /><path d=\"m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4\" /><path d=\"M4.5 15.5h15\" /><path d=\"m5 11 4-7\" /><path d=\"m9 11 1 9\" />", "shovel": "<path d=\"M2 22v-5l5-5 5 5-5 5z\" /><path d=\"M9.5 14.5 16 8\" /><path d=\"m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2\" />", "spray-can": "<path d=\"M3 3h.01\" /><path d=\"M7 5h.01\" /><path d=\"M11 7h.01\" /><path d=\"M3 7h.01\" /><path d=\"M7 9h.01\" /><path d=\"M3 11h.01\" /><rect width=\"4\" height=\"4\" x=\"15\" y=\"5\" /><path d=\"m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2\" /><path d=\"m13 14 8-2\" /><path d=\"m13 19 8-2\" />", "sprout": "<path d=\"M7 20h10\" /><path d=\"M10 20c5.5-2.5.8-6.4 3-10\" /><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z\" /><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z\" />", "sun": "<circle cx=\"12\" cy=\"12\" r=\"4\" /><path d=\"M12 2v2\" /><path d=\"M12 20v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"m17.66 17.66 1.41 1.41\" /><path d=\"M2 12h2\" /><path d=\"M20 12h2\" /><path d=\"m6.34 17.66-1.41 1.41\" /><path d=\"m19.07 4.93-1.41 1.41\" />", "tag": "<path d=\"M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z\" /><circle cx=\"7.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\" />", "thermometer": "<path d=\"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z\" />", "trash-2": "<path d=\"M3 6h18\" /><path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\" /><path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\" /><line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\" /><line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\" />", "type": "<polyline points=\"4 7 4 4 20 4 20 7\" /><line x1=\"9\" x2=\"15\" y1=\"20\" y2=\"20\" /><line x1=\"12\" x2=\"12\" y1=\"4\" y2=\"20\" />", "upload": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\" /><polyline points=\"17 8 12 3 7 8\" /><line x1=\"12\" x2=\"12\" y1=\"3\" y2=\"15\" />", "user": "<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /><circle cx=\"12\" cy=\"7\" r=\"4\" />", "wheat": "<path d=\"M2 22 16 8\" /><path d=\"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z\" /><path d=\"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" />", "x": "<path d=\"M18 6 6 18\" /><path d=\"m6 6 12 12\" />"};
+/* ── Helpers ──────────────────────────────────────────────────────── */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ico = (n, cls = "icon") => `<svg class="${cls}" viewBox="0 0 24 24">${ICONS[n] || ""}</svg>`;
+function paintIcons(root = document) { root.querySelectorAll("svg[data-i]").forEach(s => { s.innerHTML = ICONS[s.dataset.i] || ""; s.removeAttribute("data-i"); }); }
+const pad = n => String(n).padStart(2, "0");
+const isoOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (iso, n) => { const d = parse(iso); d.setDate(d.getDate() + n); return isoOf(d); };
+const fmtShort = iso => parse(iso).toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+const fmtLong = iso => parse(iso).toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+const doyOf = iso => { const d = parse(iso); return Math.round((d - new Date(d.getFullYear(), 0, 1)) / 864e5) + 1; };
+const dateFromDoy = (y, d) => isoOf(new Date(y, 0, d));
+const nf = n => Math.round(n).toLocaleString("en-CA");
+const NOW = new Date(), TODAY = isoOf(NOW), THIS_YEAR = NOW.getFullYear(), TODAY_MD = TODAY.slice(5);
+const YEARS = [0, 1, 2].map(i => ({ y: THIS_YEAR - i, c: `--y${i}` }));
+const byDate = (a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || ""));
+let toastTimer;
+function toast(msg) { $("#toastText").textContent = msg; $("#toast").classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 2600); }
+
+/* ── Reference data ───────────────────────────────────────────────── */
+// "what" names the saved pick-list behind the log form's first field. Saved items live in the shared lists.
+const TYPES = {
+  spray:    { name: "Spray",    icon: "spray-can",     c: "var(--t-spray)",    what: "Chemical",         extra: [["Rate", "e.g. 1.9 kg/ha"], ["Re-entry", "e.g. 24 h"]] },
+  planting: { name: "Planting", icon: "sprout",        c: "var(--t-planting)", what: "Crop and variety", extra: [["Amount", "e.g. 4 beds"], ["Seed lot", "optional"]] },
+  nutrient: { name: "Nutrient", icon: "flask-conical", c: "var(--t-nutrient)", what: "Fertilizer",       extra: [["Rate", "e.g. 30 lb N/ac"], ["Method", "e.g. Fertigation"]] },
+  harvest:  { name: "Harvest",  icon: "wheat",         c: "var(--t-harvest)",  what: "Crop",             extra: [["Amount", "e.g. 40 bins"], ["Destination", "optional"]] },
+  garden:   { name: "Garden",   icon: "shovel",        c: "var(--t-garden)",   what: "Task",             extra: [] },
+};
+const KINDS = { ...TYPES, order: { name: "Order pickup", icon: "shopping-basket", c: "var(--t-pickup)" } };
+const DEFAULT_CROPS = ["Strawberries", "Cucumbers", "Garlic", "Garden", "Fall Produce"];
+
+/* ── Shared state (filled live from the database) ─────────────────── */
+const S = { events: [], orders: [], notes: [], lists: { crops: [...DEFAULT_CROPS], fields: [], saved: {} }, weather: {}, forecast: null };
+let db = null, userNs = null, me = null, sampleFn = null, commentsNs = null, canWrite = null;
+
+function setStatus(kind, html) {
+  $("#statusDot").className = "status-dot" + (kind === "live" ? " live" : "");
+  $("#betaBar").classList.toggle("warn", kind === "offline" || kind === "readonly");
+  $("#statusText").innerHTML = html;
+}
+function applyWriteState() { document.body.classList.toggle("readonly", canWrite === false); if (canWrite === false) setStatus("readonly", "<b>View only.</b> You can look around, but your access doesn't allow changes. Ask the farm owner for edit access."); }
+
+async function guard(fn, okMsg) {
+  if (!db) { toast("Can't save here. Open this page in Claude."); return false; }
+  try { await fn(); if (okMsg) toast(okMsg); return true; }
+  catch (e) {
+    console.warn(e);
+    if (e?.code === "invalid_argument" && canWrite !== true) { canWrite = false; applyWriteState(); toast("Your access doesn't allow changes."); }
+    else if (e?.code === "quota_exceeded") toast("The beta's storage is full. Tell the farm owner.");
+    else toast("Couldn't save. Check your connection and try again.");
+    return false;
+  }
+}
+const saveLists = () => guard(() => db.doc("lists/main").set({ crops: S.lists.crops, fields: S.lists.fields, saved: S.lists.saved }));
+
+/* People: store ids only; resolve names when rendering */
+const NAMES = {};
+async function resolveNames(ids) {
+  if (!userNs) return;
+  const need = [...new Set(ids)].filter(id => id && !(id in NAMES));
+  if (!need.length) return;
+  need.forEach(id => NAMES[id] = "…");
+  const ps = await userNs.profiles(need);
+  need.forEach(id => NAMES[id] = ps[id]?.isMe ? "You" : (ps[id]?.name || "Someone"));
+  renderAll();
+}
+const whoLabel = e => e.by ? (NAMES[e.by] || "…") : e.src === "handwritten" ? "From notes" : e.src === "spreadsheet" ? "Imported" : "";
+
+/* ── Log form ─────────────────────────────────────────────────────── */
+let selType = "spray";
+const savedFor = t => S.lists.saved[t] || [];
+function renderTypes() {
+  $("#typePicker").innerHTML = Object.entries(TYPES).map(([k, t]) =>
+    `<button type="button" class="type-opt" style="--c:${t.c}" data-k="${k}" aria-pressed="${k === selType}">${ico(t.icon)}${t.name}</button>`).join("");
+  const t = TYPES[selType], ex = $("#extra");
+  $("#whatLabel").textContent = t.what;
+  $("#f-title").placeholder = "Choose from your list or type a new one";
+  ex.hidden = !t.extra.length;
+  ex.innerHTML = `<div class="extra-title">${t.name} details</div>` + t.extra.map(([l, ph], i) =>
+    `<div class="field"><label for="x-${i}">${l}</label><input id="x-${i}" data-x="${esc(l)}" placeholder="${esc(ph)}" autocomplete="off"></div>`).join("");
+}
+$("#typePicker").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b && b.dataset.k !== selType) { selType = b.dataset.k; $("#f-title").value = ""; renderTypes(); } });
+
+let comboIdx = -1;
+const whatIn = $("#f-title"), whatList = $("#whatList");
+const comboItems = () => { const q = whatIn.value.trim().toLowerCase(); return savedFor(selType).filter(o => o.name.toLowerCase().includes(q)); };
+const comboMeta = o => TYPES[selType].extra.map(([l]) => o[l]).filter(Boolean).join(" · ");
+function renderCombo() {
+  const t = TYPES[selType], q = whatIn.value.trim(), items = comboItems();
+  const exact = savedFor(selType).some(o => o.name.toLowerCase() === q.toLowerCase());
+  const n = items.length + (q && !exact ? 1 : 0);
+  if (comboIdx >= n) comboIdx = n - 1;
+  whatList.innerHTML = (items.length ? items.map((o, i) => `<div class="opt${i === comboIdx ? " active" : ""}" role="option" aria-selected="${i === comboIdx}">
+      <button type="button" class="opt-pick" data-pick="${esc(o.name)}"><b>${esc(o.name)}</b>${comboMeta(o) ? `<small>${esc(comboMeta(o))}</small>` : ""}</button>
+      <button type="button" class="opt-del" data-del="${esc(o.name)}" aria-label="Remove ${esc(o.name)} from the list">${ico("x", "icon sm")}</button></div>`).join("")
+    : `<div class="opt-empty">${q ? `No saved ${t.what.toLowerCase()} matches.` : `Your ${t.what.toLowerCase()} list is empty. Type a name, then save it to the list.`}</div>`)
+    + (q && !exact ? `<button type="button" class="opt-add${comboIdx === items.length ? " active" : ""}" data-add="1">${ico("plus", "icon sm")}Save "${esc(q)}" to the list</button>` : "");
+}
+function openCombo() { whatList.hidden = false; whatIn.setAttribute("aria-expanded", "true"); renderCombo(); }
+function closeCombo() { whatList.hidden = true; whatIn.setAttribute("aria-expanded", "false"); comboIdx = -1; }
+function pickWhat(name) {
+  const o = savedFor(selType).find(x => x.name === name); whatIn.value = name;
+  document.querySelectorAll("#extra [data-x]").forEach(i => { if (o && o[i.dataset.x]) i.value = o[i.dataset.x]; });
+  closeCombo();
+}
+async function addWhat() {
+  const t = TYPES[selType], name = whatIn.value.trim(); if (!name) return;
+  const o = { name }; document.querySelectorAll("#extra [data-x]").forEach(i => { if (i.value.trim()) o[i.dataset.x] = i.value.trim(); });
+  S.lists.saved = { ...S.lists.saved, [selType]: [...savedFor(selType), o] };
+  closeCombo();
+  if (await saveLists()) toast(`Saved to your ${t.what.toLowerCase()} list`);
+}
+whatIn.addEventListener("focus", openCombo);
+whatIn.addEventListener("input", () => { comboIdx = -1; openCombo(); });
+whatIn.addEventListener("keydown", e => {
+  if (e.key === "Escape") return closeCombo();
+  if (whatList.hidden && e.key === "ArrowDown") return openCombo();
+  const items = comboItems(), n = whatList.querySelectorAll(".opt, .opt-add").length;
+  if (!n) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); comboIdx = (comboIdx + (e.key === "ArrowDown" ? 1 : -1) + n) % n; renderCombo(); }
+  if (e.key === "Enter" && comboIdx >= 0) { e.preventDefault(); comboIdx < items.length ? pickWhat(items[comboIdx].name) : addWhat(); }
+});
+$("#whatToggle").addEventListener("click", () => { if (whatList.hidden) { whatIn.focus(); openCombo(); } else closeCombo(); });
+whatList.addEventListener("mousedown", e => e.preventDefault());
+whatList.addEventListener("click", async e => {
+  const pick = e.target.closest("[data-pick]"), del = e.target.closest("[data-del]"), add = e.target.closest("[data-add]");
+  if (pick) pickWhat(pick.dataset.pick);
+  else if (add) addWhat();
+  else if (del) {
+    S.lists.saved = { ...S.lists.saved, [selType]: savedFor(selType).filter(o => o.name !== del.dataset.del) };
+    renderCombo();
+    if (await saveLists()) toast(`Removed ${del.dataset.del}`);
+  }
+});
+document.addEventListener("click", e => { if (!e.target.closest("#whatCombo")) closeCombo(); });
+
+/* Editable chip lists (fields and crops) */
+const CHIPS = {
+  fields: { key: "fields", sel: new Set(), el: "#fieldPicker", noun: "field", editing: false },
+  crops:  { key: "crops",  sel: new Set(), el: "#cropPicker",  noun: "crop",  editing: false },
+};
+function renderChips(k) {
+  const c = CHIPS[k], box = $(c.el), list = S.lists[c.key] || [];
+  const typed = $("#add-" + k)?.value || "", hadFocus = document.activeElement?.id === "add-" + k;
+  box.classList.toggle("editing", c.editing);
+  document.querySelector(`[data-edit="${k}"]`).innerHTML = c.editing ? `${ico("check", "icon sm")}Done` : `${ico("pencil", "icon sm")}Edit list`;
+  box.innerHTML = list.map(v => c.editing
+      ? `<button type="button" class="chip" data-rm="${esc(v)}" aria-label="Remove ${esc(v)}">${esc(v)}<span class="x">${ico("x", "icon sm")}</span></button>`
+      : `<button type="button" class="chip" data-v="${esc(v)}" aria-pressed="${c.sel.has(v)}">${esc(v)}</button>`).join("")
+    + (c.editing ? `<span class="chip-add"><input id="add-${k}" placeholder="New ${c.noun}" autocomplete="off" aria-label="New ${c.noun}"><button type="button" data-addchip="1">Add</button></span>`
+      : (!list.length ? `<span class="meta">No ${c.noun}s yet. Tap "Edit list" to add some.</span>` : ""));
+  if (c.editing) { const inp = $("#add-" + k); inp.value = typed; if (hadFocus) inp.focus(); }
+}
+async function addChip(k) {
+  const c = CHIPS[k], inp = $("#add-" + k), v = inp.value.trim();
+  if (!v || (S.lists[c.key] || []).includes(v)) { inp.focus(); return; }
+  S.lists[c.key] = [...(S.lists[c.key] || []), v]; c.sel.add(v); inp.value = "";
+  renderChips(k); $("#add-" + k).focus();
+  if (await saveLists()) toast(`Added ${v}`);
+}
+Object.keys(CHIPS).forEach(k => {
+  const c = CHIPS[k], box = $(c.el);
+  box.addEventListener("click", async e => {
+    const v = e.target.closest("[data-v]"), rm = e.target.closest("[data-rm]"), add = e.target.closest("[data-addchip]");
+    if (v) { c.sel.has(v.dataset.v) ? c.sel.delete(v.dataset.v) : c.sel.add(v.dataset.v); renderChips(k); }
+    else if (rm) { S.lists[c.key] = (S.lists[c.key] || []).filter(x => x !== rm.dataset.rm); c.sel.delete(rm.dataset.rm); renderChips(k); saveLists(); }
+    else if (add) addChip(k);
+  });
+  box.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "add-" + k) { e.preventDefault(); addChip(k); } });
+  document.querySelector(`[data-edit="${k}"]`).addEventListener("click", () => { c.editing = !c.editing; renderChips(k); if (c.editing) $("#add-" + k).focus(); });
+});
+
+$("#f-date").value = TODAY;
+$("#logForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const date = $("#f-date").value || TODAY, what = whatIn.value.trim(), details = {};
+  document.querySelectorAll("#extra [data-x]").forEach(i => { if (i.value.trim()) details[i.dataset.x] = i.value.trim(); });
+  const doc = { date, type: selType, what: what || TYPES[selType].name, details, fields: [...CHIPS.fields.sel], crops: [...CHIPS.crops.sel],
+    desc: $("#f-desc").value.trim(), status: date > TODAY ? "planned" : "done", by: me?.id || null, createdAt: new Date().toISOString(), src: "app" };
+  $("#logSubmit").disabled = true;
+  const ok = await guard(() => db.collection("events").add(doc), date > TODAY ? `Planned for ${fmtShort(date)}` : "Event logged");
+  $("#logSubmit").disabled = false;
+  if (!ok) return;
+  whatIn.value = ""; $("#f-desc").value = ""; $("#f-date").value = TODAY;
+  document.querySelectorAll("#extra input").forEach(i => i.value = "");
+  CHIPS.fields.sel.clear(); renderChips("fields");
+  document.body.classList.remove("sheet-open");
+});
+$("#openSheet").addEventListener("click", () => document.body.classList.add("sheet-open"));
+const closeSheet = () => document.body.classList.remove("sheet-open");
+$("#closeSheet").addEventListener("click", closeSheet);
+$("#scrim").addEventListener("click", closeSheet);
+
+/* ── Shared list pieces ───────────────────────────────────────────── */
+const typeDot = (k, cls = "icon sm") => { const t = KINDS[k] || TYPES.garden; return `<span class="type-dot" style="--c:${t.c}" title="${t.name}">${ico(t.icon, cls)}</span>`; };
+const tags = crops => (crops || []).map(c => `<span class="tag">${esc(c)}</span>`).join("");
+const detailLine = e => [...Object.values(e.details || {}), ...(e.fields || [])].filter(Boolean).join(" · ");
+const evTitle = e => e.what || (TYPES[e.type]?.name ?? "Event");
+
+/* ── Weather (from the shared weather documents when present) ─────── */
+const MONTHS = [[4, "Apr"], [5, "May"], [6, "Jun"], [7, "Jul"], [8, "Aug"], [9, "Sep"], [10, "Oct"]];
+function wxDay(y, md) { return S.weather[y]?.days?.[md] || null; } // [mean, min, max, rain in]
+function hasWeather(y) { return !!S.weather[y]?.days && Object.keys(S.weather[y].days).length > 0; }
+function gddSeries(y) { // Apr 1 … Oct 31, cumulative; null past the last day with data
+  const out = []; let g = 0, any = false;
+  for (let d = doyOf(`${y}-04-01`); d <= doyOf(`${y}-10-31`); d++) {
+    const iso = dateFromDoy(y, d), w = wxDay(y, iso.slice(5));
+    if (!w) { out.push(null); continue; }
+    any = true; g += Math.max(0, w[0] - 10); out.push(g);
+  }
+  // trim trailing nulls
+  while (out.length && out[out.length - 1] == null) out.pop();
+  return any ? out : null;
+}
+function monthlyMeans(y) { return MONTHS.map(([m]) => { let t = 0, n = 0; for (let d = 1; d <= 31; d++) { const w = wxDay(y, `${pad(m)}-${pad(d)}`); if (w) { t += w[0]; n++; } } return n ? t / n : null; }); }
+function weekWeather(y) { let t = 0, n = 0, r = 0; for (let k = -3; k <= 3; k++) { const md = addDays(`${y}-${TODAY_MD}`, k).slice(5), w = wxDay(y, md); if (w) { t += w[0]; r += w[3] || 0; n++; } } return n ? { avg: t / n, rain: r } : null; }
+
+/* ── Dashboard units ──────────────────────────────────────────────── */
+function renderForecast() {
+  const f = S.forecast?.days;
+  if (!f?.length) { $("#forecast").innerHTML = `<div class="empty-box">${ico("cloud-off", "icon sm")}<span>The forecast isn't connected yet. It will appear here once weather for Corinth is set up.</span></div>`; return; }
+  $("#forecast").innerHTML = `<div class="forecast">` + f.slice(0, 7).map((d, n) =>
+    `<div class="fc${n === 0 ? " today" : ""}${d.rain >= 0.1 ? " wet" : ""}"><span class="d">${n === 0 ? "Today" : parse(d.date).toLocaleDateString("en-CA", { weekday: "short" })}</span>${ico(d.icon || "cloud")}<span class="hi">${Math.round(d.hi)}°</span><span class="lo">${Math.round(d.lo)}°</span><span class="${d.rain > 0 ? "rain" : "lo"}">${d.rain > 0 ? d.rain.toFixed(2) + " in" : "–"}</span></div>`).join("") + `</div>`;
+}
+const rainOn = iso => (S.forecast?.days || []).find(d => d.date === iso)?.rain || 0;
+function renderUpcoming() {
+  const start = addDays(TODAY, -7), end = addDays(TODAY, 14);
+  const list = S.events.filter(e => e.status === "planned" && e.date >= start && e.date <= end).sort(byDate);
+  $("#upcoming").innerHTML = list.length ? list.map(e => {
+    const [mon, day] = fmtShort(e.date).split(" ");
+    const late = e.date < TODAY ? `<span class="pill late">${ico("circle-alert", "icon sm")}Overdue</span>` : "";
+    const wet = e.type === "spray" && (rainOn(e.date) >= 0.1 || rainOn(addDays(e.date, 1)) >= 0.1) ? `<span class="pill warn">${ico("cloud-rain", "icon sm")}Rain forecast</span>` : "";
+    return `<div class="row"><div class="date-col"><b>${day}</b><span>${mon}</span></div>${typeDot(e.type)}
+      <div class="row-main"><span class="row-title">${esc(evTitle(e))}</span><div class="row-tags">${tags(e.crops)}${late}${wet}</div>${detailLine(e) ? `<span class="meta">${esc(detailLine(e))}</span>` : ""}</div>
+      <button class="check write-only" type="button" aria-pressed="false" aria-label="Mark done" data-done="${e.id}">${ico("check", "icon sm")}</button></div>`;
+  }).join("") : `<p class="empty">Nothing planned for the next two weeks. Log an event with a future date to plan it.</p>`;
+}
+$("#upcoming").addEventListener("click", e => { const b = e.target.closest("[data-done]"); if (b) guard(() => db.doc("events/" + b.dataset.done).update({ status: "done", doneAt: new Date().toISOString(), doneBy: me?.id || null }), "Marked done"); });
+
+function renderPast() {
+  const [from, to] = [addDays(TODAY, -3), addDays(TODAY, 3)];
+  $("#pastSub").textContent = `${fmtShort(from)} to ${fmtShort(to)} in earlier seasons, with that week's weather.`;
+  $("#past").innerHTML = YEARS.slice(1).map(Y => {
+    const lo = addDays(`${Y.y}-${TODAY_MD}`, -3), hi = addDays(`${Y.y}-${TODAY_MD}`, 3);
+    const evs = S.events.filter(e => e.date >= lo && e.date <= hi).sort(byDate);
+    const w = weekWeather(Y.y);
+    return `<div class="year"><div class="year-head"><h3>${Y.y}</h3><span class="meta">${evs.length} event${evs.length === 1 ? "" : "s"}</span></div>
+      ${w ? `<div class="wx-strip"><span>${ico("thermometer", "icon sm")}${w.avg.toFixed(1)} °C avg</span><span>${ico("cloud-rain", "icon sm")}${w.rain.toFixed(2)} in rain</span></div>` : ""}
+      ${evs.length ? evs.slice(0, 6).map(e => `<div class="mini">${typeDot(e.type)}<span>${esc(evTitle(e))}${e.crops?.length ? ` <span class="meta">· ${esc(e.crops.join(", "))}</span>` : ""}</span></div>`).join("") : `<p class="meta">Nothing logged for this week in ${Y.y} yet. Importing old records fills this in.</p>`}</div>`;
+  }).join("");
+}
+
+function renderRecent() {
+  const list = [...S.events].filter(e => e.status !== "planned").sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 6);
+  resolveNames(list.map(e => e.by));
+  $("#recent").innerHTML = list.length ? list.map(e => `<div class="row">${typeDot(e.type)}<div class="row-main"><span class="row-title">${esc(evTitle(e))}</span><div class="row-tags">${tags(e.crops)}</div></div>
+     <div style="text-align:right; flex:none"><div class="meta">${fmtShort(e.date)}</div><div class="meta" style="display:flex;gap:4px;align-items:center;justify-content:flex-end">${ico("user", "icon sm")}${esc(whoLabel(e))}</div></div></div>`).join("")
+    : `<p class="empty">No entries yet. Use "Log an event" to add the first one.</p>`;
+}
+
+/* Notes */
+const NOW_MONTH = TODAY.slice(0, 7);
+const monthName = ym => { const [y, m] = ym.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString("en-CA", { month: "short", year: "numeric" }); };
+const noteHtml = (n, withAction) => {
+  const due = !n.done && n.due && n.due <= NOW_MONTH;
+  const pill = n.done ? `<span class="pill ok">${ico("check", "icon sm")}Resolved</span>`
+    : due ? `<span class="pill warn">${ico("calendar-days", "icon sm")}Due now</span>` : n.due ? `<span class="pill" style="color:var(--muted)">${monthName(n.due)}</span>` : "";
+  const act = withAction ? `<button class="btn ghost write-only" type="button" data-n="${n.id}">${ico(n.done ? "history" : "check", "icon sm")}${n.done ? "Reopen" : "Mark resolved"}</button>` : "";
+  return `<div class="note"><div class="row-tags"><span class="tag">${esc(n.crop || "General")}</span>${pill}</div><p>${esc(n.text)}</p>${act}</div>`;
+};
+let noteFilter = "open";
+function renderNotes() {
+  const byDue = (a, b) => (a.due || "9999").localeCompare(b.due || "9999");
+  const open = S.notes.filter(n => !n.done).sort(byDue);
+  $("#notes").innerHTML = open.length ? open.slice(0, 3).map(n => noteHtml(n, false)).join("") : `<p class="empty">No notes yet. Add lessons and changes for next season under Notes.</p>`;
+  const list = S.notes.filter(n => noteFilter === "done" ? n.done : !n.done).sort(byDue);
+  $("#nList").innerHTML = list.length ? list.map(n => noteHtml(n, true)).join("") : `<p class="empty">No ${noteFilter === "done" ? "resolved" : "open"} notes.</p>`;
+}
+$("#n-due").value = `${THIS_YEAR + 1}-03`;
+$("#noteForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const text = $("#n-text").value.trim();
+  if (!text) { $("#n-text").focus(); toast("Write the note first"); return; }
+  if (await guard(() => db.collection("notes").add({ crop: $("#n-crop").value, due: $("#n-due").value || "", text, done: false, by: me?.id || null, createdAt: new Date().toISOString() }), "Note saved")) {
+    $("#n-text").value = ""; noteFilter = "open";
+    $("#nFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "open"));
+  }
+});
+$("#nList").addEventListener("click", e => { const b = e.target.closest("[data-n]"); if (!b) return; const n = S.notes.find(x => x.id === b.dataset.n); if (n) guard(() => db.doc("notes/" + n.id).update({ done: !n.done }), n.done ? "Note reopened" : "Note resolved"); });
+$("#nFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; noteFilter = b.dataset.f; $("#nFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderNotes(); });
+
+/* ── Orders ───────────────────────────────────────────────────────── */
+let oFilter = "upcoming";
+function fmtTime(t) { if (!t) return ["", ""]; const [h, mi] = t.split(":").map(Number); return [`${h % 12 || 12}:${pad(mi)}`, h < 12 ? "AM" : "PM"]; }
+const money = n => "$" + (+n || 0).toLocaleString("en-CA", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+const owes = o => Math.max(0, (+o.total || 0) - (+o.paid || 0));
+const dayLabel = d => d === TODAY ? "Today" : d === addDays(TODAY, 1) ? "Tomorrow" : parse(d).toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric" });
+const payPill = o => !(+o.total) ? "" : owes(o) <= 0 ? `<span class="pill ok">${ico("check", "icon sm")}Paid ${money(o.total)}</span>`
+  : `<span class="pill warn">Owes ${money(owes(o))}${+o.paid > 0 ? ` of ${money(o.total)}` : ""}</span>`;
+function orderRow(o) {
+  const [tm, ap] = fmtTime(o.time), done = o.status === "done";
+  return `<div class="order${done ? " done" : ""}"><div class="date-col"><b style="font-size:15px">${tm || "–"}</b><span>${ap}</span></div>
+    <div class="row-main"><span class="row-title">${esc(o.name)}</span>
+      ${o.phone ? `<span class="meta" style="display:flex;gap:4px;align-items:center">${ico("phone", "icon sm")}${esc(o.phone)}</span>` : ""}
+      <p class="o-items">${esc(o.items)}</p>
+      <div class="row-tags">${payPill(o)}${o.status === "new" ? `<span class="pill new">New from ${esc(o.source || "order form")}</span>` : ""}${done ? `<span class="pill" style="color:var(--muted)">Picked up</span>` : ""}</div>
+      <div class="o-actions write-only">
+        ${o.status === "new" ? `<button class="btn sm primary" type="button" data-o="${o.id}" data-act="confirm">Confirm order</button>` : ""}
+        ${owes(o) > 0 ? `<button class="btn sm outline" type="button" data-o="${o.id}" data-act="paid">Mark paid</button>` : ""}
+        <button class="btn sm outline" type="button" data-o="${o.id}" data-act="pickup">${done ? "Undo pickup" : `${ico("check", "icon sm")}Picked up`}</button>
+        <button class="del-btn" type="button" data-o="${o.id}" data-act="delete">${ico("trash-2", "icon sm")}Delete</button>
+      </div></div></div>`;
+}
+function renderOrders() {
+  const open = S.orders.filter(o => o.status !== "done");
+  const week = open.filter(o => o.date >= TODAY && o.date <= addDays(TODAY, 6));
+  $("#oStats").innerHTML = `<div class="stat"><b>${open.filter(o => o.date === TODAY).length}</b><span>Pickups today</span></div>
+    <div class="stat"><b>${week.length}</b><span>Next 7 days</span></div>
+    <div class="stat"><b>${money(S.orders.reduce((t, o) => t + owes(o), 0))}</b><span>Still owed</span></div>`;
+  const list = (oFilter === "upcoming" ? open : oFilter === "unpaid" ? S.orders.filter(o => owes(o) > 0) : S.orders.filter(o => o.status === "done")).sort(byDate);
+  if (oFilter === "done") list.reverse();
+  let h = "", last = "";
+  list.forEach(o => { if (o.date !== last) { h += `<div class="day-head">${dayLabel(o.date)}</div>`; last = o.date; } h += orderRow(o); });
+  $("#oList").innerHTML = h || `<p class="empty">${oFilter === "upcoming" ? "No upcoming orders. Add one with New order." : "No orders here."}</p>`;
+  $("#ordersDash").innerHTML = week.sort(byDate).slice(0, 5).map(o => {
+    const [mon, day] = fmtShort(o.date).split(" ");
+    return `<div class="row"><div class="date-col"><b>${day}</b><span>${mon}</span></div>
+      <div class="row-main"><span class="row-title">${esc(o.name)}</span><span class="meta">${fmtTime(o.time).join(" ")}${o.time ? " · " : ""}${esc(o.items)}</span>
+      <div class="row-tags">${payPill(o)}${o.status === "new" ? `<span class="pill new">New</span>` : ""}</div></div></div>`;
+  }).join("") || `<p class="empty">No pickups in the next 7 days.</p>`;
+  $("#customers").innerHTML = [...new Set(S.orders.map(o => o.name))].map(n => `<option value="${esc(n)}"></option>`).join("");
+}
+const armed = new Map();
+function armOrConfirm(btn, key, run) { // two taps to delete
+  if (armed.get(key)) { armed.delete(key); run(); return; }
+  armed.set(key, true); btn.classList.add("armed"); btn.lastChild.textContent = "Tap again to delete";
+  setTimeout(() => { armed.delete(key); if (btn.isConnected) { btn.classList.remove("armed"); btn.lastChild.textContent = "Delete"; } }, 4000);
+}
+$("#oList").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const o = S.orders.find(x => x.id === b.dataset.o); if (!o) return;
+  const ref = db?.doc("orders/" + o.id), act = b.dataset.act;
+  if (act === "confirm") guard(() => ref.update({ status: "" }), `Confirmed ${o.name}'s order`);
+  if (act === "paid") guard(() => ref.update({ paid: +o.total || 0 }), `${o.name} marked paid`);
+  if (act === "pickup") guard(() => ref.update({ status: o.status === "done" ? "" : "done" }), o.status === "done" ? "Pickup undone" : `${o.name} picked up`);
+  if (act === "delete") armOrConfirm(b, "o" + o.id, () => guard(() => ref.delete(), "Order deleted"));
+});
+$("#oFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; oFilter = b.dataset.f; $("#oFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderOrders(); });
+$("#o-date").value = addDays(TODAY, 1);
+$("#o-name").addEventListener("change", () => { const c = S.orders.find(o => o.name === $("#o-name").value.trim()); if (c && !$("#o-phone").value) $("#o-phone").value = c.phone || ""; });
+$("#orderForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("#o-name").value.trim(), items = $("#o-items").value.trim();
+  if (!name) { $("#o-name").focus(); toast("Add the customer's name"); return; }
+  if (!items) { $("#o-items").focus(); toast("Add what they ordered"); return; }
+  const doc = { name, phone: $("#o-phone").value.trim(), items, date: $("#o-date").value || TODAY, time: $("#o-time").value || "",
+    total: +$("#o-total").value || 0, paid: +$("#o-paid").value || 0, status: "", source: "manual", by: me?.id || null, createdAt: new Date().toISOString() };
+  if (await guard(() => db.collection("orders").add(doc), "Order saved")) {
+    ["#o-name", "#o-phone", "#o-items", "#o-total", "#o-paid"].forEach(k => $(k).value = "");
+    oFilter = "upcoming"; $("#oFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "upcoming"));
+  }
+});
+
+/* ── This season vs past years ────────────────────────────────────── */
+let cmpCrop = null;
+const cropsForCompare = () => S.lists.crops.length ? S.lists.crops : DEFAULT_CROPS;
+function renderCmpCrops() {
+  const list = cropsForCompare(); if (!list.includes(cmpCrop)) cmpCrop = list[0];
+  $("#cmpCrop").innerHTML = list.map(c => `<button type="button" data-c="${esc(c)}" aria-pressed="${c === cmpCrop}">${esc(c)}</button>`).join("");
+}
+$("#cmpCrop").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return; cmpCrop = b.dataset.c; renderCmpCrops(); drawCompare(); });
+$("#legend").innerHTML = YEARS.map(Y => `<span style="--c:var(${Y.c})"><i></i>${Y.y}</span>`).join("");
+const emptyBox = (msg, icon = "info") => `<div class="empty-box">${ico(icon, "icon sm")}<span>${msg}</span></div>`;
+const cropEvents = (crop, y) => S.events.filter(e => e.date.startsWith(y + "-") && (e.crops || []).includes(crop)).sort(byDate);
+function keyDates(crop, y) {
+  const evs = cropEvents(crop, y), k = [];
+  const plant = evs.filter(e => e.type === "planting"), harv = evs.filter(e => e.type === "harvest");
+  if (plant.length) k.push(["First planting", plant[0]]);
+  if (harv.length) k.push(["First harvest", harv[0]]);
+  if (harv.length > 1) k.push(["Last harvest", harv[harv.length - 1]]);
+  return k;
+}
+
+function drawHarvest() {
+  const units = {}, rows = [];
+  S.events.filter(e => e.type === "harvest" && e.status !== "planned" && (e.crops || []).includes(cmpCrop)).forEach(e => {
+    const m = String(e.details?.Amount ?? "").match(/([\d.,]+)\s*([A-Za-z]+)?/); if (!m) return;
+    const n = parseFloat(m[1].replace(/,/g, "")); if (!isFinite(n)) return;
+    const u = (m[2] || "units").toLowerCase(); units[u] = (units[u] || 0) + 1; rows.push({ y: +e.date.slice(0, 4), md: e.date.slice(5), n, u });
+  });
+  const unit = Object.entries(units).sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (!unit) { $("#hvNote").textContent = ""; $("#hv").innerHTML = emptyBox(`No ${esc(cmpCrop)} harvests with an amount yet. Log a Harvest with an amount like "40 bins" and tag the crop.`); return; }
+  const tot = {}; YEARS.forEach(Y => { const r = rows.filter(x => x.y === Y.y && x.u === unit); if (r.length) tot[Y.y] = [r.filter(x => x.md <= TODAY_MD).reduce((t, x) => t + x.n, 0), r.reduce((t, x) => t + x.n, 0)]; });
+  const max = Math.max(1, ...Object.values(tot).map(([a, b]) => Math.max(a, b)));
+  $("#hv").innerHTML = YEARS.map(Y => {
+    const v = tot[Y.y]; if (!v) return `<div class="hv-row"><span class="hv-y">${Y.y}</span><span class="meta">Nothing logged</span><span></span></div>`;
+    const [to, full] = v, more = Y.y !== THIS_YEAR && full > to;
+    return `<div class="hv-row" style="--c:var(${Y.c})"><span class="hv-y">${Y.y}</span>
+      <div class="hv-track">${more ? `<div class="hv-full" style="width:${full / max * 100}%"></div>` : ""}<div class="hv-bar" style="width:${to / max * 100}%"></div></div>
+      <span class="hv-v"><b>${nf(to)}</b> ${more ? `<span class="meta">of ${nf(full)}</span>` : `<span class="meta">${esc(unit)}</span>`}</span></div>`;
+  }).join("");
+  const a = tot[THIS_YEAR]?.[0], b = tot[THIS_YEAR - 1]?.[0];
+  const cmp = a != null && b ? ` This year is ${Math.abs(Math.round((a - b) / b * 100))}% ${a >= b ? "ahead of" : "behind"} ${THIS_YEAR - 1}.` : "";
+  $("#hvNote").textContent = `${unit[0].toUpperCase() + unit.slice(1)} harvested by ${fmtShort(TODAY)} each year (light bar: whole season).${cmp}`;
+}
+
+function drawTemps() {
+  const wrap = $("#tchart"), have = YEARS.filter(Y => hasWeather(Y.y));
+  if (!have.length) { $("#tNote").textContent = ""; wrap.innerHTML = emptyBox("No weather data yet. Temperatures for Corinth appear here once weather is connected.", "cloud-off"); return; }
+  const means = Object.fromEntries(have.map(Y => [Y.y, monthlyMeans(Y.y)]));
+  const W = Math.max(280, wrap.clientWidth), H = 210, m = { l: 34, r: 44, t: 12, b: 24 }, lo = -5, hi = 30, n = MONTHS.length;
+  const x = i => m.l + i / (n - 1) * (W - m.l - m.r), y = v => H - m.b - (v - lo) / (hi - lo) * (H - m.t - m.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly average temperature, April to October">`;
+  for (let v = lo; v <= hi; v += 5) s += `<line class="grid-line" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text class="axis-text" x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}°</text>`;
+  MONTHS.forEach(([, l], i) => s += `<text class="axis-text" x="${x(i)}" y="${H - 6}" text-anchor="middle">${l}</text>`);
+  [...have].reverse().forEach(Y => {
+    const pts = means[Y.y].map((v, i) => v == null ? null : `${x(i).toFixed(1)},${y(v).toFixed(1)}`).filter(Boolean).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="var(${Y.c})" stroke-width="${Y.y === THIS_YEAR ? 2.5 : 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    means[Y.y].forEach((v, i) => { if (v != null) s += `<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="var(${Y.c})" stroke="var(--surface)" stroke-width="2"/>`; });
+  });
+  const ends = have.map(Y => { const i = means[Y.y].findLastIndex(v => v != null); return i < 0 ? null : { Y, lx: x(i), ly: y(means[Y.y][i]) }; }).filter(Boolean).sort((a, b) => a.ly - b.ly);
+  for (let i = 1; i < ends.length; i++) if (ends[i].lx === ends[i - 1].lx && ends[i].ly - ends[i - 1].ly < 15) ends[i].ly = ends[i - 1].ly + 15;
+  ends.forEach(e => s += `<text class="end-label" x="${e.lx + 7}" y="${e.ly + 4}">${e.Y.y}</text>`);
+  s += `<line class="xhair" id="txh" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" visibility="hidden"/><rect id="thit" x="${m.l - 10}" y="0" width="${W - m.l - m.r + 20}" height="${H}" fill="transparent"/></svg><div class="tip" id="ttip" hidden></div>`;
+  wrap.innerHTML = s;
+  const tip = $("#ttip"), xh = $("#txh");
+  const move = ev => {
+    const rect = wrap.getBoundingClientRect(), px = (ev.clientX - rect.left) * W / rect.width;
+    const i = Math.max(0, Math.min(n - 1, Math.round((px - m.l) / (W - m.l - m.r) * (n - 1))));
+    xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); xh.setAttribute("visibility", "visible");
+    tip.innerHTML = `<b>${MONTHS[i][1]} average</b>` + have.map(Y => `<div class="tr" style="--c:var(${Y.c})"><i></i><span>${Y.y}</span><span>${means[Y.y][i] == null ? "–" : means[Y.y][i].toFixed(1) + " °C"}</span></div>`).join("");
+    tip.hidden = false; tip.style.top = "0px";
+    const tx = x(i) * rect.width / W; tip.style.left = (tx > rect.width / 2 ? tx - tip.offsetWidth - 12 : tx + 12) + "px";
+  };
+  $("#thit").addEventListener("pointermove", move); $("#thit").addEventListener("pointerdown", move);
+  $("#thit").addEventListener("pointerleave", () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); });
+  const mi = NOW.getMonth() + 1, idx = MONTHS.findIndex(([mm]) => mm === mi);
+  const a = idx >= 0 ? means[THIS_YEAR]?.[idx] : null, b = idx >= 0 ? means[THIS_YEAR - 1]?.[idx] : null;
+  $("#tNote").textContent = a != null && b != null ? `${MONTHS[idx][1]} so far averages ${a.toFixed(1)} °C, ${Math.abs(a - b).toFixed(1)}° ${a >= b ? "warmer" : "cooler"} than ${THIS_YEAR - 1}.` : "Monthly averages from daily weather for Corinth.";
+}
+
+function drawHeat() {
+  const wrap = $("#chart"), series = Object.fromEntries(YEARS.map(Y => [Y.y, gddSeries(Y.y)])), have = YEARS.filter(Y => series[Y.y]);
+  if (!have.length) { wrap.innerHTML = emptyBox("No weather data yet. Season heat for Corinth appears here once weather is connected.", "cloud-off"); $("#wxTable").innerHTML = ""; return; }
+  const START = doyOf(`${THIS_YEAR}-04-01`), END = START + 213;
+  const W = Math.max(300, wrap.clientWidth), narrow = W < 520, H = narrow ? 220 : 260, m = { l: 44, r: narrow ? 44 : 58, t: 10, b: 26 };
+  const maxG = Math.max(250, Math.ceil(Math.max(...have.map(Y => series[Y.y][series[Y.y].length - 1] || 0)) / 250) * 250);
+  const x = i => m.l + i / (END - START) * (W - m.l - m.r), y = g => H - m.b - g / maxG * (H - m.t - m.b);
+  const mdIdx = (yy, iso) => doyOf(iso) - doyOf(`${yy}-04-01`);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Growing degree days since April 1 by year">`;
+  for (let g = 0; g <= maxG; g += (narrow ? 500 : 250)) s += `<line class="grid-line" x1="${m.l}" x2="${W - m.r}" y1="${y(g)}" y2="${y(g)}"/><text class="axis-text" x="${m.l - 8}" y="${y(g) + 4}" text-anchor="end">${g.toLocaleString()}</text>`;
+  MONTHS.forEach(([mm, l]) => { const i = mdIdx(THIS_YEAR, `${THIS_YEAR}-${pad(mm)}-01`); s += `<text class="axis-text" x="${x(i)}" y="${H - 6}" text-anchor="start">${l}</text><line class="grid-line" x1="${x(i)}" x2="${x(i)}" y1="${H - m.b}" y2="${H - m.b + 4}"/>`; });
+  const ti = mdIdx(THIS_YEAR, TODAY);
+  if (ti >= 0 && ti <= END - START) s += `<line class="grid-line" x1="${x(ti)}" x2="${x(ti)}" y1="${m.t}" y2="${H - m.b}" stroke-dasharray="2 4"/><text class="axis-text" x="${x(ti) - 4}" y="${m.t + 10}" text-anchor="end">Today</text>`;
+  [...have].reverse().forEach(Y => {
+    const pts = series[Y.y].map((g, i) => g == null ? null : `${x(i).toFixed(1)},${y(g).toFixed(1)}`).filter(Boolean).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="var(${Y.c})" stroke-width="${Y.y === THIS_YEAR ? 2.5 : 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
+  });
+  const ends = have.map(Y => { const a = series[Y.y]; return { Y, ly: y(a[a.length - 1]), lx: x(a.length - 1) }; }).sort((a, b) => a.ly - b.ly);
+  for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 16) ends[i].ly = ends[i - 1].ly + 16;
+  ends.forEach(e => s += `<text class="end-label" x="${e.lx + 6}" y="${e.ly + 4}">${e.Y.y}</text>`);
+  const marks = [];
+  have.forEach(Y => keyDates(cmpCrop, Y.y).forEach(([label, e]) => { const i = mdIdx(Y.y, e.date), g = series[Y.y][i]; if (g != null) { marks.push({ Y, i, label, date: e.date }); s += `<circle cx="${x(i)}" cy="${y(g)}" r="5" fill="var(--surface)" stroke="var(${Y.c})" stroke-width="2.5"/>`; } }));
+  s += `<line class="xhair" id="xh" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" visibility="hidden"/><rect id="hit" x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H}" fill="transparent"/></svg><div class="tip" id="tip" hidden></div>`;
+  wrap.innerHTML = s;
+  const hit = $("#hit"), tip = $("#tip"), xh = $("#xh");
+  const move = ev => {
+    const rect = wrap.getBoundingClientRect(), px = (ev.clientX - rect.left) * W / rect.width;
+    const i = Math.round((px - m.l) / (W - m.l - m.r) * (END - START)); if (i < 0 || i > END - START) return;
+    xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); xh.setAttribute("visibility", "visible");
+    const near = marks.filter(k => Math.abs(k.i - i) <= 2).map(k => `${k.Y.y}: ${k.label} (${fmtShort(k.date)})`);
+    tip.innerHTML = `<b>${fmtShort(dateFromDoy(THIS_YEAR, START + i))}</b>` + have.map(Y => `<div class="tr" style="--c:var(${Y.c})"><i></i><span>${Y.y}</span><span>${series[Y.y][i] != null ? nf(series[Y.y][i]) : "–"}</span></div>`).join("") + (near.length ? `<div class="ev">${near.map(esc).join("<br>")}</div>` : "");
+    tip.hidden = false; tip.style.top = "0px";
+    const tx = x(i) * rect.width / W; tip.style.left = (tx > rect.width / 2 ? tx - tip.offsetWidth - 12 : tx + 12) + "px";
+  };
+  hit.addEventListener("pointermove", move); hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); });
+  $("#wxTable").innerHTML = `<thead><tr><th>Season</th><th>GDD to ${fmtShort(TODAY)}</th><th>Rain since Apr 1</th></tr></thead><tbody>` + have.map(Y => {
+    const a = series[Y.y], i = Math.min(a.length - 1, Math.max(0, ti)); let r = 0;
+    for (let d = doyOf(`${Y.y}-04-01`); d <= doyOf(`${Y.y}-${TODAY_MD}`); d++) r += wxDay(Y.y, dateFromDoy(Y.y, d).slice(5))?.[3] || 0;
+    return `<tr><td style="--c:var(${Y.c})"><i></i>${Y.y}</td><td>${a[i] != null ? nf(a[i]) : "–"}</td><td>${r.toFixed(1)} in</td></tr>`;
+  }).join("") + `</tbody>`;
+}
+
+function drawTimeline() {
+  const wrap = $("#tl"), any = YEARS.some(Y => cropEvents(cmpCrop, Y.y).length);
+  if (!any) { wrap.innerHTML = emptyBox(`No ${esc(cmpCrop)} events yet. Tag events with the crop and they'll line up here by year.`); $("#tlLegend").innerHTML = ""; $("#keyTable").innerHTML = ""; return; }
+  const W = Math.max(300, wrap.clientWidth), narrow = W < 520, m = { l: 44, r: 12, t: 20, b: 6 }, rowH = 52;
+  const S0 = 60, S1 = 335, H = m.t + rowH * YEARS.length + m.b, x = d => m.l + (Math.max(S0, Math.min(S1, d)) - S0) / (S1 - S0) * (W - m.l - m.r);
+  const TLM = [[3, "Mar"], ...MONTHS, [11, "Nov"]];
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(cmpCrop)} events by year">`;
+  TLM.forEach(([mm, l]) => { const d = doyOf(`${THIS_YEAR}-${pad(mm)}-01`); s += `<line class="grid-line" x1="${x(d)}" x2="${x(d)}" y1="${m.t - 4}" y2="${H - m.b}"/><text class="axis-text" x="${x(d) + 4}" y="12">${narrow ? l[0] : l}</text>`; });
+  s += `<line x1="${x(doyOf(TODAY))}" x2="${x(doyOf(TODAY))}" y1="${m.t - 4}" y2="${H - m.b}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+  YEARS.forEach((Y, r) => {
+    const cy = m.t + rowH * r + rowH / 2 + 8, evs = cropEvents(cmpCrop, Y.y), keys = new Set(keyDates(cmpCrop, Y.y).map(k => k[1].id));
+    s += `<text class="end-label" x="0" y="${cy + 4}">${Y.y}</text><line x1="${m.l}" x2="${W - m.r}" y1="${cy}" y2="${cy}" stroke="var(--line)" stroke-width="2"/>`;
+    if (evs.length > 1) s += `<line x1="${x(doyOf(evs[0].date))}" x2="${x(doyOf(evs[evs.length - 1].date))}" y1="${cy}" y2="${cy}" stroke="var(${Y.c})" stroke-width="2.5" stroke-linecap="round"/>`;
+    let lastLabel = -99;
+    evs.forEach(e => {
+      const cx = x(doyOf(e.date)), c = (KINDS[e.type] || TYPES.garden).c, key = keys.has(e.id), planned = e.status === "planned";
+      s += `<g class="tl-mk" tabindex="0" data-tip="${esc(`${fmtLong(e.date)}: ${evTitle(e)}${planned ? " (planned)" : ""}`)}"><circle cx="${cx}" cy="${cy}" r="13" fill="transparent"/>
+        <circle class="dot" cx="${cx}" cy="${cy}" r="${key ? 7 : 4.5}" fill="${planned ? "var(--surface)" : c}" stroke="${planned ? c : "var(--surface)"}" stroke-width="2"/></g>`;
+      if (key && cx - lastLabel > (narrow ? 50 : 46)) { s += `<text class="tl-label" x="${cx}" y="${cy - 13}" text-anchor="middle">${fmtShort(e.date)}</text>`; lastLabel = cx; }
+    });
+  });
+  s += `</svg><div class="tip" id="tlTip" hidden></div>`;
+  wrap.innerHTML = s;
+  const tip = $("#tlTip");
+  const showTip = e => {
+    const g = e.target.closest && e.target.closest(".tl-mk"); if (!g) { tip.hidden = true; return; }
+    tip.textContent = g.dataset.tip; tip.hidden = false;
+    const rect = wrap.getBoundingClientRect(), b = g.querySelector(".dot").getBoundingClientRect();
+    tip.style.left = Math.max(0, Math.min(rect.width - tip.offsetWidth, b.left - rect.left + b.width / 2 - tip.offsetWidth / 2)) + "px";
+    tip.style.top = (b.top - rect.top - tip.offsetHeight - 8) + "px";
+  };
+  wrap.onpointerover = showTip; wrap.onpointerdown = showTip; wrap.onfocusin = showTip;
+  wrap.onpointerleave = () => tip.hidden = true; wrap.onfocusout = () => tip.hidden = true;
+  const used = [...new Set(YEARS.flatMap(Y => cropEvents(cmpCrop, Y.y).map(e => e.type)))];
+  $("#tlLegend").innerHTML = used.map(t => `<span style="--c:${(KINDS[t] || TYPES.garden).c}"><i class="dot"></i>${(KINDS[t] || TYPES.garden).name}</span>`).join("")
+    + `<span style="--c:var(--muted)"><i class="dot big"></i>Key date</span><span><i class="dot hollow"></i>Planned</span>`;
+  const labels = ["First planting", "First harvest", "Last harvest"];
+  const KD = Object.fromEntries(YEARS.map(Y => [Y.y, Object.fromEntries(keyDates(cmpCrop, Y.y).map(([l, e]) => [l, e]))]));
+  const rows = labels.filter(l => YEARS.some(Y => KD[Y.y][l]));
+  $("#keyTable").innerHTML = rows.length ? `<thead><tr><th>Key date</th>${YEARS.map(Y => `<th>${Y.y}</th>`).join("")}<th>This year vs ${THIS_YEAR - 1}</th></tr></thead><tbody>` + rows.map(l => {
+    const a = KD[THIS_YEAR][l], b = KD[THIS_YEAR - 1][l];
+    const diff = a && b && a.status !== "planned" ? doyOf(a.date) - doyOf(b.date) : null;
+    const dtxt = diff == null ? "–" : diff === 0 ? "Same day" : `${Math.abs(diff)} day${Math.abs(diff) === 1 ? "" : "s"} ${diff < 0 ? "earlier" : "later"}`;
+    return `<tr><td>${l}</td>${YEARS.map(Y => { const e = KD[Y.y][l]; return `<td>${e ? fmtShort(e.date) + (e.status === "planned" ? " (planned)" : "") : "–"}</td>`; }).join("")}<td>${dtxt}</td></tr>`;
+  }).join("") + `</tbody>` : "";
+}
+function drawCompare() { renderCmpCrops(); drawHarvest(); drawTemps(); drawHeat(); drawTimeline(); }
+
+/* ── Calendar ─────────────────────────────────────────────────────── */
+let calY = NOW.getFullYear(), calM = NOW.getMonth(), calSel = TODAY;
+$("#calLegend").innerHTML = Object.values(KINDS).map(t => `<span style="--c:${t.c}">${ico(t.icon)}${t.name}</span>`).join("");
+const calItems = () => [...S.events.map(e => ({ ...e, title: evTitle(e), planned: e.status === "planned" })),
+  ...S.orders.map(o => ({ id: "o" + o.id, date: o.date, type: "order", title: `${o.name}${o.time ? ", " + fmtTime(o.time).join(" ") : ""}: ${o.items}`, crops: [], planned: o.status !== "done" }))];
+const evRow = e => `<div class="row">${typeDot(e.type)}<div class="row-main"><span class="row-title">${esc(e.title || evTitle(e))}</span>
+  <div class="row-tags">${tags(e.crops)}${e.planned ? `<span class="pill ok">Planned</span>` : ""}${e.src && e.src !== "app" ? `<span class="src">${e.src === "handwritten" ? "From handwritten notes" : "Imported"}</span>` : ""}</div>
+  ${detailLine(e) ? `<span class="meta">${esc(detailLine(e))}</span>` : ""}${e.desc ? `<span class="meta">${esc(e.desc)}</span>` : ""}</div>
+  <div style="text-align:right; flex:none"><div class="meta">${fmtShort(e.date)}</div>${whoLabel(e) && e.type !== "order" ? `<div class="meta" style="display:flex;gap:4px;align-items:center;justify-content:flex-end">${ico("user", "icon sm")}${esc(whoLabel(e))}</div>` : ""}
+  ${e.type !== "order" ? `<button class="del-btn write-only" type="button" data-del-ev="${e.id}">${ico("trash-2", "icon sm")}Delete</button>` : ""}</div></div>`;
+function renderCalendar() {
+  $("#calLabel").textContent = new Date(calY, calM, 1).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
+  const first = new Date(calY, calM, 1), start = new Date(calY, calM, 1 - first.getDay()), items = calItems();
+  let h = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => `<div class="dow">${d}</div>`).join("");
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    if (i === 35 && d.getMonth() !== calM) break;
+    const key = isoOf(d), evs = items.filter(e => e.date === key);
+    h += `<button type="button" class="day${d.getMonth() !== calM ? " out" : ""}${key === TODAY ? " today" : ""}" data-d="${key}" aria-pressed="${key === calSel}" aria-label="${fmtLong(key)}, ${evs.length} events">
+      <span class="num">${d.getDate()}</span><span class="evs">${evs.slice(0, 3).map(e => `<span class="cal-ev" style="--c:${(KINDS[e.type] || TYPES.garden).c}">${ico((KINDS[e.type] || TYPES.garden).icon)}<span>${esc(e.title)}</span></span>`).join("")}</span>${evs.length > 3 ? `<span class="cal-more">+${evs.length - 3} more</span>` : ""}</button>`;
+  }
+  $("#cal").innerHTML = h;
+  const sel = items.filter(e => e.date === calSel);
+  $("#calDay").innerHTML = `<div class="day-list"><h3>${fmtLong(calSel)}</h3>${sel.length ? `<div class="row-list">${sel.map(evRow).join("")}</div>` : `<p class="empty">Nothing logged or planned.</p>`}</div>`;
+}
+$("#cal").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (b) { calSel = b.dataset.d; renderCalendar(); } });
+$("#calPrev").addEventListener("click", () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCalendar(); });
+$("#calNext").addEventListener("click", () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCalendar(); });
+document.addEventListener("click", e => { const b = e.target.closest("[data-del-ev]"); if (b) armOrConfirm(b, "e" + b.dataset.delEv, () => guard(() => db.doc("events/" + b.dataset.delEv).delete(), "Event deleted")); });
+
+/* ── History ──────────────────────────────────────────────────────── */
+let hYear = "All";
+$("#hType").innerHTML = `<option value="">All types</option>` + Object.entries(TYPES).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join("");
+function renderFilterMenus() {
+  const cur = $("#hCrop").value, curN = $("#n-crop").value;
+  $("#hCrop").innerHTML = `<option value="">All crops</option>` + S.lists.crops.map(c => `<option${c === cur ? " selected" : ""}>${esc(c)}</option>`).join("");
+  $("#n-crop").innerHTML = [...S.lists.crops, "General"].map(c => `<option${c === curN ? " selected" : ""}>${esc(c)}</option>`).join("");
+  const years = ["All", ...[...new Set(S.events.map(e => e.date.slice(0, 4)))].sort().reverse()];
+  if (!years.includes(hYear)) hYear = "All";
+  $("#hYear").innerHTML = years.map(y => `<button type="button" data-y="${y}" aria-pressed="${y === hYear}">${y}</button>`).join("");
+}
+function renderHistory() {
+  const t = $("#hType").value, c = $("#hCrop").value;
+  const list = S.events.filter(e => e.status !== "planned" && (hYear === "All" || e.date.startsWith(hYear)) && (!t || e.type === t) && (!c || (e.crops || []).includes(c))).sort(byDate).reverse();
+  resolveNames(list.slice(0, 200).map(e => e.by));
+  $("#hCount").textContent = `${list.length} event${list.length === 1 ? "" : "s"}`;
+  const groups = {};
+  list.forEach(e => (groups[e.date.slice(0, 7)] ||= []).push(e));
+  $("#hList").innerHTML = list.length ? Object.entries(groups).map(([ym, evs]) => `<div class="month-group"><h3>${parse(ym + "-01").toLocaleDateString("en-CA", { month: "long", year: "numeric" })}</h3><div class="row-list">${evs.map(e => evRow({ ...e, title: evTitle(e) })).join("")}</div></div>`).join("")
+    : `<p class="empty">${S.events.length ? "No events match these filters." : "No events yet. Log one from the dashboard or import old records."}</p>`;
+}
+$("#hYear").addEventListener("click", e => { const b = e.target.closest("[data-y]"); if (!b) return; hYear = b.dataset.y; $("#hYear").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderHistory(); });
+$("#hType").addEventListener("change", renderHistory);
+$("#hCrop").addEventListener("change", renderHistory);
+
+/* ── Import: shared helpers ───────────────────────────────────────── */
+const MONTH_NAMES = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+function parseAnyDate(v, fallbackYear) {
+  if (v == null || v === "") return null;
+  if (v instanceof Date && !isNaN(v)) return isoOf(new Date(v.getTime() + 12 * 36e5)); // noon-shift absorbs UTC/local midnight differences
+  if (typeof v === "number" && v > 20000 && v < 80000) { const d = new Date(Math.round((v - 25569) * 864e5)); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; }
+  const s = String(v).trim().toLowerCase().replace(/(\d)(st|nd|rd|th)\b/g, "$1").replace(/,/g, " ").replace(/\s+/g, " ");
+  let m;
+  if ((m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
+  if ((m = s.match(/^(\d{1,2})[-/.](\d{1,2})(?:[-/.](\d{2,4}))?$/))) { let y = m[3] ? +m[3] : fallbackYear; if (y < 100) y += 2000; if (+m[1] > 12) return `${y}-${pad(+m[2])}-${pad(+m[1])}`; return `${y}-${pad(+m[1])}-${pad(+m[2])}`; }
+  if ((m = s.match(/^([a-z]{3,})\.? (\d{1,2})(?: (\d{4}))?$/))) { const mi = MONTH_NAMES.indexOf(m[1].slice(0, 3)); if (mi >= 0) return `${m[3] || fallbackYear}-${pad(mi + 1)}-${pad(+m[2])}`; }
+  if ((m = s.match(/^(\d{1,2}) ([a-z]{3,})\.?(?: (\d{4}))?$/))) { const mi = MONTH_NAMES.indexOf(m[2].slice(0, 3)); if (mi >= 0) return `${m[3] || fallbackYear}-${pad(mi + 1)}-${pad(+m[1])}`; }
+  const t = Date.parse(String(v)); return isNaN(t) ? null : isoOf(new Date(t));
+}
+function matchType(v, dflt) {
+  const s = String(v || "").toLowerCase();
+  if (!s) return dflt;
+  if (TYPES[s]) return s;
+  if (/spray|fungicid|herbicid|insecticid|pesticid/.test(s)) return "spray";
+  if (/plant|seed|sow|transplant/.test(s)) return "planting";
+  if (/fert|nutri|nitrogen|potash|compost|manure|lime|feed/.test(s)) return "nutrient";
+  if (/harvest|pick|yield/.test(s)) return "harvest";
+  if (/garden|weed|mulch|till|prune|clean|garden/.test(s)) return "garden";
+  return dflt;
+}
+const splitList = v => String(v || "").split(/[;,/]| and /i).map(x => x.trim()).filter(Boolean);
+function matchCrops(v) { const known = S.lists.crops; return splitList(v).map(c => known.find(k => k.toLowerCase() === c.toLowerCase()) || c); }
+async function importRows(rows, meta, progressEl) {
+  const importId = "imp-" + Date.now().toString(36), createdAt = new Date().toISOString();
+  const newCrops = new Set(), newFields = new Set();
+  let done = 0;
+  for (const r of rows) {
+    r.crops.forEach(c => { if (!S.lists.crops.includes(c)) newCrops.add(c); });
+    r.fields.forEach(f => { if (!S.lists.fields.includes(f)) newFields.add(f); });
+    const doc = { date: r.date, type: r.type, what: r.what || TYPES[r.type].name, details: r.details || {}, fields: r.fields, crops: r.crops, desc: r.desc || "",
+      status: r.date > TODAY ? "planned" : "done", by: me?.id || null, createdAt, src: meta.src, importId, importName: meta.name };
+    const ok = await guard(() => db.collection("events").add(doc));
+    if (!ok) { progressEl.textContent = `Stopped after ${done} of ${rows.length}. Nothing else was imported.`; break; }
+    done++; if (done % 5 === 0 || done === rows.length) progressEl.textContent = `Imported ${done} of ${rows.length}…`;
+  }
+  if (newCrops.size || newFields.size) { S.lists.crops = [...S.lists.crops, ...newCrops]; S.lists.fields = [...S.lists.fields, ...newFields]; await saveLists(); }
+  if (done === rows.length) { progressEl.textContent = `Imported ${done} event${done === 1 ? "" : "s"}.`; toast(`Imported ${done} events`); }
+  return done;
+}
+
+/* Spreadsheet import */
+let XLSXP = null, wb = null, xlsName = "", xlsRows = [], xlsHead = [];
+function loadXLSX() {
+  return XLSXP ||= new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; s.onload = () => res(window.XLSX); s.onerror = () => { XLSXP = null; rej(new Error("load")); }; document.head.append(s); });
+}
+// [key, label, exact header match, looser match]; exact matches are assigned first
+const MAP_FIELDS = [["date", "Date", /^(date|day)$/i, /date|day|when/i], ["type", "Type", /^(type|activity|event type|category)$/i, /type|category|kind/i],
+  ["what", "What", /^(what|product|chemical|item|task|title)$/i, /what|product|chemical|item|task|variety/i],
+  ["crops", "Crops", /^crops?$/i, /crop/i], ["fields", "Fields", /^(fields?|block|location)$/i, /field|block|location|bed/i],
+  ["desc", "Description / notes", /^(notes?|description|comments?)$/i, /note|desc|comment|detail|remark/i],
+  ["amount", "Amount", /^(amount|qty|quantity|yield)$/i, /amount|qty|quantity|yield|volume|bins|lbs?\b|weight/i], ["rate", "Rate", /^rate$/i, /rate|dose/i]];
+$("#xlsType").innerHTML = Object.entries(TYPES).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join("");
+$("#xlsType").value = "garden";
+$("#xlsYear").value = THIS_YEAR;
+$("#hwYear").value = THIS_YEAR;
+async function openSpreadsheet(file) {
+  if (!file) return;
+  $("#xlsProgress").textContent = "Reading…";
+  let XLSX;
+  try { XLSX = await loadXLSX(); } catch { $("#xlsProgress").textContent = "Couldn't load the spreadsheet reader. Check your connection and try again."; return; }
+  try {
+    wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+    xlsName = file.name;
+    $("#xlsSheet").innerHTML = wb.SheetNames.map(n => `<option>${esc(n)}</option>`).join("");
+    $("#xlsStep").hidden = false; $("#xlsProgress").textContent = "";
+    loadSheet();
+  } catch (e) { console.warn(e); $("#xlsProgress").textContent = "Couldn't read that file. Save it as .xlsx or .csv and try again."; }
+}
+function loadSheet() {
+  const ws = wb.Sheets[$("#xlsSheet").value];
+  const all = window.XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" });
+  const hi = Math.max(0, all.findIndex(r => r.filter(v => String(v).trim() !== "").length >= 2));
+  xlsHead = (all[hi] || []).map((h, i) => String(h).trim() || `Column ${i + 1}`);
+  xlsRows = all.slice(hi + 1).filter(r => r.some(v => String(v).trim() !== ""));
+  const used = new Set(), pick = {};
+  [2, 3].forEach(pass => MAP_FIELDS.forEach(f => { if (f[0] in pick) return; const g = xlsHead.findIndex((h, i) => !used.has(i) && f[pass].test(h)); if (g >= 0) { pick[f[0]] = g; used.add(g); } }));
+  $("#xlsMap").innerHTML = MAP_FIELDS.map(([k, label]) => {
+    const g = pick[k] ?? -1;
+    return `<div class="field"><label for="map-${k}">${label}${k === "date" ? " (needed)" : ""}</label><select id="map-${k}" data-map="${k}"><option value="">Not in this sheet</option>${xlsHead.map((h, i) => `<option value="${i}"${i === g ? " selected" : ""}>${esc(h)}</option>`).join("")}</select></div>`;
+  }).join("");
+  previewSheet();
+}
+function sheetEvents() {
+  const col = k => { const v = $(`#map-${k}`)?.value; return v === "" || v == null ? -1 : +v; };
+  const C = Object.fromEntries(MAP_FIELDS.map(([k]) => [k, col(k)])), y = +$("#xlsYear").value || THIS_YEAR, dflt = $("#xlsType").value;
+  return xlsRows.map(r => {
+    const get = k => C[k] >= 0 ? r[C[k]] : "";
+    const details = {}; if (String(get("amount")).trim()) details.Amount = String(get("amount")).trim(); if (String(get("rate")).trim()) details.Rate = String(get("rate")).trim();
+    return { date: parseAnyDate(get("date"), y), type: matchType(get("type"), dflt), what: String(get("what")).trim(), crops: matchCrops(get("crops")), fields: splitList(get("fields")), desc: String(get("desc")).trim(), details, raw: get("date") };
+  });
+}
+function previewSheet() {
+  const evs = sheetEvents(), ok = evs.filter(e => e.date);
+  $("#xlsPreview").innerHTML = `<thead><tr><th>Date</th><th>Type</th><th>What</th><th>Crops</th></tr></thead><tbody>` + evs.slice(0, 8).map(e =>
+    `<tr><td>${e.date ? fmtShort(e.date) + " " + e.date.slice(0, 4) : `<span class="bad">No date (${esc(e.raw || "blank")})</span>`}</td><td>${TYPES[e.type].name}</td><td>${esc(e.what)}</td><td>${esc(e.crops.join(", "))}</td></tr>`).join("") + `</tbody>`;
+  $("#xlsSummary").textContent = `${evs.length} rows found. ${ok.length} ready to import${evs.length - ok.length ? `, ${evs.length - ok.length} skipped because the date couldn't be read` : ""}. Showing the first ${Math.min(8, evs.length)}.`;
+  $("#xlsImport").innerHTML = `${ico("upload")}Import ${ok.length} event${ok.length === 1 ? "" : "s"}`;
+  $("#xlsImport").disabled = !ok.length;
+}
+$("#xlsFile").addEventListener("change", e => openSpreadsheet(e.target.files[0]));
+$("#xlsSheet").addEventListener("change", loadSheet);
+$("#xlsMap").addEventListener("change", previewSheet);
+$("#xlsType").addEventListener("change", previewSheet);
+$("#xlsYear").addEventListener("change", previewSheet);
+$("#xlsImport").addEventListener("click", async () => {
+  const ok = sheetEvents().filter(e => e.date); if (!ok.length) return;
+  $("#xlsImport").disabled = true;
+  await importRows(ok, { src: "spreadsheet", name: xlsName }, $("#xlsProgress"));
+  $("#xlsImport").disabled = false;
+});
+["xlsDrop", "hwDrop"].forEach(id => {
+  const el = $("#" + id);
+  el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("over"); });
+  el.addEventListener("dragleave", () => el.classList.remove("over"));
+  el.addEventListener("drop", e => { e.preventDefault(); el.classList.remove("over"); if (id === "xlsDrop") openSpreadsheet(e.dataTransfer.files[0]); else setPhotos([...e.dataTransfer.files]); });
+});
+
+/* Handwritten import (Claude reads the photos) */
+let photos = [], hwRows = [], hwCtl = null, imgLimits = null;
+function setPhotos(files) {
+  const max = imgLimits?.maxCount || 5, ok = files.filter(f => /^image\//.test(f.type)).slice(0, max);
+  if (files.length > max) toast(`Up to ${max} photos at a time`);
+  photos = ok; $("#hwThumbs").innerHTML = ""; ok.forEach(f => { const img = document.createElement("img"); img.src = URL.createObjectURL(f); img.alt = f.name; $("#hwThumbs").append(img); });
+  $("#hwRead").disabled = !photos.length;
+}
+$("#hwFiles").addEventListener("change", e => setPhotos([...e.target.files]));
+$("#hwRead").addEventListener("click", async () => {
+  if (hwCtl) { hwCtl.abort(); return; }
+  const year = +$("#hwYear").value || THIS_YEAR;
+  const prompt = `These photos are handwritten farm records from Fehr Grown Farms in Corinth, Ontario. Transcribe every dated farm activity.
+Reply with only a JSON array. Each item: {"date":"YYYY-MM-DD","type":"spray|planting|nutrient|harvest|garden","what":"short title, e.g. the product, crop or task","crops":["crop names"],"fields":["field names"],"amount":"amount with unit, or empty","rate":"application rate, or empty","description":"anything else written for that entry, including notes about next year","unsure":true or false}
+Rules: when no year is written, use ${year}. Match crops to this list when they fit: ${S.lists.crops.join(", ") || "none yet"}. Match fields to this list when they fit: ${S.lists.fields.join(", ") || "none yet"}. Set "unsure" to true when handwriting or the date is hard to read. Never invent entries. If nothing is readable, reply [].`;
+  hwCtl = new AbortController();
+  $("#hwRead").innerHTML = `${ico("x")}Stop`; $("#hwProgress").textContent = "Claude is reading the pages. This can take up to a minute…";
+  try {
+    const out = await sampleFn.json(prompt, { images: photos, signal: hwCtl.signal });
+    const arr = Array.isArray(out) ? out : [];
+    hwRows = arr.map(r => ({ include: true, date: parseAnyDate(r.date, year) || "", type: matchType(r.type, "garden"), what: String(r.what || ""), crops: matchCrops((r.crops || []).join(";")), fields: splitList((r.fields || []).join(";")),
+      desc: String(r.description || ""), details: Object.fromEntries([["Amount", r.amount], ["Rate", r.rate]].filter(([, v]) => v && String(v).trim())), unsure: !!r.unsure }));
+    $("#hwProgress").textContent = hwRows.length ? `Found ${hwRows.length} entries. Check them, fix anything that's wrong, untick what you don't want, then import. Rows Claude wasn't sure about are outlined.` : "Claude couldn't find any dated entries in these photos.";
+    renderHw();
+  } catch (e) {
+    const msg = { cancelled: "Stopped.", not_granted: "Reading photos needs your permission to use Claude. Reload the page to be asked again.", rate_limited: "Too many requests right now. Try again in a few minutes.",
+      image_rejected: "One of the photos couldn't be read. Try a clearer JPEG or PNG.", invalid_json: "Claude's answer couldn't be read. Try again, or try fewer pages at once.", refused: "Claude couldn't transcribe these photos." }[e?.code];
+    $("#hwProgress").textContent = msg || "Something went wrong reading the photos. Try again.";
+    if (e?.code === "not_granted" || e?.code === "images_unavailable" || e?.code === "sampling_disabled") { $("#hwArea").hidden = true; $("#hwUnavailable").hidden = false; }
+  } finally { hwCtl = null; $("#hwRead").innerHTML = `${ico("camera")}Read with Claude`; }
+});
+function renderHw() {
+  $("#hwList").innerHTML = hwRows.map((r, i) => `<div class="hw-row${r.unsure ? " unsure" : ""}">
+    <input type="checkbox" data-hw="${i}" data-k="include" ${r.include ? "checked" : ""} aria-label="Include this row">
+    <input type="date" data-hw="${i}" data-k="date" value="${r.date}" aria-label="Date">
+    <select data-hw="${i}" data-k="type" aria-label="Type">${Object.entries(TYPES).map(([k, t]) => `<option value="${k}"${k === r.type ? " selected" : ""}>${t.name}</option>`).join("")}</select>
+    <input class="hw-what" data-hw="${i}" data-k="what" value="${esc(r.what)}" placeholder="What" aria-label="What">
+    <input class="hw-crops" data-hw="${i}" data-k="crops" value="${esc(r.crops.join(", "))}" placeholder="Crops" aria-label="Crops">
+    <input class="hw-desc" data-hw="${i}" data-k="desc" value="${esc([Object.values(r.details).join(" · "), r.desc].filter(Boolean).join(" — "))}" placeholder="Notes" aria-label="Notes"></div>`).join("");
+  const n = hwRows.filter(r => r.include && r.date).length;
+  $("#hwImport").hidden = !hwRows.length; $("#hwImport").innerHTML = `${ico("upload")}Import ${n} event${n === 1 ? "" : "s"}`; $("#hwImport").disabled = !n;
+}
+$("#hwList").addEventListener("change", e => {
+  const el = e.target.closest("[data-hw]"); if (!el) return;
+  const r = hwRows[+el.dataset.hw], k = el.dataset.k;
+  if (k === "include") r.include = el.checked; else if (k === "crops") r.crops = matchCrops(el.value); else if (k === "desc") { r.desc = el.value; r.details = {}; } else r[k] = el.value;
+  const n = hwRows.filter(r => r.include && r.date).length; $("#hwImport").innerHTML = `${ico("upload")}Import ${n} event${n === 1 ? "" : "s"}`; $("#hwImport").disabled = !n;
+});
+$("#hwImport").addEventListener("click", async () => {
+  const rows = hwRows.filter(r => r.include && r.date); if (!rows.length) return;
+  $("#hwImport").disabled = true;
+  const n = await importRows(rows, { src: "handwritten", name: photos.map(p => p.name).join(", ") || "Handwritten notes" }, $("#hwProgress"));
+  if (n === rows.length) { hwRows = []; renderHw(); setPhotos([]); $("#hwFiles").value = ""; }
+  $("#hwImport").disabled = false;
+});
+
+/* Past imports */
+function renderImports() {
+  const g = {};
+  S.events.forEach(e => { if (!e.importId) return; (g[e.importId] ||= { id: e.importId, name: e.importName, src: e.src, at: e.createdAt, n: 0 }).n++; });
+  const list = Object.values(g).sort((a, b) => (b.at || "").localeCompare(a.at || ""));
+  $("#impList").innerHTML = list.length ? list.map(i => `<div class="imp-row">${ico(i.src === "handwritten" ? "camera" : "file-spreadsheet", "icon")}<div class="row-main"><span class="row-title">${esc(i.name || "Import")}</span><span class="meta">${i.n} event${i.n === 1 ? "" : "s"} · ${i.at ? fmtLong(i.at.slice(0, 10)) : ""}</span></div>
+    <button class="del-btn" type="button" data-rm-imp="${esc(i.id)}">${ico("trash-2", "icon sm")}Remove import</button></div>`).join("") : `<p class="empty">Nothing imported yet.</p>`;
+}
+$("#impList").addEventListener("click", e => {
+  const b = e.target.closest("[data-rm-imp]"); if (!b) return;
+  armOrConfirm(b, "i" + b.dataset.rmImp, async () => {
+    const ids = S.events.filter(x => x.importId === b.dataset.rmImp).map(x => x.id); let n = 0;
+    for (const id of ids) { if (!(await guard(() => db.doc("events/" + id).delete()))) break; n++; }
+    toast(`Removed ${n} imported event${n === 1 ? "" : "s"}`);
+  });
+});
+
+/* ── Navigation ───────────────────────────────────────────────────── */
+const VIEWS = ["dashboard", "calendar", "orders", "history", "notes", "import"];
+let curView = "dashboard";
+function show(v) {
+  if (!VIEWS.includes(v)) v = "dashboard";
+  curView = v;
+  VIEWS.forEach(x => $("#v-" + x).hidden = x !== v);
+  document.querySelectorAll("[data-view]").forEach(a => a.dataset.view === v && !a.classList.contains("wordmark") ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  ["history", "notes", "import"].includes(v) ? $("#moreBtn").setAttribute("aria-current", "page") : $("#moreBtn").removeAttribute("aria-current");
+  setMore(false);
+  renderView();
+  scrollTo(0, 0);
+}
+const setMore = on => { $("#moreMenu").hidden = !on; $("#moreBtn").setAttribute("aria-expanded", on); };
+$("#moreBtn").addEventListener("click", e => { e.stopPropagation(); setMore($("#moreMenu").hidden); });
+document.addEventListener("click", e => {
+  if (!e.target.closest("#moreMenu")) setMore(false);
+  const a = e.target.closest("[data-view]"); if (!a) return; e.preventDefault(); show(a.dataset.view);
+});
+$("#feedbackBtn").addEventListener("click", async () => {
+  if (!commentsNs) return;
+  const target = curView === "dashboard" ? $("#v-dashboard") : $("#v-" + curView).querySelector(".unit") || $("#v-" + curView);
+  try { await commentsNs.openComposer({ element: target }); } catch (e) { console.warn(e); }
+});
+
+/* ── Render ───────────────────────────────────────────────────────── */
+function renderView() {
+  if (curView === "dashboard") { renderForecast(); renderUpcoming(); renderOrders(); renderPast(); renderNotes(); renderRecent(); drawCompare(); }
+  if (curView === "calendar") renderCalendar();
+  if (curView === "orders") renderOrders();
+  if (curView === "history") renderHistory();
+  if (curView === "notes") renderNotes();
+  if (curView === "import") renderImports();
+}
+let rq = 0;
+function renderAll() { cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { renderFilterMenus(); renderView(); }); }
+$("#todayLabel").textContent = `Farm log · Corinth, ON · ${NOW.toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}`;
+paintIcons(); renderTypes(); renderChips("fields"); renderChips("crops"); renderFilterMenus();
+show(location.hash.slice(1));
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (curView === "dashboard") drawCompare(); }, 150); });
+
+/* ── Connect to the shared database ───────────────────────────────── */
+(async () => {
+  const C = window.claude;
+  if (!C?.use) { setStatus("offline", "<b>Offline preview.</b> Open this page in Claude to see and save the farm's data."); return; }
+  const [dbNs, u, smp, cm] = await Promise.all([C.use("db"), C.use("user"), C.use("sample"), C.use("comments")]);
+  userNs = u; sampleFn = smp; commentsNs = cm;
+  $("#feedbackBtn").hidden = !commentsNs;
+  if (userNs) {
+    me = await userNs.me();
+    if (me?.avatarUrl) $("#avatar").innerHTML = `<img alt="" src="${esc(me.avatarUrl)}">`;
+    $("#avatar").title = me?.name || "You";
+    canWrite = await userNs.can("data.write");
+    applyWriteState();
+  }
+  if (sampleFn) { imgLimits = (await sampleFn.limits().catch(() => null))?.images || null; }
+  if (!sampleFn || !imgLimits) { $("#hwArea").hidden = true; $("#hwUnavailable").hidden = false; }
+  else $("#hwLimit").textContent = `JPEG or PNG, up to ${imgLimits.maxCount} pages at a time`;
+  if (!dbNs) { setStatus("offline", "<b>Can't reach the farm's data.</b> Reload the page. If it keeps happening, tell the farm owner."); return; }
+  db = dbNs;
+  const onErr = e => { console.warn(e); if (e?.code === "revoked") setStatus("offline", "<b>Access changed.</b> Reload the page."); };
+  const firstLoad = new Set(["events", "orders", "notes"]);
+  const live = () => { if (canWrite !== false && !firstLoad.size) setStatus("live", "<b>Beta.</b> Everything entered here is saved and shared with everyone testing."); };
+  ["events", "orders", "notes"].forEach(name => db.collection(name).onSnapshot(snap => {
+    S[name] = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(x => name !== "events" || typeof x.date === "string");
+    firstLoad.delete(name); live(); renderAll();
+  }, onErr));
+  db.doc("lists/main").onSnapshot(snap => {
+    const d = snap.exists ? snap.data() : null;
+    S.lists = { crops: d?.crops ?? [...DEFAULT_CROPS], fields: d?.fields ?? [], saved: d?.saved ?? {} };
+    renderChips("fields"); renderChips("crops"); if (!whatList.hidden) renderCombo(); renderAll();
+  }, onErr);
+  db.collection("weather").onSnapshot(snap => {
+    S.weather = {}; S.forecast = null;
+    snap.docs.forEach(d => { if (d.id === "forecast") S.forecast = d.data(); else S.weather[d.id] = d.data(); });
+    renderAll();
+  }, onErr);
+})();
+
+</script>

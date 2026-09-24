@@ -4,6 +4,15 @@ Status: **Approved direction, Phase 0 (design) in progress.** Decisions from rev
 
 ---
 
+## Live beta (from 2026-09-24)
+
+Before the Mac mini build, the team tests a **live beta** published as a Claude artifact (`app-beta/farm-log.html`). It's a single page with the same screens as the mockup, and it saves to the artifact's shared database, so everyone sees the same data live. It starts blank.
+
+- **Who can use it:** people the owner shares it with from the page's Share menu. Each tester needs a Claude account and "Can edit" access to add entries. It can't be opened by a public link.
+- **Importing:** the Import screen reads Excel/CSV files (column matching and preview, then import) and photos of handwritten pages (Claude transcribes, you check, then import). Every import can be undone. Files can also be sent to Claude in chat to load directly.
+- **Weather:** not connected yet. The page reads weather from its database (`weather/<year>` daily values and `weather/forecast`), so weather can be loaded later without changing the page.
+- **Limits:** about 5,000 records in total, which covers several seasons of testing. Data can be exported from the beta into the Mac mini app when that's built.
+
 ## 0. Decisions from review (2026-09-23)
 
 | Question | Answer | What it changes |

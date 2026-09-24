@@ -4,6 +4,8 @@ Living record of design decisions. Update it whenever a mockup round settles som
 
 **Direction (from you):** clean and minimalist, with clear and simple iconography, titles and descriptions.
 
+**Brand (from the Fehr Grown Farms logo, `design/reference/fehr-grown-farms-logo.jpg`):** charcoal `#424244` and lime green `#8EC444`. The header uses a text wordmark ("fehr grown" over a green "FARMS") in Questrial, which is close to the logo's geometric typeface. Primary buttons are lime green with dark text (`#1D2A0E`, 7.3:1 contrast). Green text and icons use a deeper `#4D7F1E`, because lime on white is too faint for text (2.1:1).
+
 **Current mockup:** `design/mockups/dashboard.html`. Open it in any browser. It has four screens (Dashboard, Calendar, History, Notes), uses example data and saves nothing.
 
 ## Principles
@@ -59,6 +61,8 @@ The tokens sit at the top of the mockup's `<style>` block. They will move to `fr
 - Should orders record which crops they include, so they count toward harvest numbers?
 
 ## Changelog
+
+- **Beta 1 (2026-09-24):** live beta published from `app-beta/farm-log.html`, in brand colours, with all example data removed. Adds an Import screen for spreadsheets and handwritten notes.
 
 - **Round 1e (2026-09-24):** the header now reads **Fehr Grown Farm**. The season heat (GDD) chart is back as a panel inside "This season vs past years", with the chosen crop's events marked on each year's line and a GDD and rain table. Dashboard order unchanged.
 
