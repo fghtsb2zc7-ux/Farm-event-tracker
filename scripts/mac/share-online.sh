@@ -8,8 +8,10 @@
 set -euo pipefail
 PORT="8090"
 
-TS="$(command -v tailscale || true)"
-[[ -z "$TS" && -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]] && TS="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+# Prefer the command-line tool inside the Tailscale app, so it always matches the running app's version.
+# (An older separate copy, e.g. from Homebrew, triggers "client version != tailscaled server version" warnings.)
+TS="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+[[ -x "$TS" ]] || TS="$(command -v tailscale || true)"
 if [[ -z "$TS" ]]; then
   echo "Tailscale isn't installed. Install it from https://tailscale.com/download/mac, sign in, then run this again."
   exit 1

@@ -68,6 +68,7 @@ To reset someone's password, open their record, set a new password and save. To 
    ```
 
    The first time, Tailscale prints a link to approve **HTTPS** and **Funnel** for your account. Open it, approve both, then run the script again.
+   If you see `Warning: client version … != tailscaled server version …`, an older separate copy of Tailscale's command-line tool is installed. The script uses the one inside the Tailscale app, so update the project (`git pull`) and run it again, or run `/Applications/Tailscale.app/Contents/MacOS/Tailscale funnel --bg 8090` directly.
 4. The script prints the Farm Log's address. Open it on your phone to check, then share it with the team along with [TEAM-GUIDE.md](TEAM-GUIDE.md).
 
 Your teammates don't install Tailscale. Only the Mac mini needs it.
