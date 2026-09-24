@@ -79,12 +79,12 @@ Status: **Approved direction, Phase 0 (design) in progress.** Decisions from rev
 All collections live in PocketBase. Fields marked * are required.
 
 **event_types** (fully customisable in the UI)
-- name* (e.g. Spray, Planting, Garden, Nutrient, Client Pickup, Harvest)
+- name* (e.g. Spray, Planting, Garden, Nutrient, Harvest). Customer pickups are orders, not an event type (see **orders** below).
 - color*, icon
 - `extra_fields` (JSON): optional type-specific fields. For example, Spray gets *product, rate, area, REI/PHI days* and Planting gets *variety, rows, seed lot*. Defining these as data means new types need no code changes.
 
 **saved_items** (the pick lists behind the log form's first field, editable from the form)
-- name*, event_type* → event_types (Spray → chemicals, Nutrient → fertilizers, Pickup → clients, and so on)
+- name*, event_type* → event_types (Spray → chemicals, Nutrient → fertilizers, Harvest → crops, and so on)
 - defaults (JSON): details filled in when the item is picked, e.g. rate and re-entry interval for a chemical
 - archived (bool): removing an item hides it from the list but keeps it on past events
 
@@ -92,7 +92,7 @@ All collections live in PocketBase. Fields marked * are required.
 - name*, area (acres), notes, archived. Added and removed from the log form; events can have several.
 
 **tags** (crops and groupings)
-- name* (Strawberries, Cucumbers, Garlic, Garden, Fall Produce…), color, group (e.g. "Crop", "Field", "Client")
+- name* (Strawberries, Cucumbers, Garlic, Garden, Fall Produce…), color, group (e.g. "Crop", "Field")
 
 **users** (PocketBase built-in)
 - name, email, role: owner / family / crew. Crew can add and edit their own events; owners manage types, tags and settings.
@@ -107,6 +107,19 @@ All collections live in PocketBase. Fields marked * are required.
 - source: app / import-spreadsheet / import-handwritten
 - gcal_event_id, gcal_synced_at
 - weather_snapshot (JSON): conditions copied onto the event when it's marked done, so the record survives even if the weather cache is rebuilt
+
+**customers**
+- name*, phone, notes. Filled automatically from orders so repeat customers can be picked by name.
+
+**orders** (the order manager)
+- customer* → customers (name and phone shown on the order)
+- items* (free text: what they ordered)
+- pickup_date*, pickup_time
+- total, paid (dollars). "Owes" is total minus paid.
+- status: new / confirmed / picked_up / cancelled
+- source: phone / walk-in / facebook / order_form
+- created_by → users
+- Order pickups appear on the calendar but not in the event history.
 
 **notes** (the "next year I should…" feature)
 - body*, kind: observation / change-for-next-year / issue
@@ -129,10 +142,11 @@ The dashboard is a grid of cards. Each unit is a self-contained component, so un
 1. **Quick add.** Date, type, title, tags and description in one compact form. Picking a type reveals its extra fields.
 2. **Upcoming.** The next 14 days of planned events, with the 7-day forecast alongside (rain days flagged for spray planning).
 3. **This week last year(s).** Everything that happened in the same calendar week in prior years, with that week's weather. This is the core "learn from history" view.
-4. **Historical weather.** A chart of temperature, rain and cumulative GDD for any season, with event markers overlaid. You can compare two years side by side.
+4. **This season vs past years.** Pick a crop. Shows harvest volume by year (to date, and whole season for past years), monthly average temperature for each year, and a season timeline with key dates labelled, plus a table of how many days earlier or later each key date is this year.
 5. **Event history.** A filterable table and timeline by year, type and crop tag, plus a year-over-year strip showing first planting, first spray and first harvest per crop across years.
 6. **Notes to review.** "Change for next year" notes that are due, grouped by crop.
-7. **Calendar.** A full-page FullCalendar view, colour-coded by type and filterable by tag.
+7. **Calendar.** A full-page FullCalendar view, colour-coded by type and filterable by tag. Order pickups show here too.
+8. **Order pickups.** This week's customer pickups on the dashboard, with a full Orders screen for adding orders, marking them paid and marking them picked up.
 
 Analytics worth adding once there's data: days from planting to first harvest per crop per year; GDD at planting and at harvest; spray count and product totals per season; rainfall between planting and harvest.
 
@@ -167,15 +181,23 @@ This is the part you asked to spend time on. It has three loops, from fastest to
 
 ---
 
+## 6b. Orders and Facebook
+
+Many customers pick up orders at the farm, so the app has a simple **order manager** (Phase 1): name, phone, what they ordered, pickup date and time, total, and how much is paid.
+
+**Direct Facebook integration is not planned.** Reading Page messages or comments needs a registered Meta developer app, business verification and Meta's app review, and Meta changes those rules often. That's a poor fit for "free and easy to maintain".
+
+**The alternative (Phase 4):** the app serves a public **order request form** (no login) at a link like `https://farm-mini.<tailnet>.ts.net/order`. Post that link on the farm's Facebook page and in replies to customers. Submitted requests appear in Orders marked **New** with source "Facebook" for someone to confirm. Until then, orders from Facebook messages are typed in by hand.
+
 ## 7. Build phases
 
 | Phase | Scope | Result |
 |---|---|---|
 | **0. Design** | Loop A mockups, then lock `DESIGN.md` and tokens | You've approved how it looks before it's built |
-| **1. Core MVP** | Repo scaffold, PocketBase schema, logins for family and crew, mobile-first event logging, custom types and tags, calendar view, notes, style guide page, **CSV import** (spreadsheets and transcribed handwritten notes) | Everyone can log from their phone; past records loaded |
+| **1. Core MVP** | Repo scaffold, PocketBase schema, logins for family and crew, mobile-first event logging, custom types and tags, calendar view, notes, **order manager**, style guide page, **CSV import** (spreadsheets and transcribed handwritten notes) | Everyone can log events and take orders from their phone; past records loaded |
 | **2. Weather** | Set farm location; daily job for forecast and archive; one-click backfill of past years; historical weather unit with event overlay | Weather context on every event |
 | **3. Google Calendar** | OAuth setup page, one-way push, sync status on each event | Events on your phone |
-| **4. History and analytics** | "This week last year", year-over-year strip, crop timing and GDD stats, notes-to-review | The planning payoff |
+| **4. History and analytics** | "This week last year", season comparison (harvest volume, temperatures, key-date timeline), notes to review, **public order request form** to post on Facebook | The planning payoff |
 | **5. Hardening** | Offline logging queue, CSV export, automatic backups, launchd service, Tailscale setup guide, update script | Runs unattended on the Mac mini |
 
 Each phase is a separate PR, so you can review and try each one before the next starts.

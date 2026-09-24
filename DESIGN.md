@@ -28,7 +28,7 @@ The tokens sit at the top of the mockup's `<style>` block. They will move to `fr
 | `--line` | `#e1e6e0` | `#2a332d` | Borders, dividers |
 | `--accent` | `#2d6a4f` | `#5fb38a` | Buttons, active states |
 
-**Event types** (changeable in Settings): Spray: blue. Planting: green-teal. Nutrient: amber. Harvest: orange. Pickup: pink. Garden: green.
+**Event types** (changeable in Settings): Spray: blue. Planting: green-teal. Nutrient: amber. Harvest: orange. Garden: green. Order pickups (not an event type) use pink with a basket icon.
 
 **Type:** Instrument Sans (Google Fonts, open source) at 400, 500 and 600. Numbers use tabular figures so columns line up.
 
@@ -44,19 +44,23 @@ The tokens sit at the top of the mockup's `<style>` block. They will move to `fr
 |---|---|---|
 | Log an event | Top left | Opens from the bottom-bar Log button |
 | Next 14 days + forecast | Top right | 1 |
-| Season heat by year (GDD chart + table) | Middle, wide | 3 |
-| Notes for next time | Middle right | 4 |
-| This week in past years | Bottom left | 2 |
-| Recently logged (with who logged it) | Bottom right | 5 |
+| This season vs past years (harvest volume, monthly temperature, key-date timeline) | Middle, full width | 4 |
+| Order pickups (this week) | Lower left | 2 |
+| This week in past years | Lower right | 3 |
+| Notes for next time | Bottom left | 5 |
+| Recently logged (with who logged it) | Bottom right | 6 |
+
+**Screens:** Dashboard, Calendar, Orders, History, Notes. On phones the bottom bar holds Home, Calendar, Log, Orders and More, and More opens History and Notes.
 
 ## Open design questions
 
 - Should the phone home screen show "This week in past years" above or below the upcoming list?
-- Is the growing degree day chart useful to you, or would a simpler "warmer or cooler than last year" summary be better?
 - What should the farm's name in the header be?
 - Farm logo or initials, instead of the sprout icon?
 
 ## Changelog
+
+- **Round 1d (2026-09-24):** removed Pickup as an event type. Added an **Orders** screen (name, phone, what they ordered, pickup date and time, total, paid so far) with Upcoming, Unpaid and Picked up filters. Orders can be marked paid, marked picked up, or confirmed if they came from the order form. The dashboard gets an "Order pickups" unit, and the calendar shows pickups. Replaced the heat chart with **This season vs past years**: harvest volume by year, monthly average temperature, and a season timeline with labelled key dates and a days-earlier/later table.
 
 - **Round 1c (2026-09-23):** the log form's first field is now a dropdown of saved items for the chosen type (chemicals for Spray, fertilizers for Nutrient, clients for Pickup, and so on). Type to filter, pick one to fill in its saved rate and re-entry time, save a new one, or remove one with ×. Fields and Crops are tap-to-select lists with an "Edit list" button for adding and removing entries. You can pick several fields.
 

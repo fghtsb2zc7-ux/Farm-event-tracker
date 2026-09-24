@@ -116,8 +116,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
   grid-template-columns: repeat(12, minmax(0, 1fr));
   grid-template-areas:
     "log log log log log up up up up up up up"
-    "wx wx wx wx wx wx wx wx notes notes notes notes"
-    "past past past past past past recent recent recent recent recent recent";
+    "cmp cmp cmp cmp cmp cmp cmp cmp cmp cmp cmp cmp"
+    "orders orders orders orders orders orders past past past past past past"
+    "notes notes notes notes notes notes recent recent recent recent recent recent";
 }
 .unit { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px 20px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 .unit-head { display: flex; align-items: flex-start; gap: 10px; }
@@ -127,7 +128,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .unit-head .spacer { flex: 1; }
 #u-log { grid-area: log; }
 #u-up { grid-area: up; }
-#u-wx { grid-area: wx; }
+#u-cmp { grid-area: cmp; }
+#u-orders { grid-area: orders; }
 #u-notes { grid-area: notes; }
 #u-past { grid-area: past; }
 #u-recent { grid-area: recent; }
@@ -153,7 +155,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn.ghost { background: transparent; color: var(--ink-2); padding: 6px 8px; }
 .btn.ghost:hover { background: var(--surface-2); }
 .seg { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 2px; }
-.seg button { border: 0; background: transparent; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
+.seg { max-width: 100%; overflow-x: auto; }
+.seg button { white-space: nowrap; flex: none; border: 0; background: transparent; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
 
 /* ── Quick log ─────────────────────────────────────────────────────── */
@@ -164,8 +167,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .field textarea { resize: vertical; min-height: 64px; }
 .field input:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.type-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.type-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 8px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--ink-2); }
+.type-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.type-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 2px 8px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--ink-2); }
 .type-opt .icon { color: var(--c); width: 20px; height: 20px; }
 .type-opt[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 9%, var(--surface)); color: var(--ink); box-shadow: inset 0 0 0 1px var(--c); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -192,7 +195,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .opt-empty { padding: 10px; font-size: 13px; color: var(--muted); }
 .label-row { display: flex; align-items: baseline; justify-content: space-between; }
 .label-row .label { font-size: 13px; font-weight: 500; color: var(--ink-2); }
-.link-btn { border: 0; background: none; color: var(--accent); font-size: 13px; font-weight: 500; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px; }
+.link-btn { white-space: nowrap; text-decoration: none; border: 0; background: none; color: var(--accent); font-size: 13px; font-weight: 500; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px; }
 .chip .x { display: inline-grid; margin: -2px -5px -2px 4px; vertical-align: middle; }
 .chips.editing .chip { background: var(--surface-2); border-style: dashed; color: var(--ink); }
 .chip-add { display: inline-flex; gap: 4px; }
@@ -234,6 +237,25 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .legend i { width: 14px; height: 2px; border-radius: 1px; background: var(--c); }
 .legend .mk { width: 9px; height: 9px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink-2); }
 .table-wrap { overflow-x: auto; }
+.cmp-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; }
+.panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.panel h3 { font-size: 14px; }
+.panel + .panel, .cmp-grid + .panel { border-top: 1px solid var(--line); padding-top: 16px; }
+.cmp-grid .panel + .panel { border-top: 0; padding-top: 0; }
+.hv { display: flex; flex-direction: column; gap: 14px; padding-top: 4px; }
+.hv-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 13.5px; }
+.hv-y { font-weight: 600; }
+.hv-track { position: relative; height: 16px; }
+.hv-bar, .hv-full { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; }
+.hv-bar { background: var(--c); }
+.hv-full { background: color-mix(in srgb, var(--c) 28%, transparent); }
+.hv-v { white-space: nowrap; text-align: right; min-width: 88px; }
+.tl-label { fill: var(--ink-2); font-size: 11.5px; font-weight: 600; }
+.tl-mk { cursor: pointer; outline: none; }
+.tl-mk:focus-visible .dot { stroke: var(--ink); }
+.type-legend i.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); display: inline-block; }
+.type-legend i.big { width: 14px; height: 14px; }
+.type-legend i.hollow { background: var(--surface); box-shadow: inset 0 0 0 2px var(--muted); }
 table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 th { text-align: right; font-weight: 500; color: var(--muted); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -242,6 +264,32 @@ td:first-child { font-weight: 600; }
 td:first-child i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-right: 8px; }
 tr:last-child td { border-bottom: 0; }
 
+/* ── Orders ────────────────────────────────────────────────────────── */
+.orders-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--gap); align-items: start; grid-template-areas: "form list"; }
+#oFormUnit { grid-area: form; }
+#oListUnit { grid-area: list; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat b { font-size: 20px; font-weight: 600; line-height: 1.2; }
+.stat span { font-size: 12.5px; color: var(--muted); }
+.day-head { font-size: 12.5px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; padding-top: 14px; }
+.day-head:first-child { padding-top: 0; }
+.order { display: flex; gap: 12px; padding-block: 12px; border-top: 1px solid var(--line); }
+.day-head + .order { border-top: 0; padding-top: 8px; }
+.order.done .row-title, .order.done .o-items { color: var(--muted); }
+.o-items { font-size: 14px; }
+.o-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.btn.sm { padding: 6px 12px; font-size: 13px; border-radius: 999px; }
+.btn.outline { background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.btn.outline:hover { background: var(--surface-2); }
+.pill.new { background: color-mix(in srgb, var(--t-spray) 14%, transparent); color: var(--t-spray); }
+.share { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 1px dashed var(--line); border-radius: var(--radius-sm); font-size: 13.5px; color: var(--ink-2); }
+.share .icon { color: var(--accent); margin-top: 2px; }
+.share div { flex: 1; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.more-menu { position: fixed; right: 8px; bottom: calc(72px + env(safe-area-inset-bottom, 0px)); z-index: 22; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 28px rgb(0 0 0 / .16); padding: 6px; display: flex; flex-direction: column; min-width: 170px; }
+.more-menu a { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 8px; color: var(--ink); text-decoration: none; font-weight: 500; }
+.more-menu a:hover, .more-menu a[aria-current] { background: var(--surface-2); }
+
 /* ── Notes ─────────────────────────────────────────────────────────── */
 .note { display: flex; flex-direction: column; gap: 6px; padding-block: 12px; border-top: 1px solid var(--line); }
 .note:first-child { border-top: 0; padding-top: 0; }
@@ -249,7 +297,7 @@ tr:last-child td { border-bottom: 0; }
 .note .row-tags { justify-content: space-between; }
 
 /* ── Past years ────────────────────────────────────────────────────── */
-.years { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.years { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
 .year { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
 .year-head { display: flex; align-items: baseline; justify-content: space-between; }
 .year-head h3 { font-size: 15px; }
@@ -299,14 +347,18 @@ tr:last-child td { border-bottom: 0; }
 .empty { color: var(--muted); font-size: 14px; padding-block: 12px; }
 
 @media (max-width: 980px) {
-  .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "log up" "wx wx" "notes past" "recent recent"; }
+  .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "log up" "cmp cmp" "orders past" "notes recent"; }
 }
 @media (max-width: 720px) {
   body { padding-bottom: 88px; }
   .nav { display: none; }
   .topbar { padding-block: 14px 8px; }
   .topbar .avatar { margin-left: auto; }
-  .grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "up" "past" "wx" "notes" "recent"; gap: 12px; }
+  .grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "up" "orders" "past" "cmp" "notes" "recent"; gap: 12px; }
+  .cmp-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .cmp-grid .panel + .panel { border-top: 1px solid var(--line); padding-top: 16px; }
+  .orders-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "list" "form"; gap: 12px; }
+  .stat b { font-size: 17px; }
   .unit { padding: 16px; }
   .years { grid-template-columns: 1fr; }
   .fc { padding: 6px 0; font-size: 12px; }
@@ -329,6 +381,7 @@ tr:last-child td { border-bottom: 0; }
   .tabbar a[aria-current] { color: var(--accent); }
   .tabbar .add span.plus { width: 46px; height: 46px; margin-top: -18px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; box-shadow: 0 4px 12px rgb(0 0 0 / .18); }
   .tabbar .add { color: var(--ink); }
+  .tabbar button[aria-current] { color: var(--accent); }
 }
 @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
 </style>
@@ -344,6 +397,7 @@ tr:last-child td { border-bottom: 0; }
   <nav class="nav" aria-label="Main">
     <a href="#dashboard" data-view="dashboard" aria-current="page"><svg class="icon sm" viewBox="0 0 24 24" data-i="house"></svg>Dashboard</a>
     <a href="#calendar" data-view="calendar"><svg class="icon sm" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+    <a href="#orders" data-view="orders"><svg class="icon sm" viewBox="0 0 24 24" data-i="shopping-basket"></svg>Orders</a>
     <a href="#history" data-view="history"><svg class="icon sm" viewBox="0 0 24 24" data-i="history"></svg>History</a>
     <a href="#notes" data-view="notes"><svg class="icon sm" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
   </nav>
@@ -402,19 +456,47 @@ tr:last-child td { border-bottom: 0; }
     <div class="row-list" id="upcoming"></div>
   </section>
 
-  <!-- Weather history -->
-  <section class="unit" id="u-wx" aria-labelledby="h-wx">
+  <!-- This season vs past years -->
+  <section class="unit" id="u-cmp" aria-labelledby="h-cmp">
     <div class="unit-head">
-      <svg class="icon" viewBox="0 0 24 24" data-i="thermometer"></svg>
-      <div><h2 id="h-wx">Season heat by year</h2><p>Growing degree days (base 10 °C) since April 1, with crop events marked.</p></div>
-      <span class="spacer"></span>
+      <svg class="icon" viewBox="0 0 24 24" data-i="chart-column"></svg>
+      <div><h2 id="h-cmp">This season vs past years</h2><p>Harvest, temperature and key dates compared with 2024 and 2025.</p></div>
     </div>
     <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between">
-      <div class="seg" role="group" aria-label="Crop events to mark" id="cropSeg"></div>
+      <div class="seg" role="group" aria-label="Crop" id="cmpCrop"></div>
       <div class="legend" id="legend"></div>
     </div>
-    <div class="chart-wrap" id="chart"></div>
-    <div class="table-wrap"><table id="wxTable"></table></div>
+    <div class="cmp-grid">
+      <div class="panel">
+        <h3>Harvest volume</h3>
+        <p class="meta" id="hvNote"></p>
+        <div class="hv" id="hv"></div>
+        <p class="meta" id="hvKey">Solid bar: harvested by Sep 23. Light bar: whole season.</p>
+      </div>
+      <div class="panel">
+        <h3>Monthly average temperature</h3>
+        <p class="meta" id="tNote"></p>
+        <div class="chart-wrap" id="tchart"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Season timeline</h3>
+      <p class="meta">Key dates are labelled. Hover over or tap any mark for details.</p>
+      <div class="chart-wrap" id="tl"></div>
+      <div class="type-legend" id="tlLegend"></div>
+      <div class="table-wrap"><table id="keyTable"></table></div>
+    </div>
+  </section>
+
+  <!-- Order pickups -->
+  <section class="unit" id="u-orders" aria-labelledby="h-orders">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="shopping-basket"></svg>
+      <div><h2 id="h-orders">Order pickups</h2><p>Customers coming to the farm this week.</p></div>
+      <span class="spacer"></span>
+      <a href="#orders" data-view="orders" class="link-btn">All orders<svg class="icon sm" viewBox="0 0 24 24" data-i="chevron-right"></svg></a>
+    </div>
+    <div class="row-list" id="ordersDash"></div>
   </section>
 
   <!-- Notes -->
@@ -484,6 +566,53 @@ tr:last-child td { border-bottom: 0; }
   </div>
 </section>
 
+<!-- Orders -->
+<section class="view" id="v-orders" hidden>
+  <div class="orders-layout">
+    <div class="unit" id="oFormUnit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
+        <div><h2>New order</h2><p>Phone calls, Facebook messages and walk-ins.</p></div>
+      </div>
+      <form class="form" id="orderForm" novalidate>
+        <div class="two">
+          <div class="field"><label for="o-name">Name</label><input id="o-name" list="customers" autocomplete="off" placeholder="Customer name"></div>
+          <div class="field"><label for="o-phone">Phone</label><input id="o-phone" type="tel" autocomplete="off" placeholder="519-555-0100"></div>
+        </div>
+        <datalist id="customers"></datalist>
+        <div class="field"><label for="o-items">What they ordered</label><textarea id="o-items" placeholder="e.g. 2 bushels pickling cucumbers, 5 lb garlic"></textarea></div>
+        <div class="two">
+          <div class="field"><label for="o-date">Pickup date</label><input id="o-date" type="date" value="2026-09-24"></div>
+          <div class="field"><label for="o-time">Pickup time</label><input id="o-time" type="time" value="10:00"></div>
+        </div>
+        <div class="two">
+          <div class="field"><label for="o-total">Order total ($)</label><input id="o-total" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+          <div class="field"><label for="o-paid">Paid so far ($)</label><input id="o-paid" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+        </div>
+        <button class="btn primary" type="submit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save order</button>
+      </form>
+    </div>
+    <div class="unit" id="oListUnit">
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="shopping-basket"></svg>
+        <div><h2>Orders</h2><p>Who's coming, what they ordered and who still owes.</p></div>
+      </div>
+      <div class="stats" id="oStats"></div>
+      <div class="share">
+        <svg class="icon" viewBox="0 0 24 24" data-i="link"></svg>
+        <div>
+          <span>Post your order form link on the farm's Facebook page. Orders sent through it show up here marked <b>New</b> for you to confirm.</span>
+          <button class="btn sm outline" type="button" id="copyLink"><svg class="icon sm" viewBox="0 0 24 24" data-i="link"></svg>Copy order form link</button>
+        </div>
+      </div>
+      <div class="seg" role="group" aria-label="Show" id="oFilter">
+        <button type="button" data-f="upcoming" aria-pressed="true">Upcoming</button><button type="button" data-f="unpaid" aria-pressed="false">Unpaid</button><button type="button" data-f="done" aria-pressed="false">Picked up</button>
+      </div>
+      <div id="oList"></div>
+    </div>
+  </div>
+</section>
+
 <!-- Notes -->
 <section class="view" id="v-notes" hidden>
   <div class="notes-layout">
@@ -520,13 +649,17 @@ tr:last-child td { border-bottom: 0; }
   <a href="#dashboard" data-view="dashboard" aria-current="page"><svg class="icon" viewBox="0 0 24 24" data-i="house"></svg>Home</a>
   <a href="#calendar" data-view="calendar"><svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
   <button class="add" type="button" id="openSheet"><span class="plus"><svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg></span>Log</button>
+  <a href="#orders" data-view="orders"><svg class="icon" viewBox="0 0 24 24" data-i="shopping-basket"></svg>Orders</a>
+  <button type="button" id="moreBtn" aria-expanded="false" aria-controls="moreMenu"><svg class="icon" viewBox="0 0 24 24" data-i="ellipsis"></svg>More</button>
+</nav>
+<div class="more-menu" id="moreMenu" hidden>
   <a href="#history" data-view="history"><svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>History</a>
   <a href="#notes" data-view="notes"><svg class="icon" viewBox="0 0 24 24" data-i="notebook-pen"></svg>Notes</a>
-</nav>
+</div>
 <div class="toast" id="toast" role="status"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg><span id="toastText">Event logged</span></div>
 
 <script>
-const ICONS={"chevron-down":"<path d=\"m6 9 6 6 6-6\" />","pencil":"<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\" /><path d=\"m15 5 4 4\" />","chevron-left":"<path d=\"m15 18-6-6 6-6\" />","spray-can":"<path d=\"M3 3h.01\" /><path d=\"M7 5h.01\" /><path d=\"M11 7h.01\" /><path d=\"M3 7h.01\" /><path d=\"M7 9h.01\" /><path d=\"M3 11h.01\" /><rect width=\"4\" height=\"4\" x=\"15\" y=\"5\" /><path d=\"m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2\" /><path d=\"m13 14 8-2\" /><path d=\"m13 19 8-2\" />","sprout":"<path d=\"M7 20h10\" /><path d=\"M10 20c5.5-2.5.8-6.4 3-10\" /><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z\" /><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z\" />","shovel":"<path d=\"M2 22v-5l5-5 5 5-5 5z\" /><path d=\"M9.5 14.5 16 8\" /><path d=\"m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2\" />","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\" /><path d=\"M8.5 2h7\" /><path d=\"M7 16h10\" />","truck":"<path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\" /><path d=\"M15 18H9\" /><path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14\" /><circle cx=\"17\" cy=\"18\" r=\"2\" /><circle cx=\"7\" cy=\"18\" r=\"2\" />","wheat":"<path d=\"M2 22 16 8\" /><path d=\"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z\" /><path d=\"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" />","cloud-rain":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M16 14v6\" /><path d=\"M8 14v6\" /><path d=\"M12 16v6\" />","notebook-pen":"<path d=\"M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4\" /><path d=\"M2 6h4\" /><path d=\"M2 10h4\" /><path d=\"M2 14h4\" /><path d=\"M2 18h4\" /><path d=\"M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z\" />","thermometer":"<path d=\"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z\" />","plus":"<path d=\"M5 12h14\" /><path d=\"M12 5v14\" />","calendar-days":"<path d=\"M8 2v4\" /><path d=\"M16 2v4\" /><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /><path d=\"M3 10h18\" /><path d=\"M8 14h.01\" /><path d=\"M12 14h.01\" /><path d=\"M16 14h.01\" /><path d=\"M8 18h.01\" /><path d=\"M12 18h.01\" /><path d=\"M16 18h.01\" />","history":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /><path d=\"M3 3v5h5\" /><path d=\"M12 7v5l4 2\" />","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\" /><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\" />","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\" /><path d=\"M12 2v2\" /><path d=\"M12 20v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"m17.66 17.66 1.41 1.41\" /><path d=\"M2 12h2\" /><path d=\"M20 12h2\" /><path d=\"m6.34 17.66-1.41 1.41\" /><path d=\"m19.07 4.93-1.41 1.41\" />","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\" />","cloud-sun":"<path d=\"M12 2v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"M20 12h2\" /><path d=\"m19.07 4.93-1.41 1.41\" /><path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /><path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />","check":"<path d=\"M20 6 9 17l-5-5\" />","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /><circle cx=\"12\" cy=\"10\" r=\"3\" />","chevron-right":"<path d=\"m9 18 6-6-6-6\" />","leaf":"<path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\" /><path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\" />","cloud-drizzle":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M8 19v1\" /><path d=\"M8 14v1\" /><path d=\"M16 19v1\" /><path d=\"M16 14v1\" /><path d=\"M12 21v1\" /><path d=\"M12 16v1\" />","x":"<path d=\"M18 6 6 18\" /><path d=\"m6 6 12 12\" />","user":"<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /><circle cx=\"12\" cy=\"7\" r=\"4\" />"};
+const ICONS={"chart-column":"<path d=\"M3 3v16a2 2 0 0 0 2 2h16\" /><path d=\"M18 17V9\" /><path d=\"M13 17V5\" /><path d=\"M8 17v-3\" />","phone":"<path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\" />","link":"<path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\" /><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\" />","ellipsis":"<circle cx=\"12\" cy=\"12\" r=\"1\" /><circle cx=\"19\" cy=\"12\" r=\"1\" /><circle cx=\"5\" cy=\"12\" r=\"1\" />","shopping-basket":"<path d=\"m15 11-1 9\" /><path d=\"m19 11-4-7\" /><path d=\"M2 11h20\" /><path d=\"m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4\" /><path d=\"M4.5 15.5h15\" /><path d=\"m5 11 4-7\" /><path d=\"m9 11 1 9\" />","chevron-down":"<path d=\"m6 9 6 6 6-6\" />","pencil":"<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\" /><path d=\"m15 5 4 4\" />","chevron-left":"<path d=\"m15 18-6-6 6-6\" />","spray-can":"<path d=\"M3 3h.01\" /><path d=\"M7 5h.01\" /><path d=\"M11 7h.01\" /><path d=\"M3 7h.01\" /><path d=\"M7 9h.01\" /><path d=\"M3 11h.01\" /><rect width=\"4\" height=\"4\" x=\"15\" y=\"5\" /><path d=\"m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2\" /><path d=\"m13 14 8-2\" /><path d=\"m13 19 8-2\" />","sprout":"<path d=\"M7 20h10\" /><path d=\"M10 20c5.5-2.5.8-6.4 3-10\" /><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z\" /><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z\" />","shovel":"<path d=\"M2 22v-5l5-5 5 5-5 5z\" /><path d=\"M9.5 14.5 16 8\" /><path d=\"m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2\" />","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\" /><path d=\"M8.5 2h7\" /><path d=\"M7 16h10\" />","truck":"<path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\" /><path d=\"M15 18H9\" /><path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14\" /><circle cx=\"17\" cy=\"18\" r=\"2\" /><circle cx=\"7\" cy=\"18\" r=\"2\" />","wheat":"<path d=\"M2 22 16 8\" /><path d=\"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /><path d=\"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z\" /><path d=\"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /><path d=\"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" />","cloud-rain":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M16 14v6\" /><path d=\"M8 14v6\" /><path d=\"M12 16v6\" />","notebook-pen":"<path d=\"M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4\" /><path d=\"M2 6h4\" /><path d=\"M2 10h4\" /><path d=\"M2 14h4\" /><path d=\"M2 18h4\" /><path d=\"M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z\" />","thermometer":"<path d=\"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z\" />","plus":"<path d=\"M5 12h14\" /><path d=\"M12 5v14\" />","calendar-days":"<path d=\"M8 2v4\" /><path d=\"M16 2v4\" /><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /><path d=\"M3 10h18\" /><path d=\"M8 14h.01\" /><path d=\"M12 14h.01\" /><path d=\"M16 14h.01\" /><path d=\"M8 18h.01\" /><path d=\"M12 18h.01\" /><path d=\"M16 18h.01\" />","history":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /><path d=\"M3 3v5h5\" /><path d=\"M12 7v5l4 2\" />","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\" /><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\" />","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\" /><path d=\"M12 2v2\" /><path d=\"M12 20v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"m17.66 17.66 1.41 1.41\" /><path d=\"M2 12h2\" /><path d=\"M20 12h2\" /><path d=\"m6.34 17.66-1.41 1.41\" /><path d=\"m19.07 4.93-1.41 1.41\" />","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\" />","cloud-sun":"<path d=\"M12 2v2\" /><path d=\"m4.93 4.93 1.41 1.41\" /><path d=\"M20 12h2\" /><path d=\"m19.07 4.93-1.41 1.41\" /><path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /><path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />","check":"<path d=\"M20 6 9 17l-5-5\" />","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /><circle cx=\"12\" cy=\"10\" r=\"3\" />","chevron-right":"<path d=\"m9 18 6-6-6-6\" />","leaf":"<path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\" /><path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\" />","cloud-drizzle":"<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\" /><path d=\"M8 19v1\" /><path d=\"M8 14v1\" /><path d=\"M16 19v1\" /><path d=\"M16 14v1\" /><path d=\"M12 21v1\" /><path d=\"M12 16v1\" />","x":"<path d=\"M18 6 6 18\" /><path d=\"m6 6 12 12\" />","user":"<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /><circle cx=\"12\" cy=\"7\" r=\"4\" />"};
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const ico = (n, cls = "icon") => `<svg class="${cls}" viewBox="0 0 24 24">${ICONS[n] || ""}</svg>`;
@@ -550,12 +683,11 @@ const TYPES = {
   harvest:  { name: "Harvest",  icon: "wheat",         c: "var(--t-harvest)",  what: "Crop",
               extra: [["Amount", "e.g. 40 bins"], ["Destination", "optional"]],
               saved: [{ name: "Acorn squash" }, { name: "Pumpkins" }, { name: "Pickling cucumbers" }, { name: "Strawberries" }, { name: "Garlic" }] },
-  pickup:   { name: "Pickup",   icon: "truck",         c: "var(--t-pickup)",   what: "Client",
-              extra: [["Order", "e.g. 60 bins"], ["Time", "e.g. 9:00"]],
-              saved: [{ name: "Hillside Market", Time: "9:00" }, { name: "St. Thomas grocer" }, { name: "Farmers co-op" }] },
   garden:   { name: "Garden",   icon: "shovel",        c: "var(--t-garden)",   what: "Task", extra: [],
               saved: [{ name: "Weeding" }, { name: "Mulching" }, { name: "Pull and clear beds" }, { name: "Spread compost" }] },
 };
+// Order pickups are not an event type; they come from Orders and show on the calendar with this style.
+const KINDS = { ...TYPES, order: { name: "Order pickup", icon: "shopping-basket", c: "var(--t-pickup)" } };
 const CROPS = ["Strawberries", "Cucumbers", "Garlic", "Garden", "Fall Produce"];
 const FIELDS = ["North field", "South field", "Hillside", "Strawberry block", "Garden beds", "Home orchard"];
 
@@ -565,12 +697,12 @@ const FORECAST = [
 ];
 
 const UPCOMING = [
-  { d: "Sep 24", t: "pickup",   title: "Hillside Market: pumpkins and squash", crops: ["Fall Produce"], meta: "60 bins · 9:00" },
+  { d: "Sep 24", t: "harvest",  title: "Last pass on acorn squash and pumpkins", crops: ["Fall Produce"], meta: "Hillside Market order needs 60 bins by Thu 9:00" },
   { d: "Sep 26", t: "nutrient", title: "Fall nitrogen on strawberries", crops: ["Strawberries"], meta: "Rain Fri (0.42 in). Apply after it passes.", warn: "Rain day before" },
   { d: "Sep 29", t: "spray",    title: "Copper on fall kale and broccoli", crops: ["Fall Produce"], meta: "Dry window Sun to Mon" , ok: "Dry window" },
   { d: "Oct 1",  t: "planting", title: "Fall rye cover crop, cucumber field", crops: ["Cucumbers"], meta: "South field" },
   { d: "Oct 3",  t: "planting", title: "Plant garlic, 4 beds of Music", crops: ["Garlic"], meta: "Note from 2025: plant by Oct 5" },
-  { d: "Oct 8",  t: "pickup",   title: "Thanksgiving order, St. Thomas grocer", crops: ["Fall Produce", "Garlic"], meta: "Squash, garlic, apples" },
+  { d: "Oct 8",  t: "garden",   title: "Pull cucumber trellis and drip line", crops: ["Cucumbers"], meta: "South field" },
 ];
 
 let NOTES = [
@@ -583,9 +715,20 @@ let NOTES = [
 
 const PAST = [
   { y: 2025, c: "var(--y2025)", avg: 16.1, rain: 0.38, ev: [
-    ["planting", "Fall rye seeded in garden beds"], ["pickup", "Hillside Market, 60 bins of pumpkins"], ["nutrient", "Strawberries fall nitrogen, 30 lb N/ac"] ] },
+    ["planting", "Fall rye seeded in garden beds"], ["harvest", "Pumpkins, 60 bins for Hillside Market"], ["nutrient", "Strawberries fall nitrogen, 30 lb N/ac"] ] },
   { y: 2024, c: "var(--y2024)", avg: 17.8, rain: 1.31, ev: [
     ["harvest", "Butternut squash, 1.2 t"], ["garden", "Cucumbers pulled, beds cleaned"], ["garden", "Garlic seed cloves separated"] ] },
+];
+
+let ORDERS = [
+  { name: "Linda Moreau", phone: "519-555-0142", items: "2 bushels pickling cucumbers, 5 lb garlic", date: "2026-09-23", time: "16:30", total: 62, paid: 62 },
+  { name: "Hillside Market", phone: "519-555-0198", items: "60 bins pumpkins and squash", date: "2026-09-24", time: "09:00", total: 1800, paid: 0 },
+  { name: "Raj Patel", phone: "226-555-0117", items: "Half bushel tomatoes for canning, 10 lb onions", date: "2026-09-24", time: "17:15", total: 48, paid: 20 },
+  { name: "Grace Van Dyk", phone: "519-555-0170", items: "3 carving pumpkins, 2 acorn squash", date: "2026-09-26", time: "10:00", total: 24, paid: 0, status: "new", source: "Facebook" },
+  { name: "Dave Kowalski", phone: "519-555-0126", items: "20 lb seed garlic (Music)", date: "2026-09-27", time: "11:30", total: 300, paid: 100 },
+  { name: "St. Thomas grocer", phone: "519-555-0181", items: "20 bins squash, 40 lb garlic, 10 bushels apples", date: "2026-10-08", time: "08:00", total: 1450, paid: 0 },
+  { name: "Marie Tremblay", phone: "519-555-0163", items: "10 lb seed garlic (Music)", date: "2026-09-22", time: "18:00", total: 150, paid: 150, status: "done" },
+  { name: "Tom Hughes", phone: "226-555-0154", items: "1 bushel pickling cucumbers", date: "2026-09-21", time: "12:00", total: 30, paid: 0, status: "done" },
 ];
 
 let RECENT = [
@@ -712,7 +855,7 @@ let toastTimer;
 function toast(msg) { $("#toastText").textContent = msg; $("#toast").classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 2200); }
 
 /* ── Lists ────────────────────────────────────────────────────────── */
-const typeDot = (k, cls = "icon sm") => `<span class="type-dot" style="--c:${TYPES[k].c}" title="${TYPES[k].name}">${ico(TYPES[k].icon, cls)}</span>`;
+const typeDot = (k, cls = "icon sm") => `<span class="type-dot" style="--c:${KINDS[k].c}" title="${KINDS[k].name}">${ico(KINDS[k].icon, cls)}</span>`;
 const tags = crops => crops.map(c => `<span class="tag">${esc(c)}</span>`).join("");
 
 $("#forecast").innerHTML = FORECAST.map(([d, i, hi, lo, r], n) =>
@@ -760,98 +903,168 @@ function renderRecent() {
      <div style="text-align:right; flex:none"><div class="meta">${esc(r.when)}</div><div class="meta" style="display:flex;gap:4px;align-items:center;justify-content:flex-end">${ico("user", "icon sm")}${esc(r.who)}</div></div></div>`).join("");
 }
 
-/* ── Weather chart (example data, shaped like a Corinth ON season) ── */
+/* ── Season comparison (example data, shaped like a Corinth ON season) ── */
 function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
 const START = 91, END = 304, TODAY = 266; // Apr 1 … Oct 31, today = Sep 23
+const MONTHS = [[91, "Apr"], [121, "May"], [152, "Jun"], [182, "Jul"], [213, "Aug"], [244, "Sep"], [274, "Oct"]];
 const YEARS = [
   { y: 2026, c: "--y2026", off: 0.35, seed: 11, last: TODAY },
   { y: 2025, c: "--y2025", off: -0.25, seed: 23, last: END },
   { y: 2024, c: "--y2024", off: 0.9,  seed: 37, last: END },
 ];
 YEARS.forEach(Y => {
-  const r = rng(Y.seed); let g = 0, rain = 0, hot = 0; Y.gdd = []; Y.rainTo = 0; Y.hot = 0;
+  const r = rng(Y.seed), sums = MONTHS.map(() => [0, 0]); let g = 0, rain = 0;
   for (let d = START; d <= Y.last; d++) {
     const mean = 8.2 + 13.6 * Math.sin(2 * Math.PI * (d - 110) / 365) + Y.off + (r() + r() + r() - 1.5) * 4;
     g += Math.max(0, mean - 10);
-    if (mean + 6 >= 30) hot++;
     if (r() < 0.31) rain += -Math.log(1 - r()) * 0.29;
-    Y.gdd.push(g);
-    if (d === TODAY) { Y.gddTo = g; Y.rainTo = rain; Y.hot = hot; }
+    const mi = MONTHS.findLastIndex(([md]) => d >= md); sums[mi][0] += mean; sums[mi][1]++;
+    if (d === TODAY) { Y.gddTo = g; Y.rainTo = rain; }
   }
+  Y.temps = sums.map(([t, n]) => n ? t / n : null);
 });
-const EVENTS = {
-  Cucumbers:    { 2026: [[146, "Transplanted"], [189, "First mildew spray"], [188, "First harvest"]], 2025: [[148, "Transplanted"], [190, "First harvest"], [201, "First mildew spray"]], 2024: [[143, "Transplanted"], [181, "First harvest"]] },
-  Strawberries: { 2026: [[134, "First bloom"], [162, "First pick"], [197, "Renovated"]], 2025: [[131, "First bloom"], [160, "First pick"], [195, "Renovated"]], 2024: [[127, "First bloom"], [155, "First pick"], [193, "Renovated"]] },
-  Garlic:       { 2026: [[172, "Scapes cut"], [199, "Harvested"]], 2025: [[175, "Scapes cut"], [203, "Harvested"], [287, "Planted"]], 2024: [[168, "Scapes cut"], [196, "Harvested"], [284, "Planted"]] },
-};
-let selCrop = "Cucumbers";
-$("#cropSeg").innerHTML = Object.keys(EVENTS).map(c => `<button type="button" data-c="${c}" aria-pressed="${c === selCrop}">${c}</button>`).join("");
-$("#cropSeg").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return; selCrop = b.dataset.c; $("#cropSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); drawChart(); });
-$("#legend").innerHTML = YEARS.map(Y => `<span style="--c:var(${Y.c})"><i></i>${Y.y}</span>`).join("") + `<span><i class="mk"></i>${"Crop event"}</span>`;
-$("#wxTable").innerHTML = `<thead><tr><th>Season</th><th>GDD to Sep 23</th><th>Rain since Apr 1</th><th>Days over 30 °C</th></tr></thead><tbody>` +
-  YEARS.map(Y => `<tr><td style="--c:var(${Y.c})"><i></i>${Y.y}</td><td>${Math.round(Y.gddTo).toLocaleString()}</td><td>${Y.rainTo.toFixed(1)} in</td><td>${Y.hot}</td></tr>`).join("") + `</tbody>`;
 
-const MONTHS = [[91, "Apr"], [121, "May"], [152, "Jun"], [182, "Jul"], [213, "Aug"], [244, "Sep"], [274, "Oct"]];
-const fmtDate = d => { const dt = new Date(2026, 0, d); return dt.toLocaleDateString("en-CA", { month: "short", day: "numeric" }); };
-function drawChart() {
-  const wrap = $("#chart"), W = Math.max(300, wrap.clientWidth), narrow = W < 520;
-  const H = narrow ? 230 : 280, m = { l: 40, r: narrow ? 44 : 58, t: 10, b: 26 };
-  const maxG = Math.ceil(Math.max(...YEARS.map(Y => Y.gdd[Y.gdd.length - 1])) / 250) * 250;
-  const x = d => m.l + (d - START) / (END - START) * (W - m.l - m.r);
-  const y = g => H - m.b - g / maxG * (H - m.t - m.b);
-  const cs = getComputedStyle(document.documentElement);
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative growing degree days for 2024, 2025 and 2026">`;
-  for (let g = 0; g <= maxG; g += (narrow ? 500 : 250)) s += `<line class="grid-line" x1="${m.l}" x2="${W - m.r}" y1="${y(g)}" y2="${y(g)}"/><text class="axis-text" x="${m.l - 8}" y="${y(g) + 4}" text-anchor="end">${g.toLocaleString()}</text>`;
-  MONTHS.forEach(([d, l]) => s += `<text class="axis-text" x="${x(d)}" y="${H - 6}" text-anchor="start">${l}</text><line class="grid-line" x1="${x(d)}" x2="${x(d)}" y1="${H - m.b}" y2="${H - m.b + 4}"/>`);
-  s += `<line class="grid-line" x1="${x(TODAY)}" x2="${x(TODAY)}" y1="${m.t}" y2="${H - m.b}" stroke-dasharray="2 4"/><text class="axis-text" x="${x(TODAY) - 4}" y="${m.t + 10}" text-anchor="end">Today</text>`;
-  [...YEARS].reverse().forEach(Y => {
-    const pts = Y.gdd.map((g, i) => `${x(START + i).toFixed(1)},${y(g).toFixed(1)}`).join(" ");
-    s += `<polyline points="${pts}" fill="none" stroke="var(${Y.c})" stroke-width="${Y.y === 2026 ? 2.5 : 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
-  });
-  // end labels, nudged apart so they never collide
-  const ends = YEARS.map(Y => ({ Y, ly: y(Y.gdd[Y.gdd.length - 1]), lx: x(Y.last) })).sort((a, b) => a.ly - b.ly);
-  for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 16) ends[i].ly = ends[i - 1].ly + 16;
-  ends.forEach(e => s += `<text class="end-label" x="${e.lx + 6}" y="${e.ly + 4}">${e.Y.y}</text>`);
-  YEARS.forEach(Y => (EVENTS[selCrop][Y.y] || []).forEach(([d]) => {
-    if (d > Y.last) return;
-    s += `<circle cx="${x(d)}" cy="${y(Y.gdd[d - START])}" r="4.5" fill="var(--surface)" stroke="var(${Y.c})" stroke-width="2.5"/>`;
-  }));
-  s += `<line class="xhair" id="xh" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" visibility="hidden"/><rect id="hit" x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H}" fill="transparent"/></svg><div class="tip" id="tip" hidden></div>`;
-  wrap.innerHTML = s;
-  const hit = $("#hit"), tip = $("#tip"), xh = $("#xh");
-  const move = ev => {
-    const rect = wrap.getBoundingClientRect(), px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
-    const d = Math.round(START + (px * W / rect.width - m.l) / (W - m.l - m.r) * (END - START));
-    if (d < START || d > END) return;
-    xh.setAttribute("x1", x(d)); xh.setAttribute("x2", x(d)); xh.setAttribute("visibility", "visible");
-    const evs = YEARS.flatMap(Y => (EVENTS[selCrop][Y.y] || []).filter(([ed]) => Math.abs(ed - d) <= 2 && ed <= Y.last).map(([ed, l]) => `${Y.y}: ${l} (${fmtDate(ed)})`));
-    tip.innerHTML = `<b>${fmtDate(d)}</b>` + YEARS.map(Y => `<div class="tr" style="--c:var(${Y.c})"><i></i><span>${Y.y}</span><span>${d <= Y.last ? Math.round(Y.gdd[d - START]).toLocaleString() : "–"}</span></div>`).join("") + (evs.length ? `<div class="ev">${evs.map(esc).join("<br>")}</div>` : "");
-    tip.hidden = false;
-    const tx = x(d) * rect.width / W; tip.style.left = (tx > rect.width / 2 ? tx - tip.offsetWidth - 12 : tx + 12) + "px";
-  };
-  const leave = () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); };
-  hit.addEventListener("pointermove", move); hit.addEventListener("pointerdown", move); hit.addEventListener("pointerleave", leave);
+// Key crop dates per year: [day of year, what, type, key date?, planned?]
+const TL = {
+  Cucumbers: {
+    2026: [[121, "Seeded in trays", "planting"], [146, "Transplanted", "planting", 1], [188, "First harvest", "harvest", 1], [189, "First mildew spray", "spray"], [245, "Last harvest", "harvest", 1]],
+    2025: [[123, "Seeded in trays", "planting"], [148, "Transplanted", "planting", 1], [190, "First harvest", "harvest", 1], [201, "First mildew spray", "spray"], [238, "Last harvest", "harvest", 1]],
+    2024: [[118, "Seeded in trays", "planting"], [143, "Transplanted", "planting", 1], [181, "First harvest", "harvest", 1], [196, "First mildew spray", "spray"], [250, "Last harvest", "harvest", 1]] },
+  Strawberries: {
+    2026: [[105, "Straw pulled back", "garden"], [134, "First bloom", "garden"], [162, "First pick", "harvest", 1], [185, "Last pick", "harvest", 1], [197, "Renovated", "garden"], [258, "Potash applied", "nutrient"]],
+    2025: [[108, "Straw pulled back", "garden"], [131, "First bloom", "garden"], [160, "First pick", "harvest", 1], [182, "Last pick", "harvest", 1], [195, "Renovated", "garden"], [262, "Fall nitrogen", "nutrient"]],
+    2024: [[100, "Straw pulled back", "garden"], [127, "First bloom", "garden"], [155, "First pick", "harvest", 1], [179, "Last pick", "harvest", 1], [193, "Renovated", "garden"], [259, "Fall nitrogen", "nutrient"]] },
+  Garlic: {
+    2026: [[135, "Side-dressed", "nutrient"], [172, "Scapes cut", "garden"], [199, "Harvested", "harvest", 1], [276, "Planted", "planting", 1, 1]],
+    2025: [[138, "Side-dressed", "nutrient"], [175, "Scapes cut", "garden"], [203, "Harvested", "harvest", 1], [287, "Planted", "planting", 1]],
+    2024: [[133, "Side-dressed", "nutrient"], [168, "Scapes cut", "garden"], [196, "Harvested", "harvest", 1], [284, "Planted", "planting", 1]] },
+  "Fall Produce": {
+    2026: [[148, "Squash seeded", "planting"], [158, "Transplanted", "planting", 1], [220, "Bravo spray", "spray"], [240, "First harvest", "harvest", 1], [251, "Bravo spray", "spray"], [293, "Last harvest", "harvest", 1, 1]],
+    2025: [[150, "Squash seeded", "planting"], [160, "Transplanted", "planting", 1], [224, "Bravo spray", "spray"], [243, "First harvest", "harvest", 1], [292, "Last harvest", "harvest", 1]],
+    2024: [[146, "Squash seeded", "planting"], [156, "Transplanted", "planting", 1], [215, "Bravo spray", "spray"], [236, "First harvest", "harvest", 1], [298, "Last harvest", "harvest", 1]] },
+};
+// Harvest per year: [by Sep 23, whole season] (null = season not finished)
+const HARVEST = {
+  Cucumbers:      { unit: "bushels", 2026: [790, 790], 2025: [720, 720], 2024: [860, 860] },
+  Strawberries:   { unit: "flats",   2026: [1310, 1310], 2025: [1105, 1105], 2024: [1240, 1240] },
+  Garlic:         { unit: "lb",      2026: [2380, 2380], 2025: [1650, 1650], 2024: [2100, 2100] },
+  "Fall Produce": { unit: "bins",    2026: [96, null], 2025: [88, 212], 2024: [102, 236] },
+};
+let cmpCrop = "Cucumbers";
+$("#cmpCrop").innerHTML = Object.keys(TL).map(c => `<button type="button" data-c="${esc(c)}" aria-pressed="${c === cmpCrop}">${esc(c)}</button>`).join("");
+$("#cmpCrop").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return; cmpCrop = b.dataset.c; $("#cmpCrop").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); drawCompare(); });
+$("#legend").innerHTML = YEARS.map(Y => `<span style="--c:var(${Y.c})"><i></i>${Y.y}</span>`).join("");
+const fmtDate = d => new Date(2026, 0, d).toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+const nf = n => Math.round(n).toLocaleString("en-CA");
+
+function drawHarvest() {
+  const h = HARVEST[cmpCrop], max = Math.max(...YEARS.map(Y => h[Y.y][1] ?? h[Y.y][0]));
+  $("#hv").innerHTML = YEARS.map(Y => {
+    const [to, full] = h[Y.y], more = full != null && full > to;
+    return `<div class="hv-row" style="--c:var(${Y.c})"><span class="hv-y">${Y.y}</span>
+      <div class="hv-track">${more ? `<div class="hv-full" style="width:${full / max * 100}%"></div>` : ""}<div class="hv-bar" style="width:${to / max * 100}%"></div></div>
+      <span class="hv-v"><b>${nf(to)}</b> ${more ? `<span class="meta">of ${nf(full)}</span>` : `<span class="meta">${h.unit}</span>`}</span></div>`;
+  }).join("");
+  const a = h[2026][0], b = h[2025][0], pct = Math.round((a - b) / b * 100);
+  $("#hvNote").textContent = `${h.unit[0].toUpperCase() + h.unit.slice(1)} harvested by Sep 23. This year is ${Math.abs(pct)}% ${pct >= 0 ? "ahead of" : "behind"} 2025.`;
+  $("#hvKey").hidden = !YEARS.some(Y => h[Y.y][1] > h[Y.y][0]);
 }
+
+function drawTemps() {
+  const wrap = $("#tchart"), W = Math.max(280, wrap.clientWidth), H = 210, m = { l: 34, r: 44, t: 12, b: 24 }, lo = 0, hi = 25, n = MONTHS.length;
+  const x = i => m.l + i / (n - 1) * (W - m.l - m.r), y = v => H - m.b - (v - lo) / (hi - lo) * (H - m.t - m.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly average temperature from April to October, 2024 to 2026">`;
+  for (let v = lo; v <= hi; v += 5) s += `<line class="grid-line" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text class="axis-text" x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}°</text>`;
+  MONTHS.forEach(([, l], i) => s += `<text class="axis-text" x="${x(i)}" y="${H - 6}" text-anchor="middle">${l}</text>`);
+  [...YEARS].reverse().forEach(Y => {
+    const pts = Y.temps.map((v, i) => v == null ? null : `${x(i).toFixed(1)},${y(v).toFixed(1)}`).filter(Boolean).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="var(${Y.c})" stroke-width="${Y.y === 2026 ? 2.5 : 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    Y.temps.forEach((v, i) => { if (v != null) s += `<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="var(${Y.c})" stroke="var(--surface)" stroke-width="2"/>`; });
+  });
+  const ends = YEARS.map(Y => { const i = Y.temps.findLastIndex(v => v != null); return { Y, lx: x(i), ly: y(Y.temps[i]) }; }).sort((a, b) => a.ly - b.ly);
+  for (let i = 1; i < ends.length; i++) if (ends[i].lx === ends[i - 1].lx && ends[i].ly - ends[i - 1].ly < 15) ends[i].ly = ends[i - 1].ly + 15;
+  ends.forEach(e => s += `<text class="end-label" x="${e.lx + 7}" y="${e.ly + 4}">${e.Y.y}</text>`);
+  s += `<line class="xhair" id="txh" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" visibility="hidden"/><rect id="thit" x="${m.l - 10}" y="0" width="${W - m.l - m.r + 20}" height="${H}" fill="transparent"/></svg><div class="tip" id="ttip" hidden></div>`;
+  wrap.innerHTML = s;
+  const tip = $("#ttip"), xh = $("#txh");
+  const move = ev => {
+    const rect = wrap.getBoundingClientRect(), px = (ev.clientX - rect.left) * W / rect.width;
+    const i = Math.max(0, Math.min(n - 1, Math.round((px - m.l) / (W - m.l - m.r) * (n - 1))));
+    xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); xh.setAttribute("visibility", "visible");
+    tip.innerHTML = `<b>${MONTHS[i][1]} average</b>` + YEARS.map(Y => `<div class="tr" style="--c:var(${Y.c})"><i></i><span>${Y.y}</span><span>${Y.temps[i] == null ? "–" : Y.temps[i].toFixed(1) + " °C"}</span></div>`).join("");
+    tip.hidden = false;
+    const tx = x(i) * rect.width / W; tip.style.top = "0px"; tip.style.left = (tx > rect.width / 2 ? tx - tip.offsetWidth - 12 : tx + 12) + "px";
+  };
+  $("#thit").addEventListener("pointermove", move); $("#thit").addEventListener("pointerdown", move);
+  $("#thit").addEventListener("pointerleave", () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); });
+  const t26 = YEARS[0].temps[5], t25 = YEARS[1].temps[5], diff = t26 - t25;
+  $("#tNote").textContent = `September so far is ${t26.toFixed(1)} °C, ${Math.abs(diff).toFixed(1)}° ${diff >= 0 ? "warmer" : "cooler"} than September 2025. Same for every crop.`;
+}
+
+const TL_START = 91, TL_END = 319, TL_MONTHS = [...MONTHS, [305, "Nov"]];
+function drawTimeline() {
+  const wrap = $("#tl"), W = Math.max(300, wrap.clientWidth), narrow = W < 520, m = { l: 44, r: 12, t: 20, b: 6 }, rowH = 52;
+  const H = m.t + rowH * YEARS.length + m.b, x = d => m.l + (d - TL_START) / (TL_END - TL_START) * (W - m.l - m.r);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Key dates for ${esc(cmpCrop)} in 2024, 2025 and 2026">`;
+  TL_MONTHS.forEach(([d, l]) => s += `<line class="grid-line" x1="${x(d)}" x2="${x(d)}" y1="${m.t - 4}" y2="${H - m.b}"/><text class="axis-text" x="${x(d) + 4}" y="12">${narrow ? l[0] : l}</text>`);
+  s += `<line x1="${x(TODAY)}" x2="${x(TODAY)}" y1="${m.t - 4}" y2="${H - m.b}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+  YEARS.forEach((Y, r) => {
+    const cy = m.t + rowH * r + rowH / 2 + 8, evs = TL[cmpCrop][Y.y] || [];
+    s += `<text class="end-label" x="0" y="${cy + 4}">${Y.y}</text><line x1="${m.l}" x2="${W - m.r}" y1="${cy}" y2="${cy}" stroke="var(--line)" stroke-width="2"/>`;
+    if (evs.length) s += `<line x1="${x(evs[0][0])}" x2="${x(evs[evs.length - 1][0])}" y1="${cy}" y2="${cy}" stroke="var(${Y.c})" stroke-width="2.5" stroke-linecap="round"/>`;
+    let lastLabel = -99;
+    evs.forEach(([d, l, t, key, planned]) => {
+      const cx = x(d), c = KINDS[t].c;
+      s += `<g class="tl-mk" tabindex="0" data-tip="${esc(`${Y.y}: ${l}, ${fmtDate(d)}${planned ? " (planned)" : ""}`)}"><circle cx="${cx}" cy="${cy}" r="13" fill="transparent"/>
+        <circle class="dot" cx="${cx}" cy="${cy}" r="${key ? 7 : 4.5}" fill="${planned ? "var(--surface)" : c}" stroke="${planned ? c : "var(--surface)"}" stroke-width="2"/></g>`;
+      if (key && cx - lastLabel > (narrow ? 50 : 46)) { s += `<text class="tl-label" x="${cx}" y="${cy - 13}" text-anchor="middle">${fmtDate(d)}</text>`; lastLabel = cx; }
+    });
+  });
+  s += `</svg><div class="tip" id="tlTip" hidden></div>`;
+  wrap.innerHTML = s;
+  const tip = $("#tlTip");
+  const showTip = e => {
+    const g = e.target.closest && e.target.closest(".tl-mk"); if (!g) { tip.hidden = true; return; }
+    tip.textContent = g.dataset.tip; tip.hidden = false;
+    const rect = wrap.getBoundingClientRect(), b = g.querySelector(".dot").getBoundingClientRect();
+    tip.style.left = Math.max(0, Math.min(rect.width - tip.offsetWidth, b.left - rect.left + b.width / 2 - tip.offsetWidth / 2)) + "px";
+    tip.style.top = (b.top - rect.top - tip.offsetHeight - 8) + "px";
+  };
+  wrap.onpointerover = showTip; wrap.onpointerdown = showTip; wrap.onfocusin = showTip;
+  wrap.onpointerleave = () => tip.hidden = true; wrap.onfocusout = () => tip.hidden = true;
+
+  const used = [...new Set(YEARS.flatMap(Y => (TL[cmpCrop][Y.y] || []).map(e => e[2])))];
+  $("#tlLegend").innerHTML = used.map(t => `<span style="--c:${KINDS[t].c}"><i class="dot"></i>${KINDS[t].name}</span>`).join("")
+    + `<span style="--c:var(--muted)"><i class="dot big"></i>Key date</span><span><i class="dot hollow"></i>Planned</span>`;
+  const keys = [...new Set(YEARS.flatMap(Y => (TL[cmpCrop][Y.y] || []).filter(e => e[3]).map(e => e[1])))];
+  const find = (y, l) => (TL[cmpCrop][y] || []).find(e => e[1] === l);
+  $("#keyTable").innerHTML = `<thead><tr><th>Key date</th>${YEARS.map(Y => `<th>${Y.y}</th>`).join("")}<th>This year vs 2025</th></tr></thead><tbody>` + keys.map(l => {
+    const a = find(2026, l), b = find(2025, l);
+    const diff = a && b && !a[4] ? a[0] - b[0] : null;
+    const dtxt = diff == null ? "–" : diff === 0 ? "Same day" : `${Math.abs(diff)} day${Math.abs(diff) === 1 ? "" : "s"} ${diff < 0 ? "earlier" : "later"}`;
+    return `<tr><td>${esc(l)}</td>${YEARS.map(Y => { const e = find(Y.y, l); return `<td>${e ? fmtDate(e[0]) + (e[4] ? " (planned)" : "") : "–"}</td>`; }).join("")}<td>${dtxt}</td></tr>`;
+  }).join("") + `</tbody>`;
+}
+function drawCompare() { drawHarvest(); drawTemps(); drawTimeline(); }
 
 /* ── All events (example data) for Calendar and History ───────────── */
 const iso = (y, doy) => { const d = new Date(y, 0, doy); return `${y}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
-const KIND = { "Transplanted": "planting", "Planted": "planting", "First harvest": "harvest", "First pick": "harvest", "Harvested": "harvest", "First mildew spray": "spray", "First bloom": "garden", "Renovated": "garden", "Scapes cut": "garden" };
 const WHO = ["You", "Jordan", "Sam"];
 const ALL = [
   ...UPCOMING.map(u => ({ date: "2026-" + ({ Sep: "09", Oct: "10" })[u.d.split(" ")[0]] + "-" + u.d.split(" ")[1].padStart(2, "0"), t: u.t, title: u.title, crops: u.crops, planned: true })),
   ...RECENT.map((r, i) => ({ date: ["2026-09-23", "2026-09-22", "2026-09-21", "2026-09-20"][i], t: r.t, title: r.title, crops: r.crops, who: r.who })),
-  ...Object.entries(EVENTS).flatMap(([crop, byYear]) => Object.entries(byYear).flatMap(([y, evs]) => evs.map(([d, l], k) => ({ date: iso(+y, d), t: KIND[l], title: `${crop}: ${l.toLowerCase()}`, crops: [crop], who: WHO[(d + k) % 3], src: +y < 2026 ? "Imported" : "" })))),
+  ...Object.entries(TL).flatMap(([crop, byYear]) => Object.entries(byYear).flatMap(([y, evs]) => evs.filter(e => !e[4]).map(([d, l, t], k) => ({ date: iso(+y, d), t, title: `${crop}: ${l.toLowerCase()}`, crops: [crop], who: WHO[(d + k) % 3], src: +y < 2026 ? "Imported" : "" })))),
   ...PAST.flatMap(p => p.ev.map(([t, title], k) => ({ date: `${p.y}-09-${22 + k}`, t, title, crops: [], who: WHO[k % 3], src: "Imported" }))),
   { date: "2026-09-02", t: "harvest", title: "Pickling cucumbers, last pick", crops: ["Cucumbers"], who: "Sam" },
   { date: "2026-09-08", t: "spray", title: "Bravo on pumpkins, 2.4 L/ha", crops: ["Fall Produce"], who: "You" },
-  { date: "2026-09-10", t: "pickup", title: "Hillside Market: cucumbers and peppers", crops: ["Cucumbers"], who: "Jordan" },
+  { date: "2026-09-10", t: "harvest", title: "Cucumbers and peppers for Hillside Market", crops: ["Cucumbers"], who: "Jordan" },
   { date: "2026-09-15", t: "nutrient", title: "Potash on strawberry beds, 60 lb/ac", crops: ["Strawberries"], who: "You" },
   { date: "2026-09-17", t: "harvest", title: "Pumpkins, first 30 bins", crops: ["Fall Produce"], who: "Jordan" },
   { date: "2026-10-12", t: "garden", title: "Pull summer garden, spread compost", crops: ["Garden"], planned: true },
   { date: "2026-10-20", t: "harvest", title: "Last squash before frost", crops: ["Fall Produce"], planned: true },
   { date: "2025-10-14", t: "planting", title: "Garlic planted, 4 beds of Music", crops: ["Garlic"], who: "You", src: "Imported" },
   { date: "2025-08-05", t: "spray", title: "Copper on cucumbers", crops: ["Cucumbers"], who: "Sam", src: "Imported" },
-  { date: "2024-08-12", t: "pickup", title: "Hillside Market: 50 bins of cucumbers", crops: ["Cucumbers"], who: "You", src: "Imported" },
+  { date: "2024-08-12", t: "harvest", title: "Cucumbers, 50 bins for Hillside Market", crops: ["Cucumbers"], who: "You", src: "Imported" },
 ];
 const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
 const longDate = s => parse(s).toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
@@ -860,8 +1073,9 @@ const evRow = e => `<div class="row">${typeDot(e.t)}<div class="row-main"><span 
   <div style="text-align:right; flex:none"><div class="meta">${parse(e.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}</div>${e.who ? `<div class="meta" style="display:flex;gap:4px;align-items:center;justify-content:flex-end">${ico("user", "icon sm")}${esc(e.who)}</div>` : ""}</div></div>`;
 
 /* Calendar */
+const calItems = () => [...ALL, ...ORDERS.map(o => ({ date: o.date, t: "order", title: `${o.name}, ${fmtTime(o.time).join(" ")}: ${o.items}`, crops: [], planned: o.status !== "done" }))];
 let calY = 2026, calM = 8, calSel = "2026-09-23";
-$("#calLegend").innerHTML = Object.values(TYPES).map(t => `<span style="--c:${t.c}">${ico(t.icon)}${t.name}</span>`).join("");
+$("#calLegend").innerHTML = Object.values(KINDS).map(t => `<span style="--c:${t.c}">${ico(t.icon)}${t.name}</span>`).join("");
 function renderCalendar() {
   $("#calLabel").textContent = new Date(calY, calM, 1).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
   const first = new Date(calY, calM, 1), start = new Date(calY, calM, 1 - first.getDay());
@@ -870,12 +1084,12 @@ function renderCalendar() {
     const d = new Date(start); d.setDate(start.getDate() + i);
     if (i === 35 && d.getMonth() !== calM) break;
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const evs = ALL.filter(e => e.date === key);
+    const evs = calItems().filter(e => e.date === key);
     h += `<button type="button" class="day${d.getMonth() !== calM ? " out" : ""}${key === "2026-09-23" ? " today" : ""}" data-d="${key}" aria-pressed="${key === calSel}" aria-label="${longDate(key)}, ${evs.length} events">
-      <span class="num">${d.getDate()}</span><span class="evs">${evs.slice(0, 3).map(e => `<span class="cal-ev" style="--c:${TYPES[e.t].c}">${ico(TYPES[e.t].icon)}<span>${esc(e.title)}</span></span>`).join("")}</span>${evs.length > 3 ? `<span class="cal-more">+${evs.length - 3} more</span>` : ""}</button>`;
+      <span class="num">${d.getDate()}</span><span class="evs">${evs.slice(0, 3).map(e => `<span class="cal-ev" style="--c:${KINDS[e.t].c}">${ico(KINDS[e.t].icon)}<span>${esc(e.title)}</span></span>`).join("")}</span>${evs.length > 3 ? `<span class="cal-more">+${evs.length - 3} more</span>` : ""}</button>`;
   }
   $("#cal").innerHTML = h;
-  const sel = ALL.filter(e => e.date === calSel);
+  const sel = calItems().filter(e => e.date === calSel);
   $("#calDay").innerHTML = `<div class="day-list"><h3>${longDate(calSel)}</h3>${sel.length ? `<div class="row-list">${sel.map(evRow).join("")}</div>` : `<p class="empty">Nothing logged or planned.</p>`}</div>`;
 }
 $("#cal").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (b) { calSel = b.dataset.d; renderCalendar(); } });
@@ -904,6 +1118,74 @@ $("#hYear").addEventListener("click", e => { const b = e.target.closest("[data-y
 $("#hType").addEventListener("change", renderHistory);
 $("#hCrop").addEventListener("change", renderHistory);
 
+/* Orders */
+let oFilter = "upcoming";
+const TODAY_ISO = "2026-09-23";
+function fmtTime(t) { const [h, mi] = t.split(":").map(Number); return [`${h % 12 || 12}:${String(mi).padStart(2, "0")}`, h < 12 ? "AM" : "PM"]; }
+const money = n => "$" + n.toLocaleString("en-CA", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+const owes = o => Math.max(0, o.total - o.paid);
+const dayLabel = d => d === TODAY_ISO ? "Today" : d === "2026-09-24" ? "Tomorrow" : parse(d).toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric" });
+const payPill = o => owes(o) <= 0 ? `<span class="pill ok">${ico("check", "icon sm")}Paid ${money(o.total)}</span>`
+  : `<span class="pill warn">Owes ${money(owes(o))}${o.paid > 0 ? ` of ${money(o.total)}` : ""}</span>`;
+const byWhen = (a, b) => (a.date + a.time).localeCompare(b.date + b.time);
+function orderRow(o) {
+  const i = ORDERS.indexOf(o), [tm, ap] = fmtTime(o.time), done = o.status === "done";
+  return `<div class="order${done ? " done" : ""}"><div class="date-col"><b style="font-size:15px">${tm}</b><span>${ap}</span></div>
+    <div class="row-main"><span class="row-title">${esc(o.name)}</span>
+      <span class="meta" style="display:flex;gap:4px;align-items:center">${ico("phone", "icon sm")}${esc(o.phone)}</span>
+      <p class="o-items">${esc(o.items)}</p>
+      <div class="row-tags">${payPill(o)}${o.status === "new" ? `<span class="pill new">New from ${esc(o.source)}</span>` : ""}${done ? `<span class="pill" style="color:var(--muted)">Picked up</span>` : ""}</div>
+      <div class="o-actions">
+        ${o.status === "new" ? `<button class="btn sm primary" type="button" data-o="${i}" data-act="confirm">Confirm order</button>` : ""}
+        ${owes(o) > 0 ? `<button class="btn sm outline" type="button" data-o="${i}" data-act="paid">Mark paid</button>` : ""}
+        <button class="btn sm outline" type="button" data-o="${i}" data-act="pickup">${done ? "Undo pickup" : `${ico("check", "icon sm")}Picked up`}</button>
+      </div></div></div>`;
+}
+function renderOrders() {
+  const open = ORDERS.filter(o => o.status !== "done");
+  const week = open.filter(o => o.date >= TODAY_ISO && o.date <= "2026-09-29");
+  $("#oStats").innerHTML = `<div class="stat"><b>${open.filter(o => o.date === TODAY_ISO).length}</b><span>Pickups today</span></div>
+    <div class="stat"><b>${week.length}</b><span>This week</span></div>
+    <div class="stat"><b>${money(ORDERS.reduce((t, o) => t + owes(o), 0))}</b><span>Still owed</span></div>`;
+  const list = (oFilter === "upcoming" ? open : oFilter === "unpaid" ? ORDERS.filter(o => owes(o) > 0) : ORDERS.filter(o => o.status === "done")).sort(byWhen);
+  if (oFilter === "done") list.reverse();
+  let h = "", last = "";
+  list.forEach(o => { if (o.date !== last) { h += `<div class="day-head">${dayLabel(o.date)}</div>`; last = o.date; } h += orderRow(o); });
+  $("#oList").innerHTML = h || `<p class="empty">No orders here.</p>`;
+  $("#ordersDash").innerHTML = week.sort(byWhen).slice(0, 5).map(o => {
+    const [mon, day] = parse(o.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" }).split(" ");
+    return `<div class="row"><div class="date-col"><b>${day}</b><span>${mon}</span></div>
+      <div class="row-main"><span class="row-title">${esc(o.name)}</span><span class="meta">${fmtTime(o.time).join(" ")} · ${esc(o.items)}</span>
+      <div class="row-tags">${payPill(o)}${o.status === "new" ? `<span class="pill new">New</span>` : ""}</div></div></div>`;
+  }).join("") || `<p class="empty">No pickups this week.</p>`;
+  $("#customers").innerHTML = [...new Set(ORDERS.map(o => o.name))].map(n => `<option value="${esc(n)}"></option>`).join("");
+}
+$("#oList").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const o = ORDERS[+b.dataset.o], act = b.dataset.act;
+  if (act === "confirm") { o.status = ""; toast(`Confirmed ${o.name}'s order`); }
+  if (act === "paid") { o.paid = o.total; toast(`${o.name} marked paid`); }
+  if (act === "pickup") { o.status = o.status === "done" ? "" : "done"; toast(o.status === "done" ? `${o.name} picked up` : "Pickup undone"); }
+  renderOrders(); renderCalendar();
+});
+$("#oFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; oFilter = b.dataset.f; $("#oFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderOrders(); });
+$("#o-name").addEventListener("change", () => { const c = ORDERS.find(o => o.name === $("#o-name").value.trim()); if (c && !$("#o-phone").value) $("#o-phone").value = c.phone; });
+$("#orderForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = $("#o-name").value.trim(), items = $("#o-items").value.trim();
+  if (!name) { $("#o-name").focus(); toast("Add the customer's name"); return; }
+  if (!items) { $("#o-items").focus(); toast("Add what they ordered"); return; }
+  ORDERS.push({ name, phone: $("#o-phone").value.trim() || "No phone", items, date: $("#o-date").value || "2026-09-24", time: $("#o-time").value || "10:00",
+    total: +$("#o-total").value || 0, paid: +$("#o-paid").value || 0 });
+  ["#o-name", "#o-phone", "#o-items", "#o-total", "#o-paid"].forEach(k => $(k).value = "");
+  oFilter = "upcoming"; $("#oFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "upcoming"));
+  renderOrders(); renderCalendar(); toast("Order saved");
+});
+$("#copyLink").addEventListener("click", () => {
+  const url = "https://farm-mini.your-tailnet.ts.net/order";
+  try { navigator.clipboard.writeText(url).then(() => toast("Link copied (example link)"), () => toast(url)); } catch { toast(url); }
+});
+
 /* Notes view */
 $("#noteForm").addEventListener("submit", e => {
   e.preventDefault();
@@ -918,17 +1200,24 @@ $("#nList").addEventListener("click", e => { const b = e.target.closest("[data-n
 $("#nFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; noteFilter = b.dataset.f; $("#nFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderNotes(); });
 
 /* Navigation */
-const VIEWS = ["dashboard", "calendar", "history", "notes"];
+const VIEWS = ["dashboard", "calendar", "orders", "history", "notes"];
 function show(v) {
   if (!VIEWS.includes(v)) v = "dashboard";
   VIEWS.forEach(x => $("#v-" + x).hidden = x !== v);
   document.querySelectorAll("[data-view]").forEach(a => a.dataset.view === v ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
-  if (v === "dashboard") drawChart();
+  ["history", "notes"].includes(v) ? $("#moreBtn").setAttribute("aria-current", "page") : $("#moreBtn").removeAttribute("aria-current");
+  setMore(false);
+  if (v === "dashboard") drawCompare();
   scrollTo(0, 0);
 }
-document.addEventListener("click", e => { const a = e.target.closest("[data-view]"); if (!a) return; e.preventDefault(); show(a.dataset.view); });
+const setMore = on => { $("#moreMenu").hidden = !on; $("#moreBtn").setAttribute("aria-expanded", on); };
+$("#moreBtn").addEventListener("click", e => { e.stopPropagation(); setMore($("#moreMenu").hidden); });
+document.addEventListener("click", e => {
+  if (!e.target.closest("#moreMenu")) setMore(false);
+  const a = e.target.closest("[data-view]"); if (!a) return; e.preventDefault(); show(a.dataset.view);
+});
 
-paintIcons(); renderTypes(); renderCrops(); renderRecent(); renderPast(); renderNotes(); drawChart(); renderCalendar(); renderHistory();
+paintIcons(); renderTypes(); renderCrops(); renderRecent(); renderPast(); renderNotes(); renderOrders(); drawCompare(); renderCalendar(); renderHistory();
 show(location.hash.slice(1));
-let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawChart, 120); });
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (!$("#v-dashboard").hidden) drawCompare(); }, 120); });
 </script>
