@@ -1016,7 +1016,7 @@ function weekWeather(y) { let t = 0, n = 0, r = 0; for (let k = -3; k <= 3; k++)
 
 /* ── Dashboard units ──────────────────────────────────────────────── */
 function renderForecast() {
-  const f = S.forecast?.days;
+  const f = (S.forecast?.days || []).filter(d => d.date >= TODAY);
   if (!f?.length) { $("#forecast").innerHTML = `<div class="empty-box">${ico("cloud-off", "icon sm")}<span>The forecast isn't connected yet. It will appear here once weather for Corinth is set up.</span></div>`; return; }
   $("#forecast").innerHTML = `<div class="forecast">` + f.slice(0, 7).map((d, n) =>
     `<div class="fc${n === 0 ? " today" : ""}${d.rain >= 0.1 ? " wet" : ""}"><span class="d">${n === 0 ? "Today" : parse(d.date).toLocaleDateString("en-CA", { weekday: "short" })}</span>${ico(d.icon || "cloud")}<span class="hi">${Math.round(d.hi)}°</span><span class="lo">${Math.round(d.lo)}°</span><span class="${d.rain > 0 ? "rain" : "lo"}">${d.rain > 0 ? d.rain.toFixed(2) + " in" : "–"}</span></div>`).join("") + `</div>`;
