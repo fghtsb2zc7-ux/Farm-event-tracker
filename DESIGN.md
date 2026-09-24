@@ -44,7 +44,7 @@ The tokens sit at the top of the mockup's `<style>` block. They will move to `fr
 |---|---|---|
 | Log an event | Top left | Opens from the bottom-bar Log button |
 | Next 14 days + forecast | Top right | 1 |
-| This season vs past years (harvest volume, monthly temperature, key-date timeline) | Middle, full width | 4 |
+| This season vs past years (harvest volume, monthly temperature, season heat (GDD), key-date timeline) | Middle, full width | 4 |
 | Order pickups (this week) | Lower left | 2 |
 | This week in past years | Lower right | 3 |
 | Notes for next time | Bottom left | 5 |
@@ -55,10 +55,12 @@ The tokens sit at the top of the mockup's `<style>` block. They will move to `fr
 ## Open design questions
 
 - Should the phone home screen show "This week in past years" above or below the upcoming list?
-- What should the farm's name in the header be?
-- Farm logo or initials, instead of the sprout icon?
+- Brand colours and logo from the Fehr Grown Farm Instagram (@fehrgrownfarm). Instagram can't be reached from Claude's environment, so this needs a logo file and colours saved to `design/reference/` or pasted into chat.
+- Should orders record which crops they include, so they count toward harvest numbers?
 
 ## Changelog
+
+- **Round 1e (2026-09-24):** the header now reads **Fehr Grown Farm**. The season heat (GDD) chart is back as a panel inside "This season vs past years", with the chosen crop's events marked on each year's line and a GDD and rain table. Dashboard order unchanged.
 
 - **Round 1d (2026-09-24):** removed Pickup as an event type. Added an **Orders** screen (name, phone, what they ordered, pickup date and time, total, paid so far) with Upcoming, Unpaid and Picked up filters. Orders can be marked paid, marked picked up, or confirmed if they came from the order form. The dashboard gets an "Order pickups" unit, and the calendar shows pickups. Replaced the heat chart with **This season vs past years**: harvest volume by year, monthly average temperature, and a season timeline with labelled key dates and a days-earlier/later table.
 

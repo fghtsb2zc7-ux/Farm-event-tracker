@@ -1,4 +1,4 @@
-<title>Farm Log Dashboard</title>
+<title>Fehr Grown Farm Log</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap">
@@ -390,7 +390,7 @@ tr:last-child td { border-bottom: 0; }
   <div class="brand">
     <div class="brand-mark"><svg class="icon" viewBox="0 0 24 24" data-i="sprout"></svg></div>
     <div>
-      <h1>Farm Log</h1>
+      <h1>Fehr Grown Farm</h1>
       <p><svg class="icon sm" viewBox="0 0 24 24" data-i="map-pin"></svg>Corinth, ON · Wed Sep 23, 2026</p>
     </div>
   </div>
@@ -460,7 +460,7 @@ tr:last-child td { border-bottom: 0; }
   <section class="unit" id="u-cmp" aria-labelledby="h-cmp">
     <div class="unit-head">
       <svg class="icon" viewBox="0 0 24 24" data-i="chart-column"></svg>
-      <div><h2 id="h-cmp">This season vs past years</h2><p>Harvest, temperature and key dates compared with 2024 and 2025.</p></div>
+      <div><h2 id="h-cmp">This season vs past years</h2><p>Harvest, temperature, season heat and key dates compared with 2024 and 2025.</p></div>
     </div>
     <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between">
       <div class="seg" role="group" aria-label="Crop" id="cmpCrop"></div>
@@ -478,6 +478,12 @@ tr:last-child td { border-bottom: 0; }
         <p class="meta" id="tNote"></p>
         <div class="chart-wrap" id="tchart"></div>
       </div>
+    </div>
+    <div class="panel">
+      <h3>Season heat</h3>
+      <p class="meta">Growing degree days (base 10 °C) since April 1, with this crop's key dates marked on each year's line.</p>
+      <div class="chart-wrap" id="chart"></div>
+      <div class="table-wrap"><table id="wxTable"></table></div>
     </div>
     <div class="panel">
       <h3>Season timeline</h3>
@@ -913,10 +919,10 @@ const YEARS = [
   { y: 2024, c: "--y2024", off: 0.9,  seed: 37, last: END },
 ];
 YEARS.forEach(Y => {
-  const r = rng(Y.seed), sums = MONTHS.map(() => [0, 0]); let g = 0, rain = 0;
+  const r = rng(Y.seed), sums = MONTHS.map(() => [0, 0]); let g = 0, rain = 0; Y.gdd = [];
   for (let d = START; d <= Y.last; d++) {
     const mean = 8.2 + 13.6 * Math.sin(2 * Math.PI * (d - 110) / 365) + Y.off + (r() + r() + r() - 1.5) * 4;
-    g += Math.max(0, mean - 10);
+    g += Math.max(0, mean - 10); Y.gdd.push(g);
     if (r() < 0.31) rain += -Math.log(1 - r()) * 0.29;
     const mi = MONTHS.findLastIndex(([md]) => d >= md); sums[mi][0] += mean; sums[mi][1]++;
     if (d === TODAY) { Y.gddTo = g; Y.rainTo = rain; }
@@ -1045,7 +1051,46 @@ function drawTimeline() {
     return `<tr><td>${esc(l)}</td>${YEARS.map(Y => { const e = find(Y.y, l); return `<td>${e ? fmtDate(e[0]) + (e[4] ? " (planned)" : "") : "–"}</td>`; }).join("")}<td>${dtxt}</td></tr>`;
   }).join("") + `</tbody>`;
 }
-function drawCompare() { drawHarvest(); drawTemps(); drawTimeline(); }
+function drawHeat() {
+  const wrap = $("#chart"), W = Math.max(300, wrap.clientWidth), narrow = W < 520;
+  const H = narrow ? 220 : 260, m = { l: 44, r: narrow ? 44 : 58, t: 10, b: 26 };
+  const maxG = Math.ceil(Math.max(...YEARS.map(Y => Y.gdd[Y.gdd.length - 1])) / 250) * 250;
+  const x = d => m.l + (d - START) / (END - START) * (W - m.l - m.r);
+  const y = g => H - m.b - g / maxG * (H - m.t - m.b);
+  const evsFor = Y => (TL[cmpCrop][Y.y] || []).filter(e => !e[4] && e[0] >= START && e[0] <= Y.last);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Growing degree days since April 1 for 2024, 2025 and 2026">`;
+  for (let g = 0; g <= maxG; g += (narrow ? 500 : 250)) s += `<line class="grid-line" x1="${m.l}" x2="${W - m.r}" y1="${y(g)}" y2="${y(g)}"/><text class="axis-text" x="${m.l - 8}" y="${y(g) + 4}" text-anchor="end">${g.toLocaleString()}</text>`;
+  MONTHS.forEach(([d, l]) => s += `<text class="axis-text" x="${x(d)}" y="${H - 6}" text-anchor="start">${l}</text><line class="grid-line" x1="${x(d)}" x2="${x(d)}" y1="${H - m.b}" y2="${H - m.b + 4}"/>`);
+  s += `<line class="grid-line" x1="${x(TODAY)}" x2="${x(TODAY)}" y1="${m.t}" y2="${H - m.b}" stroke-dasharray="2 4"/><text class="axis-text" x="${x(TODAY) - 4}" y="${m.t + 10}" text-anchor="end">Today</text>`;
+  [...YEARS].reverse().forEach(Y => {
+    const pts = Y.gdd.map((g, i) => `${x(START + i).toFixed(1)},${y(g).toFixed(1)}`).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="var(${Y.c})" stroke-width="${Y.y === 2026 ? 2.5 : 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
+  });
+  const ends = YEARS.map(Y => ({ Y, ly: y(Y.gdd[Y.gdd.length - 1]), lx: x(Y.last) })).sort((a, b) => a.ly - b.ly);
+  for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 16) ends[i].ly = ends[i - 1].ly + 16;
+  ends.forEach(e => s += `<text class="end-label" x="${e.lx + 6}" y="${e.ly + 4}">${e.Y.y}</text>`);
+  YEARS.forEach(Y => evsFor(Y).forEach(([d, , , key]) => {
+    s += `<circle cx="${x(d)}" cy="${y(Y.gdd[d - START])}" r="${key ? 5 : 3.5}" fill="${key ? "var(--surface)" : `var(${Y.c})`}" stroke="var(${key ? Y.c : "--surface"})" stroke-width="${key ? 2.5 : 1.5}"/>`;
+  }));
+  s += `<line class="xhair" id="xh" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" visibility="hidden"/><rect id="hit" x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H}" fill="transparent"/></svg><div class="tip" id="tip" hidden></div>`;
+  wrap.innerHTML = s;
+  const hit = $("#hit"), tip = $("#tip"), xh = $("#xh");
+  const move = ev => {
+    const rect = wrap.getBoundingClientRect(), px = ev.clientX - rect.left;
+    const d = Math.round(START + (px * W / rect.width - m.l) / (W - m.l - m.r) * (END - START));
+    if (d < START || d > END) return;
+    xh.setAttribute("x1", x(d)); xh.setAttribute("x2", x(d)); xh.setAttribute("visibility", "visible");
+    const near = YEARS.flatMap(Y => evsFor(Y).filter(([ed]) => Math.abs(ed - d) <= 2).map(([ed, l]) => `${Y.y}: ${l} (${fmtDate(ed)})`));
+    tip.innerHTML = `<b>${fmtDate(d)}</b>` + YEARS.map(Y => `<div class="tr" style="--c:var(${Y.c})"><i></i><span>${Y.y}</span><span>${d <= Y.last ? nf(Y.gdd[d - START]) : "–"}</span></div>`).join("") + (near.length ? `<div class="ev">${near.map(esc).join("<br>")}</div>` : "");
+    tip.hidden = false; tip.style.top = "0px";
+    const tx = x(d) * rect.width / W; tip.style.left = (tx > rect.width / 2 ? tx - tip.offsetWidth - 12 : tx + 12) + "px";
+  };
+  hit.addEventListener("pointermove", move); hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); });
+  $("#wxTable").innerHTML = `<thead><tr><th>Season</th><th>GDD to Sep 23</th><th>Rain since Apr 1</th></tr></thead><tbody>` +
+    YEARS.map(Y => `<tr><td style="--c:var(${Y.c})"><i></i>${Y.y}</td><td>${nf(Y.gddTo)}</td><td>${Y.rainTo.toFixed(1)} in</td></tr>`).join("") + `</tbody>`;
+}
+function drawCompare() { drawHarvest(); drawTemps(); drawHeat(); drawTimeline(); }
 
 /* ── All events (example data) for Calendar and History ───────────── */
 const iso = (y, doy) => { const d = new Date(y, 0, doy); return `${y}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
