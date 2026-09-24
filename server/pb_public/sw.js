@@ -1,7 +1,7 @@
 // Farm Log service worker: keeps the app itself on the phone so it opens without signal.
 // Farm data is handled separately (cached by js/adapter.js; server calls under /api/ always go to the network).
 // Bump VERSION when releasing so phones pick up the new files.
-const VERSION = "farmlog-2026-09-24";
+const VERSION = "farmlog-2026-09-24b";
 const SHELL = [
   "/", "/index.html", "/css/app.css", "/js/adapter.js", "/js/app.js",
   "/vendor/pocketbase.umd.js", "/manifest.webmanifest",

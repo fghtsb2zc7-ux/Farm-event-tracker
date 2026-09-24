@@ -36,7 +36,7 @@
     } catch (err) {
       $("#loginMsg").textContent = err?.status === 0
         ? "Can't reach the farm server. Check your connection and try again."
-        : "That email and password didn't match. Try again, or ask the farm owner to reset your password.";
+        : "That email and password didn't match. Team logins are made in the admin dashboard; the admin login itself only works there (at /_/). Ask the farm owner if you need a login or a password reset.";
       btn.disabled = false;
     }
   });

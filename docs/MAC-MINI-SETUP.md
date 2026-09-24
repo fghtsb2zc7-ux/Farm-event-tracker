@@ -45,6 +45,10 @@ It will:
 
 When it finishes, open <http://127.0.0.1:8090> in Safari on the Mac mini. You should see the Farm Log sign-in page.
 
+> The admin login only works in the admin dashboard (`/_/`), not on the app's sign-in page. To use the app yourself, make a team login for yourself in step 3.
+>
+> Forgot the admin password? In Terminal: `~/FarmLog/bin/pocketbase superuser upsert you@example.com 'NewPassword123' --dir ~/FarmLog/pb_data`
+
 ## 3. Add the team
 
 1. On the Mac mini, open <http://127.0.0.1:8090/_/> and sign in with the admin email and password from step 2.
