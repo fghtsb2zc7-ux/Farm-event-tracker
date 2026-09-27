@@ -858,6 +858,30 @@ $("#restoreFile").addEventListener("change", async (e) => {
   e.target.value = "";
 });
 
+/* Google Sheets links (live CSV files served by the Mac mini) */
+let sheetInfo = null;
+async function renderSheetLinks() {
+  if (!window.pb || !$("#sheetsUnit")) return;
+  try { sheetInfo ||= await pb.send("/api/farm/csv-links", {}); } catch { return; } // offline: keep hidden
+  if (!sheetInfo?.key) return;
+  const url = f => `${location.origin}/api/farm/csv/${f}?key=${encodeURIComponent(sheetInfo.key)}`;
+  $("#sheetLinks").innerHTML = sheetInfo.files.map((f, i) => `<div class="sheet-row">
+      <div><b>${esc(f.name)}</b><div class="meta">${esc(f.description)}</div></div>
+      <input readonly id="sheet-${i}" value="${esc(`=IMPORTDATA("${url(f.name)}")`)}" aria-label="Google Sheets formula for ${esc(f.name)}">
+      <button class="btn sm outline" type="button" data-copy="sheet-${i}">${ico("check", "icon sm")}Copy</button>
+      <a class="link-btn" href="${esc(url(f.name))}" download="${esc(f.name)}">Download</a></div>`).join("");
+  if (/^(localhost|127\.|192\.168\.|10\.)/.test(location.hostname)) {
+    $("#sheetLinks").insertAdjacentHTML("afterbegin", `<div class="empty-box" style="margin-bottom:8px">${ico("circle-alert", "icon sm")}<span>These links use this Mac's local address, which Google can't reach. Open the Farm Log at its .ts.net address and copy the links from there.</span></div>`);
+  }
+  $("#sheetsUnit").hidden = false;
+}
+$("#sheetLinks").addEventListener("click", async e => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  const inp = $("#" + b.dataset.copy);
+  try { await navigator.clipboard.writeText(inp.value); toast("Copied. Paste it into cell A1 of a Google Sheet."); }
+  catch { inp.focus(); inp.select(); toast("Selected. Copy it, then paste into cell A1 of a Google Sheet."); }
+});
+
 /* ── Navigation ───────────────────────────────────────────────────── */
 const VIEWS = ["dashboard", "calendar", "orders", "history", "notes", "import"];
 let curView = "dashboard";
@@ -890,7 +914,7 @@ function renderView() {
   if (curView === "orders") renderOrders();
   if (curView === "history") renderHistory();
   if (curView === "notes") renderNotes();
-  if (curView === "import") renderImports();
+  if (curView === "import") { renderImports(); renderSheetLinks(); }
 }
 let rq = 0;
 function renderAll() { cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { renderFilterMenus(); renderView(); }); }

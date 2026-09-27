@@ -85,6 +85,8 @@ When you're ready to switch, ask Claude to export the beta's data. You'll get a 
 |---|---|
 | Update to the latest version | In Terminal: `cd ~/Farm-event-tracker && bash scripts/mac/update.sh` |
 | Download all data | In the app: **Import → Download all data** |
+| Spreadsheets and charts | In the app, open **Import → Google Sheets links** using the `.ts.net` address, not 127.0.0.1. Copy a formula into cell A1 of a Google Sheet; it refreshes about hourly. The same CSV files are saved every night at 2:30 am in `~/FarmLog/exports` (dated copies for 30 days in `exports/history`). |
+| Switch off the Sheets links | Admin dashboard → **Collections → farm_config → exports** → change `key` to any new long random text → save. Old links stop working and the new ones show in the app. |
 | Backups | Automatic every night at 3 am, keeping 14 days, in `~/FarmLog/pb_data/backups`. Restore from the admin dashboard under **Settings → Backups**. Turn on Time Machine too, so there's a copy off the Mac mini's own disk. |
 | Weather | Automatic: checked every 30 minutes and refreshed when it's more than 6 hours old. |
 | Restart the Farm Log | `sudo launchctl kickstart -k system/ca.fehrgrownfarms.farmlog` |

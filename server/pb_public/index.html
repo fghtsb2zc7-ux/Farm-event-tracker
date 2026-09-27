@@ -369,6 +369,17 @@
       <p class="progress" id="restoreProgress"></p>
     </div>
 
+    <div class="unit wide" id="sheetsUnit" hidden>
+      <div class="unit-head">
+        <svg class="icon" viewBox="0 0 24 24" data-i="file-spreadsheet"></svg>
+        <div><h2>Google Sheets links</h2><p>Live copies of the farm's data for your own sheets and charts. They keep themselves up to date.</p></div>
+      </div>
+      <p class="meta">To use one: make a new Google Sheet, click cell A1, paste the formula, and press Enter. Google Sheets refreshes it about once an hour. Build charts on another tab that points at this one, so they update too.</p>
+      <div id="sheetLinks" class="sheet-links"></div>
+      <p class="meta">Anyone with one of these links can open that file without signing in, and the orders file includes phone numbers, so share them only with people you trust. To switch off every link, change the key in the admin dashboard (Collections → farm_config → exports). The new links then appear here.</p>
+      <p class="meta">A copy of every file is also saved on the Mac mini each night, in the FarmLog → exports folder.</p>
+    </div>
+
     <div class="unit wide">
       <div class="unit-head">
         <svg class="icon" viewBox="0 0 24 24" data-i="history"></svg>

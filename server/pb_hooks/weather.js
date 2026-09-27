@@ -22,8 +22,8 @@ function getJSON(url) {
 function readData(app, id) {
   try {
     const rec = app.findRecordById("weather", id);
-    const raw = rec.get("data");
-    return { rec, data: raw ? JSON.parse(JSON.stringify(raw)) : {} };
+    const raw = rec.getString("data");
+    return { rec, data: raw ? JSON.parse(raw) : {} };
   } catch (_) {
     return { rec: null, data: {} };
   }
