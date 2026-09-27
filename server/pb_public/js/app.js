@@ -310,6 +310,7 @@ function orderRow(o) {
       <div class="o-actions write-only">
         ${o.status === "new" ? `<button class="btn sm primary" type="button" data-o="${o.id}" data-act="confirm">Confirm order</button>` : ""}
         ${owes(o) > 0 ? `<button class="btn sm outline" type="button" data-o="${o.id}" data-act="paid">Mark paid</button>` : ""}
+        <button class="btn sm outline" type="button" data-o="${o.id}" data-act="edit">${ico("pencil", "icon sm")}Edit</button>
         <button class="btn sm outline" type="button" data-o="${o.id}" data-act="pickup">${done ? "Undo pickup" : `${ico("check", "icon sm")}Picked up`}</button>
         <button class="del-btn" type="button" data-o="${o.id}" data-act="delete">${ico("trash-2", "icon sm")}Delete</button>
       </div></div></div>`;
@@ -347,19 +348,53 @@ $("#oList").addEventListener("click", e => {
   if (act === "paid") guard(() => ref.update({ paid: +o.total || 0 }), `${o.name} marked paid`);
   if (act === "pickup") guard(() => ref.update({ status: o.status === "done" ? "" : "done" }), o.status === "done" ? "Pickup undone" : `${o.name} picked up`);
   if (act === "delete") armOrConfirm(b, "o" + o.id, () => guard(() => ref.delete(), "Order deleted"));
+  if (act === "edit") startOrderEdit(o);
 });
 $("#oFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; oFilter = b.dataset.f; $("#oFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderOrders(); });
 $("#o-date").value = addDays(TODAY, 1);
 $("#o-name").addEventListener("change", () => { const c = S.orders.find(o => o.name === $("#o-name").value.trim()); if (c && !$("#o-phone").value) $("#o-phone").value = c.phone || ""; });
+/* Editing an order reuses the order form: it fills in, saves in place, then goes back to "New order". */
+let editingOrder = null;
+function startOrderEdit(o) {
+  editingOrder = o.id;
+  $("#o-name").value = o.name || ""; $("#o-phone").value = o.phone || ""; $("#o-items").value = o.items || "";
+  $("#o-date").value = o.date || TODAY; $("#o-time").value = o.time || "";
+  $("#o-total").value = o.total ? o.total : ""; $("#o-paid").value = o.paid ? o.paid : "";
+  $("#oFormTitle").textContent = `Edit ${o.name}'s order`;
+  $("#oFormSub").textContent = "Change what they ordered, the pickup date or time, or the amounts, then save.";
+  $("#oSubmit").lastChild.textContent = "Save changes";
+  $("#oCancel").hidden = false;
+  $("#oFormUnit").scrollIntoView({ behavior: "smooth", block: "start" });
+  setTimeout(() => $("#o-items").focus({ preventScroll: true }), 300);
+}
+function endOrderEdit() {
+  editingOrder = null;
+  ["#o-name", "#o-phone", "#o-items", "#o-total", "#o-paid"].forEach(k => $(k).value = "");
+  $("#o-date").value = addDays(TODAY, 1); $("#o-time").value = "10:00";
+  $("#oFormTitle").textContent = "New order";
+  $("#oFormSub").textContent = "Phone calls, Facebook messages and walk-ins.";
+  $("#oSubmit").lastChild.textContent = "Save order";
+  $("#oCancel").hidden = true;
+}
+$("#oCancel").addEventListener("click", endOrderEdit);
 $("#orderForm").addEventListener("submit", async e => {
   e.preventDefault();
   const name = $("#o-name").value.trim(), items = $("#o-items").value.trim();
   if (!name) { $("#o-name").focus(); toast("Add the customer's name"); return; }
   if (!items) { $("#o-items").focus(); toast("Add what they ordered"); return; }
+  if (editingOrder) {
+    const changes = { name, phone: $("#o-phone").value.trim(), items, date: $("#o-date").value || TODAY, time: $("#o-time").value || "",
+      total: +$("#o-total").value || 0, paid: +$("#o-paid").value || 0, editedAt: new Date().toISOString(), editedBy: me?.id || null };
+    if (await guard(() => db.doc("orders/" + editingOrder).update(changes), "Order updated")) {
+      endOrderEdit();
+      $("#oListUnit").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    return;
+  }
   const doc = { name, phone: $("#o-phone").value.trim(), items, date: $("#o-date").value || TODAY, time: $("#o-time").value || "",
     total: +$("#o-total").value || 0, paid: +$("#o-paid").value || 0, status: "", source: "manual", by: me?.id || null, createdAt: new Date().toISOString() };
   if (await guard(() => db.collection("orders").add(doc), "Order saved")) {
-    ["#o-name", "#o-phone", "#o-items", "#o-total", "#o-paid"].forEach(k => $(k).value = "");
+    endOrderEdit();
     oFilter = "upcoming"; $("#oFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "upcoming"));
   }
 });

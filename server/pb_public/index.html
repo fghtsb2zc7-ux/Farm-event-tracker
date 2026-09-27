@@ -218,7 +218,7 @@
     <div class="unit write-only" id="oFormUnit">
       <div class="unit-head">
         <svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>
-        <div><h2>New order</h2><p>Phone calls, Facebook messages and walk-ins.</p></div>
+        <div><h2 id="oFormTitle">New order</h2><p id="oFormSub">Phone calls, Facebook messages and walk-ins.</p></div>
       </div>
       <form class="form" id="orderForm" novalidate>
         <div class="two">
@@ -235,7 +235,10 @@
           <div class="field"><label for="o-total">Order total ($)</label><input id="o-total" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
           <div class="field"><label for="o-paid">Paid so far ($)</label><input id="o-paid" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
         </div>
-        <button class="btn primary" type="submit"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save order</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <button class="btn primary" type="submit" id="oSubmit" style="flex:1"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save order</button>
+          <button class="btn outline" type="button" id="oCancel" hidden>Cancel</button>
+        </div>
       </form>
     </div>
     <div class="unit" id="oListUnit">
