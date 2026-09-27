@@ -8,7 +8,7 @@ Setup and day-to-day instructions: [docs/MAC-MINI-SETUP.md](../docs/MAC-MINI-SET
 |---|---|
 | `pb_public/` | The app: `index.html`, `css/app.css` (brand tokens at the top), `js/app.js` (screens and logic), `js/adapter.js` (sign-in, live sync and offline queue on top of PocketBase), `sw.js` (offline support), `manifest.webmanifest` and `icons/` (home-screen install), `vendor/` (PocketBase SDK and SheetJS, so nothing loads from outside except fonts) |
 | `pb_migrations/` | Database setup: `events`, `orders`, `notes`, `lists`, `weather`. Each record keeps its content in one JSON `data` field, the same shape the beta used. Team members read and write farm data; only the server writes weather. |
-| `pb_hooks/` | CSV exports (`exports.js`): nightly files in `~/FarmLog/exports` and live links for Google Sheets at `/api/farm/csv/<file>?key=…` (key in `farm_config/exports`). Weather for Corinth from Open-Meteo. Checked every 30 minutes and refreshed when older than 6 hours. Superusers can force a refresh with `POST /api/farm/weather/refresh`. |
+| `pb_hooks/` | CSV exports (`exports.js`): nightly files in `~/FarmLog/exports` and live links for Google Sheets at `/api/farm/csv/<file>?key=…` (key in `farm_config/exports`). The farm's Ambient Weather station (`ambient.js`): current conditions every 5 minutes and daily summaries, using keys in `farm_config/ambient`. Weather for Corinth from Open-Meteo. Checked every 30 minutes and refreshed when older than 6 hours. Superusers can force a refresh with `POST /api/farm/weather/refresh`. |
 
 ## Run it locally (any computer)
 

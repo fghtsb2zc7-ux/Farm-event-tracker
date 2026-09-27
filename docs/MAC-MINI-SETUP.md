@@ -73,7 +73,30 @@ To reset someone's password, open their record, set a new password and save. To 
 
 Your teammates don't install Tailscale. Only the Mac mini needs it.
 
-## 5. Move the beta data across
+## 5. Connect the farm's weather station (Ambient Weather WS-2902)
+
+The station must be uploading to ambientweather.net. Then:
+
+1. Sign in at <https://ambientweather.net>, open your account menu and choose **API Keys**.
+2. Create an **API Key**. Further down the same page, create an **Application Key** (you may need to give it a short description, such as "Farm Log").
+3. On the Mac mini, open the admin dashboard (<http://127.0.0.1:8090/_/>), go to **Collections → farm_config**, and open the **ambient** record.
+4. In the **data** box, paste your two keys between the quotes, so it looks like this (with your own keys):
+
+   ```json
+   {"apiKey": "your-api-key", "applicationKey": "your-application-key", "macAddress": ""}
+   ```
+
+   Leave `macAddress` empty unless the account has more than one station. Then click **Save**.
+5. Within 5 minutes, the dashboard's **Next 14 days** card shows a **Fehr Farm station** strip with current conditions.
+
+What the station adds:
+- **Current conditions** on the dashboard, updated every 5 minutes: temperature, humidity, wind and gusts, rain today, and soil moisture if you add a soil sensor.
+- **Conditions saved with each entry** logged for today, shown as "At the time: …" in History and the calendar. Useful for spray records.
+- **Your own daily weather** (average, low, high and rain) replaces the regional Open-Meteo estimates for every day the station covers, in the charts and in `weather-daily.csv` (the `source` column says which). Open-Meteo still fills in earlier years and gives the forecast.
+
+If nothing appears, check the log (`~/FarmLog/logs/farmlog.log`) for lines starting with `[station]`. They say whether the keys were refused or no station was found.
+
+## 6. Move the beta data across
 
 When you're ready to switch, ask Claude to export the beta's data. You'll get a `farm-log-….json` file. In the new Farm Log, go to **Import → Backup and move data → Load a Farm Log file** and choose it. Loading the same file twice is safe.
 

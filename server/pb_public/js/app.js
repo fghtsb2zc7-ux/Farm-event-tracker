@@ -180,6 +180,8 @@ $("#logForm").addEventListener("submit", async e => {
   document.querySelectorAll("#extra [data-x]").forEach(i => { if (i.value.trim()) details[i.dataset.x] = i.value.trim(); });
   const doc = { date, type: selType, what: what || TYPES[selType].name, details, fields: [...CHIPS.fields.sel], crops: [...CHIPS.crops.sel],
     desc: $("#f-desc").value.trim(), status: date > TODAY ? "planned" : "done", by: me?.id || null, createdAt: new Date().toISOString(), src: "app" };
+  const st = date === TODAY && stationNow(30);
+  if (st) doc.conditions = { at: st.at, tempC: st.tempC, humidity: st.humidity, windKmh: st.windKmh, gustKmh: st.gustKmh, windDir: st.windDir, rainTodayIn: st.rainTodayIn };
   $("#logSubmit").disabled = true;
   const ok = await guard(() => db.collection("events").add(doc), date > TODAY ? `Planned for ${fmtShort(date)}` : "Event logged");
   $("#logSubmit").disabled = false;
@@ -202,8 +204,33 @@ const evTitle = e => e.what || (TYPES[e.type]?.name ?? "Event");
 
 /* ── Weather (from the shared weather documents when present) ─────── */
 const MONTHS = [[4, "Apr"], [5, "May"], [6, "Jun"], [7, "Jul"], [8, "Aug"], [9, "Sep"], [10, "Oct"]];
-function wxDay(y, md) { return S.weather[y]?.days?.[md] || null; } // [mean, min, max, rain in]
-function hasWeather(y) { return !!S.weather[y]?.days && Object.keys(S.weather[y].days).length > 0; }
+// [mean, min, max, rain in]. The farm's own station wins over Open-Meteo for any day it covers.
+function wxDay(y, md) { return S.weather["station" + y]?.days?.[md] || S.weather[y]?.days?.[md] || null; }
+function hasWeather(y) { return [S.weather[y], S.weather["station" + y]].some(w => w?.days && Object.keys(w.days).length > 0); }
+
+/* Farm station (Ambient Weather) current conditions */
+const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+const compass = deg => typeof deg === "number" ? COMPASS[Math.round(deg / 22.5) % 16] : "";
+const ago = iso => { const m = Math.round((Date.now() - new Date(iso).getTime()) / 6e4); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`; };
+const stationNow = (maxMinutes) => { const s = S.weather.station; return s?.at && (Date.now() - new Date(s.at).getTime()) / 6e4 <= maxMinutes ? s : null; };
+function conditionsLine(c) {
+  if (!c) return "";
+  const bits = [];
+  if (c.tempC != null) bits.push(`${c.tempC.toFixed(1)} °C`);
+  if (c.humidity != null) bits.push(`${Math.round(c.humidity)}% humidity`);
+  if (c.windKmh != null) bits.push(`wind ${Math.round(c.windKmh)} km/h ${compass(c.windDir)}${c.gustKmh ? `, gusts ${Math.round(c.gustKmh)}` : ""}`.trim());
+  if (c.rainTodayIn != null) bits.push(`${c.rainTodayIn.toFixed(2)} in rain today`);
+  return bits.join(" · ");
+}
+function renderStation() {
+  const s = S.weather.station, el = $("#station");
+  if (!el) return;
+  if (!s?.at) { el.innerHTML = ""; return; }
+  const fresh = (Date.now() - new Date(s.at).getTime()) / 6e4 <= 120;
+  const soil = s.soil ? Object.entries(s.soil).filter(([, v]) => v != null).map(([k, v]) => k.startsWith("moisture") ? `soil moisture ${Math.round(v)}%` : `soil ${v.toFixed(1)} °C`).join(" · ") : "";
+  el.innerHTML = `<div class="station${fresh ? "" : " stale"}">${ico("thermometer", "icon sm")}<div><b>${esc(s.name || "Farm station")}</b> <span class="meta">· ${fresh ? "updated" : "last reading"} ${ago(s.at)}</span>
+    <div>${esc(conditionsLine(s))}${s.rainHourIn ? ` · ${s.rainHourIn.toFixed(2)} in in the last hour` : ""}${soil ? ` · ${esc(soil)}` : ""}</div></div></div>`;
+}
 function gddSeries(y) { // Apr 1 … Oct 31, cumulative; null past the last day with data
   const out = []; let g = 0, any = false;
   for (let d = doyOf(`${y}-04-01`); d <= doyOf(`${y}-10-31`); d++) {
@@ -220,6 +247,7 @@ function weekWeather(y) { let t = 0, n = 0, r = 0; for (let k = -3; k <= 3; k++)
 
 /* ── Dashboard units ──────────────────────────────────────────────── */
 function renderForecast() {
+  renderStation();
   const f = (S.forecast?.days || []).filter(d => d.date >= TODAY);
   if (!f?.length) { $("#forecast").innerHTML = `<div class="empty-box">${ico("cloud-off", "icon sm")}<span>The forecast isn't connected yet. It will appear here once weather for Corinth is set up.</span></div>`; return; }
   $("#forecast").innerHTML = `<div class="forecast">` + f.slice(0, 7).map((d, n) =>
@@ -575,7 +603,7 @@ const calItems = () => [...S.events.map(e => ({ ...e, title: evTitle(e), planned
   ...S.orders.map(o => ({ id: "o" + o.id, date: o.date, type: "order", title: `${o.name}${o.time ? ", " + fmtTime(o.time).join(" ") : ""}: ${o.items}`, crops: [], planned: o.status !== "done" }))];
 const evRow = e => `<div class="row">${typeDot(e.type)}<div class="row-main"><span class="row-title">${esc(e.title || evTitle(e))}</span>
   <div class="row-tags">${tags(e.crops)}${e.planned ? `<span class="pill ok">Planned</span>` : ""}${e.src && e.src !== "app" ? `<span class="src">${e.src === "handwritten" ? "From handwritten notes" : "Imported"}</span>` : ""}</div>
-  ${detailLine(e) ? `<span class="meta">${esc(detailLine(e))}</span>` : ""}${e.desc ? `<span class="meta">${esc(e.desc)}</span>` : ""}</div>
+  ${detailLine(e) ? `<span class="meta">${esc(detailLine(e))}</span>` : ""}${e.conditions ? `<span class="meta">${ico("thermometer", "icon sm")} At the time: ${esc(conditionsLine(e.conditions))}</span>` : ""}${e.desc ? `<span class="meta">${esc(e.desc)}</span>` : ""}</div>
   <div style="text-align:right; flex:none"><div class="meta">${fmtShort(e.date)}</div>${whoLabel(e) && e.type !== "order" ? `<div class="meta" style="display:flex;gap:4px;align-items:center;justify-content:flex-end">${ico("user", "icon sm")}${esc(whoLabel(e))}</div>` : ""}
   ${e.type !== "order" ? `<button class="del-btn write-only" type="button" data-del-ev="${e.id}">${ico("trash-2", "icon sm")}Delete</button>` : ""}</div></div>`;
 function renderCalendar() {

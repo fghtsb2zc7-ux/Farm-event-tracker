@@ -6,7 +6,7 @@ const FILES = {
   "harvests.csv": "Harvests only, with the amount split into number and unit",
   "orders.csv": "Customer orders, including phone numbers",
   "notes.csv": "Notes for next season",
-  "weather-daily.csv": "Daily weather for Corinth with season growing degree days",
+  "weather-daily.csv": "Daily weather (farm station where available, otherwise Open-Meteo) with season growing degree days",
 };
 
 const readAll = (app, name) => {
@@ -95,18 +95,24 @@ function build(app, file) {
   }
 
   if (file === "weather-daily.csv") {
+    // The farm's own station wins over Open-Meteo for any day it covers.
+    const all = readAll(app, "weather"), byId = {};
+    all.forEach((w) => { byId[w.id] = w; });
+    const years = [...new Set(all.map((w) => (w.id.match(/^(?:station)?(\d{4})$/) || [])[1]).filter(Boolean))].sort();
     const rows = [];
-    readAll(app, "weather").filter((w) => /^\d{4}$/.test(w.id)).sort((a, b) => a.id.localeCompare(b.id)).forEach((w) => {
+    years.forEach((y) => {
+      const om = (byId[y] || {}).days || {}, st = (byId["station" + y] || {}).days || {};
       let season = 0;
-      Object.keys(w.days || {}).sort().forEach((md) => {
-        const [mean, min, max, rain] = w.days[md];
+      [...new Set([...Object.keys(om), ...Object.keys(st)])].sort().forEach((md) => {
+        const fromStation = !!st[md];
+        const [mean, min, max, rain] = fromStation ? st[md] : om[md];
         const gdd = Math.max(0, mean - 10);
         const inSeason = md >= "04-01" && md <= "10-31";
         if (inSeason) season += gdd;
-        rows.push([`${w.id}-${md}`, Number(w.id), mean, min, max, rain, Math.round(gdd * 10) / 10, inSeason ? Math.round(season) : ""]);
+        rows.push([`${y}-${md}`, Number(y), mean, min, max, rain, Math.round(gdd * 10) / 10, inSeason ? Math.round(season) : "", fromStation ? "Farm station" : "Open-Meteo"]);
       });
     });
-    return toCSV(["date", "year", "mean_c", "min_c", "max_c", "rain_in", "gdd_base10", "gdd_season_total_since_apr1"], rows);
+    return toCSV(["date", "year", "mean_c", "min_c", "max_c", "rain_in", "gdd_base10", "gdd_season_total_since_apr1", "source"], rows);
   }
 
   throw new Error("Unknown file " + file);

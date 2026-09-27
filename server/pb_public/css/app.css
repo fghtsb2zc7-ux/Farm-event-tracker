@@ -486,3 +486,9 @@ body.signed-out > :not(#login):not(.toast) { display: none !important; }
 .sheet-row:first-child { border-top: 0; }
 .sheet-row input { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: 7px 9px; font-size: 12.5px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
 @media (max-width: 720px) { .sheet-row { grid-template-columns: minmax(0, 1fr) auto; } .sheet-row > div, .sheet-row input { grid-column: 1 / -1; } }
+
+/* Farm station current conditions */
+.station { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--accent-soft); font-size: 13.5px; }
+.station .icon { color: var(--accent); margin-top: 3px; }
+.station b { font-weight: 600; }
+.station.stale { background: var(--surface-2); color: var(--ink-2); }
