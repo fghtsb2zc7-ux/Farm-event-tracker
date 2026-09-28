@@ -10,7 +10,11 @@
  *     are queued and sent when the connection comes back
  */
 (() => {
-  const pb = new PocketBase(location.origin);
+  // The app can be served at the root of its own port or under a path (…/shop/), so every address is relative to this page.
+  const BASE = new URL(".", location.href).href.replace(/\/$/, "");
+  // Its own sign-in key: under /shop it shares the browser storage of the Farm Log's address.
+  const Store = new PocketBase(BASE).authStore.constructor;
+  const pb = new PocketBase(BASE, new Store("shoplog_auth"));
   pb.autoCancellation(false);
   window.pb = pb;
 

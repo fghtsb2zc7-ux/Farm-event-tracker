@@ -6,7 +6,7 @@ and a Products screen where categories, options and prices are edited.
 
 |                 | Farm Log                | Rough Cut Dezigns Orders       |
 |-----------------|-------------------------|--------------------------------|
-| Address         | `https://kierans-mini.<tailnet>.ts.net` | the same, with `:8443` on the end |
+| Address         | `https://kierans-mini.<tailnet>.ts.net/` | the same, with `/shop/` on the end |
 | On the Mac      | `http://127.0.0.1:8090` | `http://127.0.0.1:8091`        |
 | Data folder     | `~/FarmLog`             | `~/ShopLog`                    |
 | App files       | `server/`               | `shop/`                        |
@@ -21,12 +21,13 @@ From your laptop, sign in to the Mac mini: `ssh kieranfehr@kierans-mini`. Then r
 cd ~/Farm-event-tracker
 git pull
 bash scripts/mac/setup.sh shop          # downloads PocketBase, asks for an admin email + password, starts the service
-bash scripts/mac/share-online.sh shop   # puts it online at https://<mac>.ts.net:8443
+bash scripts/mac/share-online.sh shop   # puts it online at the farm address + /shop/
 ```
 
 `share-online.sh shop` finishes by printing the exact address in bold, for example
-`https://kierans-mini.tail1234.ts.net:8443`. Use the whole thing: `https://`, the full name including the
-`tail….ts.net` part, and `:8443`.
+`https://kierans-mini.tail1234.ts.net/shop/`. It's your Farm Log address with `/shop/` on the end.
+(It used to be on `:8443`, which some phone and Wi-Fi networks block; re-running `share-online.sh shop`
+moves it to `/shop/`.)
 
 The admin account only opens the admin dashboard (`/_/`). To sign in to the app itself, make a login:
 
@@ -45,7 +46,7 @@ If nightly auto-updates are already on for the Farm Log, `setup.sh shop` adds th
 - **New order**: type the customer's name (saved customers pop up), choose pickup or ship and a date, then tap a
   category and an option to add it to the order. Quantities and prices can be changed per order.
 - **Tax**: set in Products → Shop settings (starts at 0%). It applies to items and shipping.
-- **Google Sheets**: Products → Google Sheets links, copied from the `.ts.net:8443` address.
+- **Google Sheets**: Products → Google Sheets links, copied from the `.ts.net/shop/` address.
   A copy of the CSV files is also saved each night in `~/ShopLog/exports`.
 - **Backups**: nightly at 3:15, kept for 14 days, in `~/ShopLog/pb_data/backups`.
 
@@ -71,5 +72,5 @@ bash scripts/mac/check-online.sh            # check both apps from the internet
 bash scripts/mac/add-user.sh shop           # add a login, or reset a password
 tail -f ~/ShopLog/logs/shop.log             # the shop's log
 sudo launchctl kickstart -k system/ca.roughcutdezigns.orders   # restart the shop
-tailscale funnel --https=8443 off           # take the shop offline (the farm stays online)
+tailscale funnel --https=443 --set-path=/shop off   # take the shop offline (the farm stays online)
 ```

@@ -1,7 +1,7 @@
 // Farm Log service worker: keeps the app itself on the phone so it opens without signal.
 // Farm data is handled separately (cached by js/adapter.js; server calls under /api/ always go to the network).
 // Bump VERSION when releasing so phones pick up the new files.
-const VERSION = "farmlog-2026-09-27c";
+const VERSION = "farmlog-2026-09-28a";
 const SHELL = [
   "/", "/index.html", "/css/app.css", "/js/adapter.js", "/js/app.js",
   "/vendor/pocketbase.umd.js", "/manifest.webmanifest",
@@ -13,12 +13,14 @@ self.addEventListener("install", (e) => {
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith("farmlog-") && k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.startsWith("/api/") || url.pathname.startsWith("/_/")) return;
+  // Rough Cut Dezigns Orders is shared at /shop on the same address; it has its own service worker.
+  if (url.pathname === "/shop" || url.pathname.startsWith("/shop/")) return;
 
   // Try the Mac mini first so updates show up right away; use the saved copy when there's no signal.
   e.respondWith(fetch(e.request).then((res) => {

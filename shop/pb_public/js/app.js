@@ -437,7 +437,7 @@ async function renderSheetLinks() {
   if (!window.pb) return;
   try { sheetInfo ||= await pb.send("/api/shop/csv-links", {}); } catch { return; }
   if (!sheetInfo?.key) return;
-  const url = f => `${location.origin}/api/shop/csv/${f}?key=${encodeURIComponent(sheetInfo.key)}`;
+  const url = f => `${new URL("api/shop/csv/", location.href).href}${f}?key=${encodeURIComponent(sheetInfo.key)}`;
   $("#sheetLinks").innerHTML = (/^(localhost|127\.|192\.168\.|10\.)/.test(location.hostname) ? `<div class="empty-box" style="margin-bottom:8px">${ico("circle-alert", "icon sm")}<span>These links use this Mac's local address, which Google can't reach. Open Orders at its .ts.net address and copy the links from there.</span></div>` : "")
     + sheetInfo.files.map((f, i) => `<div class="sheet-row"><div><b>${esc(f.name)}</b><div class="meta">${esc(f.description)}</div></div>
       <input readonly id="sheet-${i}" value="${esc(`=IMPORTDATA("${url(f.name)}")`)}" aria-label="Google Sheets formula for ${esc(f.name)}">
@@ -480,7 +480,7 @@ function renderAll() {
 $("#todayLabel").textContent = NOW.toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 paintIcons();
 show(location.hash.slice(1) === "order" ? "orders" : location.hash.slice(1));
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(err => console.warn("service worker", err));
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(err => console.warn("service worker", err));
 
 /* ── Connect ──────────────────────────────────────────────────────── */
 (async () => {

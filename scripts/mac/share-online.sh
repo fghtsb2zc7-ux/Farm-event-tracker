@@ -2,9 +2,9 @@
 # Gives an app a secure web address with Tailscale Funnel, so phones can reach it anywhere.
 # Needs the Tailscale app installed and signed in on this Mac first (see docs/MAC-MINI-SETUP.md).
 #
-# Run:  bash scripts/mac/share-online.sh          (Farm Log:  https://<mac>.ts.net)
-#       bash scripts/mac/share-online.sh shop     (Rough Cut Dezigns Orders:  https://<mac>.ts.net:8443)
-# Stop sharing any time with:  tailscale funnel --https=443 off   (or --https=8443 off for the shop)
+# Run:  bash scripts/mac/share-online.sh          (Farm Log:  https://<mac>.<tailnet>.ts.net/)
+#       bash scripts/mac/share-online.sh shop     (Rough Cut Dezigns Orders:  https://<mac>.<tailnet>.ts.net/shop/)
+# Stop sharing an app with:  tailscale funnel --https=443 --set-path=/shop off   (or without --set-path for the farm)
 
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/apps.sh"
@@ -27,7 +27,11 @@ echo "Turning on Tailscale Funnel for the $APP_NAME…"
 echo "If this is the first time, Tailscale prints a link to approve HTTPS and Funnel for your account."
 echo "Open it, approve, then run this script again."
 echo
-"$TS" funnel --bg --https="$FUNNEL_PORT" "$PORT"
+"$TS" funnel --bg --https=443 --set-path="$FUNNEL_PATH" "http://127.0.0.1:$PORT"
+if [[ "$APP" == shop ]]; then
+  # The shop used to be shared on :8443, which some networks block. That's replaced by /shop.
+  "$TS" funnel --https=8443 off >/dev/null 2>&1 || true
+fi
 echo
 echo "Checking it from the internet, the way other phones and computers reach it…"
 echo "(The first time, the security certificate can take a minute or two. If it says NO, wait and run this again.)"

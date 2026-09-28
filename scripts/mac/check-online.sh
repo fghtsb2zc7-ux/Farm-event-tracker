@@ -30,13 +30,14 @@ PROBLEM=0
 APPS="$(installed_apps)"; APPS="${APPS:-farm}"
 for a in $APPS; do
   app_config "$a"
-  URL="https://$HOST"; [[ "$FUNNEL_PORT" != "443" ]] && URL="$URL:$FUNNEL_PORT"
+  URL="https://$HOST${FUNNEL_PATH%/}/"
   printf "\033[1m%s\033[0m  %s\n" "$APP_NAME" "$URL"
   if curl -fs --max-time 5 "http://127.0.0.1:$PORT/api/health" >/dev/null; then echo "  running on this Mac: yes"
   else echo "  running on this Mac: NO. Restart it: sudo launchctl kickstart -k system/$LABEL"; PROBLEM=1; echo; continue; fi
-  # Tailscale lists each shared address as "https://<name>[:port] (Funnel on)" or "(tailnet only)".
-  SHARED="$(echo "$FUNNEL" | grep -F "$URL (" | head -n 1)"
-  if [[ -z "$SHARED" ]]; then
+  # Tailscale lists the address as "https://<name> (Funnel on)" or "(tailnet only)", then one
+  # "|-- <path> proxy http://127.0.0.1:<port>" line per app.
+  SHARED="$(echo "$FUNNEL" | grep -F "https://$HOST (" | head -n 1)"
+  if [[ -z "$SHARED" ]] || ! echo "$FUNNEL" | grep -Eq -- "-- $FUNNEL_PATH +proxy http://(127\.0\.0\.1|localhost):$PORT"; then
     echo "  shared publicly: NO (it isn't in the Funnel settings above)"; PROBLEM=1; echo; continue
   elif [[ "$SHARED" != *"Funnel on"* ]]; then
     echo "  shared publicly: NO (it's shared with your own Tailscale devices only, which is why it works on this Mac)"; PROBLEM=1; echo; continue
@@ -46,7 +47,7 @@ for a in $APPS; do
     echo "  reachable from the internet: NO (public DNS doesn't know $HOST, so Funnel isn't on for this Mac)"
     PROBLEM=1; echo; continue
   fi
-  if curl -fsS --max-time 20 --resolve "$HOST:$FUNNEL_PORT:$PUBLIC_IP" "$URL/api/health" >/dev/null 2>&1; then
+  if curl -fsS --max-time 20 --resolve "$HOST:443:$PUBLIC_IP" "${URL}api/health" >/dev/null 2>&1; then
     echo "  reachable from the internet: yes"
   else
     echo "  reachable from the internet: NO"
@@ -57,8 +58,8 @@ done
 
 if [[ $PROBLEM == 0 ]]; then
   echo "Everything answers from the internet. If a phone still can't open it:"
-  echo "  - check the address letter by letter, including https:// and any :8443 on the end"
-  echo "  - try the phone on mobile data instead of Wi-Fi (some Wi-Fi networks block :8443)"
+  echo "  - check the address letter by letter, including https:// and /shop/ for the shop"
+  echo "  - on that phone, open the address in a private tab (an old saved copy can get in the way)"
 else
   echo "To fix: bash scripts/mac/share-online.sh <app>   (farm or shop), then run this check again."
 fi

@@ -2,6 +2,10 @@
 <html lang="en-CA">
 <head>
 <meta charset="utf-8">
+<script>
+  // Served at …/shop? Add the trailing slash so the app's relative file addresses resolve inside /shop/.
+  if (!location.pathname.endsWith("/") && !/\.[a-z]+$/i.test(location.pathname)) location.replace(location.pathname + "/" + location.search + location.hash);
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Rough Cut Dezigns Orders</title>
 <meta name="description" content="Orders, customers and products for Rough Cut Dezigns woodworking and 3D printing.">
@@ -10,14 +14,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Orders">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Questrial&display=swap">
-<link rel="stylesheet" href="/css/app.css">
-<link rel="stylesheet" href="/css/shop.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/shop.css">
 </head>
 <body class="signed-out">
 
@@ -214,8 +218,8 @@
 </nav>
 <div class="toast" id="toast" role="status"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg><span id="toastText"></span></div>
 
-<script src="/vendor/pocketbase.umd.js"></script>
-<script src="/js/adapter.js"></script>
-<script src="/js/app.js"></script>
+<script src="vendor/pocketbase.umd.js"></script>
+<script src="js/adapter.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

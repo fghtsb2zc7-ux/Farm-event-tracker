@@ -147,4 +147,4 @@ It follows the branch the project folder is on, and only runs while you're logge
 
 ## A second app on this Mac
 
-Rough Cut Dezigns Orders runs beside the Farm Log on port 8091 and is shared at `https://<mac>.ts.net:8443`. See [SHOP-SETUP.md](SHOP-SETUP.md). The update scripts above update and restart both.
+Rough Cut Dezigns Orders runs beside the Farm Log on port 8091 and is shared at the same address with `/shop/` on the end. See [SHOP-SETUP.md](SHOP-SETUP.md). The update scripts above update and restart both.

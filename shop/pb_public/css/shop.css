@@ -41,9 +41,9 @@
 }
 
 /* Brand fonts, bundled so the logo looks right offline (SIL Open Font License, see fonts/OFL-*.txt) */
-@font-face { font-family: "Kaushan Script"; src: url("/fonts/kaushan-script-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Josefin Sans"; src: url("/fonts/josefin-sans-300.woff2") format("woff2"); font-weight: 300; font-display: swap; }
-@font-face { font-family: "Josefin Sans"; src: url("/fonts/josefin-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Kaushan Script"; src: url("../fonts/kaushan-script-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Josefin Sans"; src: url("../fonts/josefin-sans-300.woff2") format("woff2"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Josefin Sans"; src: url("../fonts/josefin-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 
 /* Logo wordmark: thin frame, brush-script "rough", geometric "cut", small "dezigns" */
 .wordmark.rc-mark { border: 1.5px solid var(--brand-grey); padding: 3px 10px 4px; line-height: 1; align-items: center; }
