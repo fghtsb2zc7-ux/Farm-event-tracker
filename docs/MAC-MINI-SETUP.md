@@ -102,11 +102,25 @@ When you're ready to switch, ask Claude to export the beta's data. You'll get a 
 
 ---
 
+## Automatic updates
+
+Run this once on the Mac mini (in person, or over `ssh`). It asks for your Mac password once:
+
+```bash
+cd ~/Farm-event-tracker && bash scripts/mac/enable-auto-update.sh
+```
+
+Every night at 4:10 am the Mac mini checks GitHub for a newer Farm Log. If there is one, it installs it and restarts the app, then checks the app answers. If the new version doesn't start within 90 seconds, it puts the previous version back and restarts again, so the team is never left with a broken app. Each check adds a line to `~/FarmLog/logs/update.log`.
+
+It follows the branch the project folder is on, and only runs while you're logged in on the Mac mini (normal for a Mac that stays on). To turn it off: `bash scripts/mac/enable-auto-update.sh --off`.
+
 ## Day-to-day
 
 | Task | How |
 |---|---|
-| Update to the latest version | In Terminal: `cd ~/Farm-event-tracker && bash scripts/mac/update.sh` |
+| Update to the latest version | Automatic every night at 4:10 am once you've run `bash scripts/mac/enable-auto-update.sh` (see below). By hand any time: `cd ~/Farm-event-tracker && bash scripts/mac/update.sh` |
+| See what the updates did | `~/FarmLog/logs/update.log`: one line per check, including anything it skipped or rolled back |
+| Work on the Mac mini from elsewhere | With **Remote Login** on (System Settings → General → Sharing), from any computer on your Tailscale account: `ssh kieranfehr@kierans-mini` |
 | Download all data | In the app: **Import → Download all data** |
 | Spreadsheets and charts | In the app, open **Import → Google Sheets links** using the `.ts.net` address, not 127.0.0.1. Copy a formula into cell A1 of a Google Sheet; it refreshes about hourly. The same CSV files are saved every night at 2:30 am in `~/FarmLog/exports` (dated copies for 30 days in `exports/history`). |
 | Switch off the Sheets links | Admin dashboard → **Collections → farm_config → exports** → change `key` to any new long random text → save. Old links stop working and the new ones show in the app. |
