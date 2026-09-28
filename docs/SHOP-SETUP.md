@@ -49,20 +49,25 @@ If nightly auto-updates are already on for the Farm Log, `setup.sh shop` adds th
   A copy of the CSV files is also saved each night in `~/ShopLog/exports`.
 - **Backups**: nightly at 3:15, kept for 14 days, in `~/ShopLog/pb_data/backups`.
 
-## If Safari says it "can't find the server"
+## If Safari or Chrome can't reach it
 
-- Check the address is the full one printed by `bash scripts/mac/share-online.sh shop`. Safari can't find
-  `<mac>.ts.net`-style shortcuts or an address missing the `tail….ts.net` part.
-- Try the Farm Log address on the same phone. If the farm opens but `…:8443` doesn't, re-run
-  `bash scripts/mac/share-online.sh shop`: it turns sharing on and checks the address answers from the internet.
-- The first time, the security certificate can take a minute or two. Wait, then try again.
-- On the Mac mini itself, `http://127.0.0.1:8091` always works (that's how you reached the admin dashboard).
+It can work on the Mac mini but not on other devices. The Mac reaches the app over your private Tailscale
+connection, but other devices come in over the public internet through Tailscale Funnel. To check that route, run:
+
+```bash
+bash scripts/mac/check-online.sh
+```
+
+For each app it says whether it's running, whether it's shared publicly, and whether it answers from the
+internet, with the fix for whatever says NO. If everything says yes and a phone still can't open it, check
+the address letter by letter, and try the phone on mobile data instead of Wi-Fi.
 
 ## Useful commands
 
 ```bash
 bash scripts/mac/update.sh                  # update and restart both apps
-bash scripts/mac/share-online.sh shop       # show the address and check it's online
+bash scripts/mac/share-online.sh shop       # share it publicly and check it from the internet
+bash scripts/mac/check-online.sh            # check both apps from the internet
 bash scripts/mac/add-user.sh shop           # add a login, or reset a password
 tail -f ~/ShopLog/logs/shop.log             # the shop's log
 sudo launchctl kickstart -k system/ca.roughcutdezigns.orders   # restart the shop
