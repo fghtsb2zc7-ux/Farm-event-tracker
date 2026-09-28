@@ -31,8 +31,16 @@ echo
 echo
 "$TS" funnel status
 echo
-if [[ "$FUNNEL_PORT" == "443" ]]; then
-  echo "The https://….ts.net address above is the $APP_NAME's address."
+# This Mac's full Tailscale name, e.g. kierans-mini.tail1234.ts.net (the first DNSName in the status is this Mac's).
+HOST="$("$TS" status --json 2>/dev/null | grep -o '"DNSName": *"[^"]*"' | head -n 1 | sed -E 's/.*"([^"]*)"$/\1/; s/\.$//')"
+URL="https://$HOST"; [[ "$FUNNEL_PORT" != "443" ]] && URL="$URL:$FUNNEL_PORT"
+if [[ -n "$HOST" ]]; then
+  echo "Checking it answers from the internet…"
+  if curl -fsS --max-time 20 "$URL/api/health" >/dev/null 2>&1; then echo "  yes, it's online."
+  else echo "  not yet. The first time can take a minute or two while the security certificate is made; run this script again then."; fi
+  echo
+  printf "\033[1mThe %s's address:  %s\033[0m\n" "$APP_NAME" "$URL"
+  echo "Type or paste it exactly, including https:// and the whole name$([[ "$FUNNEL_PORT" != "443" ]] && echo " and the :$FUNNEL_PORT on the end")."
 else
-  echo "The $APP_NAME's address is the https://….ts.net:$FUNNEL_PORT one above (the :$FUNNEL_PORT matters)."
+  echo "Couldn't read this Mac's Tailscale name. The address is the https://….ts.net one above$([[ "$FUNNEL_PORT" != "443" ]] && echo ", with :$FUNNEL_PORT on the end")."
 fi
