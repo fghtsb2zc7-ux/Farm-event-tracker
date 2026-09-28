@@ -23,7 +23,7 @@ if ! curl -fs "http://127.0.0.1:$PORT/api/health" >/dev/null; then
   exit 1
 fi
 
-echo "Turning on Tailscale Funnel for the $APP_NAME…"
+echo "Turning on Tailscale Funnel for the ${APP_NAME}…"
 echo "If this is the first time, Tailscale prints a link to approve HTTPS and Funnel for your account."
 echo "Open it, approve, then run this script again."
 echo
