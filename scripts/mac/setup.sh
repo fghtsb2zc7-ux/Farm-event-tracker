@@ -1,23 +1,29 @@
 #!/bin/bash
-# Fehr Grown Farm Log: one-time setup on the Mac mini.
+# One-time setup of an app on the Mac mini: the Farm Log (farm) or Rough Cut Dezigns Orders (shop).
 #
 # What it does:
-#   1. Downloads PocketBase (the open-source server) into ~/FarmLog/bin
-#   2. Creates your admin (owner) account
-#   3. Installs a background service that starts the Farm Log at boot and restarts it if it stops
+#   1. Downloads PocketBase (the open-source server) into ~/FarmLog/bin or ~/ShopLog/bin
+#   2. Creates your admin (owner) account for that app
+#   3. Installs a background service that starts the app at boot and restarts it if it stops
 #   4. Optionally keeps the Mac awake and restarts it after a power cut
 #
-# Run it from the project folder:   bash scripts/mac/setup.sh
+# Run it from the project folder:
+#   bash scripts/mac/setup.sh          (the Farm Log)
+#   bash scripts/mac/setup.sh shop     (Rough Cut Dezigns Orders)
+# Add --new-admin to add or reset the admin account.
 # It's safe to run again (for example to update PocketBase): it replaces the program, never your data.
 
 set -euo pipefail
 
 PB_VERSION="0.40.4"
-LABEL="ca.fehrgrownfarms.farmlog"
-PORT="8090"
-
 REPO_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-HOME_DIR="$HOME/FarmLog"
+source "$REPO_DIR/scripts/mac/apps.sh"
+APP_ARG=farm; NEW_ADMIN=""
+for arg in "$@"; do
+  case "$arg" in --new-admin) NEW_ADMIN=1 ;; *) APP_ARG="$arg" ;; esac
+done
+app_config "$APP_ARG" || exit 1
+
 BIN="$HOME_DIR/bin/pocketbase"
 DATA_DIR="$HOME_DIR/pb_data"
 LOG_DIR="$HOME_DIR/logs"
@@ -58,9 +64,9 @@ echo "Installed $("$BIN" --version)"
 
 say "2/4  Admin account"
 echo "This is the owner login for the admin dashboard (adding people, resetting passwords, backups)."
-echo "It is separate from the logins your team uses in the app."
-if [[ -f "$DATA_DIR/data.db" ]] && [[ "${1:-}" != "--new-admin" ]]; then
-  echo "An existing Farm Log database was found, so the admin account is left as it is."
+echo "It is separate from the logins people use in the app. It can be the same email as your other app's admin."
+if [[ -f "$DATA_DIR/data.db" ]] && [[ -z "$NEW_ADMIN" ]]; then
+  echo "An existing $APP_NAME database was found, so the admin account is left as it is."
   echo "(Run with --new-admin to add or reset one.)"
 else
   read -r -p "Admin email: " ADMIN_EMAIL
@@ -89,17 +95,17 @@ cat > "$TMP_PLIST" <<PLIST
     <string>serve</string>
     <string>--http=127.0.0.1:$PORT</string>
     <string>--dir=$DATA_DIR</string>
-    <string>--hooksDir=$REPO_DIR/server/pb_hooks</string>
-    <string>--migrationsDir=$REPO_DIR/server/pb_migrations</string>
-    <string>--publicDir=$REPO_DIR/server/pb_public</string>
+    <string>--hooksDir=$REPO_DIR/$SRC_DIR/pb_hooks</string>
+    <string>--migrationsDir=$REPO_DIR/$SRC_DIR/pb_migrations</string>
+    <string>--publicDir=$REPO_DIR/$SRC_DIR/pb_public</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict><key>TZ</key><string>America/Toronto</string></dict>
   <key>WorkingDirectory</key><string>$HOME_DIR</string>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
-  <key>StandardOutPath</key><string>$LOG_DIR/farmlog.log</string>
-  <key>StandardErrorPath</key><string>$LOG_DIR/farmlog.log</string>
+  <key>StandardOutPath</key><string>$LOG_DIR/$LOG_NAME</string>
+  <key>StandardErrorPath</key><string>$LOG_DIR/$LOG_NAME</string>
 </dict>
 </plist>
 PLIST
@@ -113,7 +119,7 @@ for _ in $(seq 1 30); do
   if curl -fs "http://127.0.0.1:$PORT/api/health" >/dev/null; then echo " … running."; break; fi
   printf "."; sleep 1
 done
-curl -fs "http://127.0.0.1:$PORT/api/health" >/dev/null || { echo; echo "It didn't start. The log is at $LOG_DIR/farmlog.log"; exit 1; }
+curl -fs "http://127.0.0.1:$PORT/api/health" >/dev/null || { echo; echo "It didn't start. The log is at $LOG_DIR/$LOG_NAME"; exit 1; }
 
 say "4/4  Keep the Mac mini available"
 read -r -p "Stop this Mac from sleeping and restart it automatically after a power cut? [Y/n] " ANSWER
@@ -122,13 +128,18 @@ if [[ ! "$ANSWER" =~ ^[Nn] ]]; then
   echo "Done. (The display can still turn off.)"
 fi
 
-say "The Farm Log is running on this Mac."
+# Nightly auto-updates already on? Let them restart this app too.
+if [[ -f "$HOME/Library/LaunchAgents/ca.fehrgrownfarms.farmlog.update.plist" ]]; then
+  write_restart_permission && echo "Nightly automatic updates will include the $APP_NAME."
+fi
+
+say "The $APP_NAME is running on this Mac."
 cat <<DONE
   App:              http://127.0.0.1:$PORT
   Admin dashboard:  http://127.0.0.1:$PORT/_/
   Your data:        $DATA_DIR   (nightly backups in $DATA_DIR/backups)
-  Log file:         $LOG_DIR/farmlog.log
+  Log file:         $LOG_DIR/$LOG_NAME
 
-Next: put it online for the team with Tailscale Funnel:
-  bash scripts/mac/share-online.sh
+Next: put it online with Tailscale Funnel:
+  bash scripts/mac/share-online.sh $APP
 DONE

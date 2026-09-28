@@ -1,0 +1,150 @@
+/* Rough Cut Dezigns Orders: brand overrides and shop-only components. Loaded after app.css (shared with the Farm Log).
+   Palette from the logo: charcoal ink, natural wood tan, autumn rust, forest green. Contrast checked (AA). */
+:root {
+  --rc-ink: #1f1d1b;
+  --rc-wood: #d9c3a5;
+  --rc-rust: #a64a20;      /* 5.8:1 with white */
+  --rc-forest: #3f5a3a;    /* 7.7:1 with white */
+  --brand-grey: var(--rc-ink);
+  --brand-green: var(--rc-rust);   /* primary buttons; name kept from the shared styles */
+  --on-brand: #ffffff;
+  --bg: #f7f3ec;
+  --surface: #ffffff;
+  --surface-2: #efe7da;
+  --ink: #1f1d1b;
+  --ink-2: #4a4540;
+  --muted: #6f6861;
+  --line: #e4d9c8;
+  --accent: #8f3f1b;
+  --accent-ink: #ffffff;
+  --accent-soft: #f5e6d8;
+  --t-spray: #2f6f9a;      /* Ordered */
+  --t-planting: var(--rc-forest);  /* Ready */
+  --font-script: "Kaushan Script", "Brush Script MT", cursive;
+  --font-thin: "Josefin Sans", "Futura", "Century Gothic", ui-sans-serif, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand-grey: #f1ebe2; --brand-green: #e08a55; --on-brand: #1b1a18;
+    --bg: #151412; --surface: #1d1b19; --surface-2: #282522; --line: #38342f;
+    --ink: #f1ebe2; --ink-2: #cfc6ba; --muted: #9a9188;
+    --accent: #e08a55; --accent-ink: #1b1a18; --accent-soft: #35261c;
+    --t-spray: #6aa8d4; --t-planting: #8fb58a; --rc-wood: #6b5a45;
+  }
+}
+:root[data-theme="dark"] {
+  --brand-grey: #f1ebe2; --brand-green: #e08a55; --on-brand: #1b1a18;
+  --bg: #151412; --surface: #1d1b19; --surface-2: #282522; --line: #38342f;
+  --ink: #f1ebe2; --ink-2: #cfc6ba; --muted: #9a9188;
+  --accent: #e08a55; --accent-ink: #1b1a18; --accent-soft: #35261c;
+  --t-spray: #6aa8d4; --t-planting: #8fb58a; --rc-wood: #6b5a45;
+}
+
+/* Brand fonts, bundled so the logo looks right offline (SIL Open Font License, see fonts/OFL-*.txt) */
+@font-face { font-family: "Kaushan Script"; src: url("/fonts/kaushan-script-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Josefin Sans"; src: url("/fonts/josefin-sans-300.woff2") format("woff2"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Josefin Sans"; src: url("/fonts/josefin-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+
+/* Logo wordmark: thin frame, brush-script "rough", geometric "cut", small "dezigns" */
+.wordmark.rc-mark { border: 1.5px solid var(--brand-grey); padding: 3px 10px 4px; line-height: 1; align-items: center; }
+.rc-mark .wm-top { display: inline-flex; align-items: baseline; gap: 6px; font-size: 24px; }
+.rc-mark .rc-rough { font-family: var(--font-script); font-size: 1em; }
+.rc-mark .rc-cut { font-family: var(--font-thin); font-weight: 300; font-size: .72em; color: var(--brand-green); }
+.rc-mark .wm-farms { font-family: var(--font-thin); font-weight: 400; font-size: 10px; letter-spacing: .32em; color: var(--muted); align-self: center; margin: .5em -.32em 0 0; text-transform: lowercase; }
+.login-card .rc-mark { align-self: flex-start; padding: 6px 16px 8px; }
+.login-card .rc-mark .wm-top { font-size: 38px; }
+.login-card .rc-mark .wm-farms { font-size: 13px; }
+.topbar { border-bottom: 3px solid var(--rc-wood); }
+.editor-head h2 { font-family: var(--font-thin); }
+
+.topbar .desk-only { margin-left: 8px; }
+.view > .unit + .unit, .wide-stats + .unit { margin-top: var(--gap); }
+.wide-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.search { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 4px 12px; min-width: 220px; flex: 1; max-width: 360px; }
+.search .icon { color: var(--muted); }
+.search input { border: 0; background: none; outline: none; width: 100%; padding: 4px 0; }
+
+/* Order cards */
+.o-lines { font-size: 13.5px; color: var(--ink-2); }
+.pill.status-new { background: color-mix(in srgb, var(--t-spray) 14%, transparent); color: var(--t-spray); }
+.pill.status-making { background: var(--accent-soft); color: var(--accent); }
+.pill.status-ready { background: color-mix(in srgb, var(--t-planting) 16%, transparent); color: var(--t-planting); }
+.pill.status-done { background: var(--surface-2); color: var(--muted); }
+.pill.status-cancelled { background: var(--surface-2); color: var(--muted); text-decoration: line-through; }
+.pill.ful { background: var(--surface-2); color: var(--ink-2); }
+.day-head.late { color: var(--warn); }
+.money { font-variant-numeric: tabular-nums; }
+
+/* Editor */
+.editor-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.editor-head h2 { font-weight: 400; font-size: 22px; }
+.editor { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--gap); align-items: start; }
+.ed-col { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.linked { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; background: var(--accent-soft); color: var(--ink-2); border-radius: var(--radius-sm); padding: 8px 10px; }
+.linked b { color: var(--ink); }
+.pick-more { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 12px; align-items: end; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.pick-more .wide { grid-column: 1 / -1; }
+.pick-more .field input { background: var(--surface); }
+.chip .price { color: var(--muted); margin-left: 4px; }
+.chip[aria-pressed="true"] .price { color: inherit; opacity: .8; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
+.stepper button { border: 0; background: none; padding: 8px 10px; cursor: pointer; color: var(--ink-2); display: grid; }
+.stepper button:hover { background: var(--surface-2); }
+.stepper input { width: 52px; text-align: center; border: 0; border-inline: 1px solid var(--line); padding: 8px 4px; background: none; }
+.cart-line { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; padding-block: 10px; border-top: 1px solid var(--line); }
+.cart-line:first-child { border-top: 0; }
+.cart-line .price-in { width: 90px; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 6px 8px; text-align: right; }
+.cart-line .stepper input { width: 40px; padding: 6px 2px; }
+.cart-line .stepper button { padding: 6px 7px; }
+.cart-line .line-total { min-width: 72px; text-align: right; font-weight: 600; }
+.cart-line .x-btn { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; display: grid; }
+.cart-line .x-btn:hover { background: var(--surface-2); color: var(--ink); }
+.cart-line .note { font-size: 12.5px; color: var(--muted); }
+.totals { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--line); padding-top: 10px; }
+.totals div { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink-2); }
+.totals .grand { font-size: 17px; font-weight: 600; color: var(--ink); padding-top: 4px; }
+.totals .owe { color: var(--warn); font-weight: 600; }
+.ed-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ed-actions .spacer { flex: 1; }
+
+/* Customers */
+.cust { padding-block: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.cust:first-child { border-top: 0; }
+.cust-top { display: flex; gap: 12px; align-items: flex-start; }
+.cust-top .row-main { gap: 2px; }
+.cust-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.cust-form .full { grid-column: 1 / -1; }
+.cust-form input, .cust-form textarea { background: var(--surface); }
+
+/* Products */
+.products-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.products-layout > .wide { grid-column: 1 / -1; }
+.cat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.cat { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--bg); }
+.cat-head { display: flex; gap: 8px; align-items: center; }
+.cat-head input { flex: 1; font-weight: 600; font-size: 15px; border: 1px solid transparent; background: none; border-radius: 6px; padding: 6px 8px; }
+.cat-head input:hover, .cat-head input:focus { border-color: var(--line); background: var(--surface); }
+.opt-row { display: grid; grid-template-columns: minmax(0, 1fr) 110px auto; gap: 6px; align-items: center; }
+.opt-row input { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+.opt-row .money-in { display: flex; align-items: center; gap: 2px; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding-left: 8px; }
+.opt-row .money-in input { border: 0; text-align: right; width: 100%; }
+.opt-row .x-btn { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; display: grid; }
+.opt-row.new input { border-style: dashed; }
+.add-cat { display: flex; gap: 8px; flex-wrap: wrap; }
+.add-cat input { flex: 1; min-width: 200px; border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius-sm); padding: 9px 11px; }
+
+@media (max-width: 980px) {
+  .editor, .products-layout { grid-template-columns: minmax(0, 1fr); }
+  .wide-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .topbar .desk-only { display: none; }
+  .search { max-width: none; min-width: 0; }
+  .cart-line { grid-template-columns: minmax(0, 1fr) auto; }
+  .cart-line .line-total { text-align: left; }
+  .cust-form { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .rc-mark .wm-top { font-size: 20px; }
+  .rc-mark .wm-farms { font-size: 9px; }
+}

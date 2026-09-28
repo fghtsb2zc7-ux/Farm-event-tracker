@@ -144,3 +144,7 @@ It follows the branch the project folder is on, and only runs while you're logge
 - The Farm Log only accepts connections from the Mac itself. The outside world reaches it through Tailscale's encrypted Funnel, so no router ports are opened.
 - Everyone signs in, and only signed-in people can see or change farm data.
 - The admin dashboard (`/_/`) can also be reached through the Funnel address. Use a strong admin password, and consider turning on two-step sign-in in the dashboard under **Collections → _superusers → ⚙ (options) → Multi-factor authentication**.
+
+## A second app on this Mac
+
+Rough Cut Dezigns Orders runs beside the Farm Log on port 8091 and is shared at `https://<mac>.ts.net:8443`. See [SHOP-SETUP.md](SHOP-SETUP.md). The update scripts above update and restart both.

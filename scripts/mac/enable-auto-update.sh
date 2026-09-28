@@ -1,17 +1,16 @@
 #!/bin/bash
-# Turns on automatic nightly updates for the Farm Log (4:10 am). Run once on the Mac mini:
+# Turns on automatic nightly updates for the apps on this Mac (4:10 am): the Farm Log and, once set up, the shop. Run once on the Mac mini:
 #   bash scripts/mac/enable-auto-update.sh
 # Turn them off again with:
 #   bash scripts/mac/enable-auto-update.sh --off
 
 set -euo pipefail
 
-LABEL="ca.fehrgrownfarms.farmlog"
 AGENT="ca.fehrgrownfarms.farmlog.update"
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 PLIST="$HOME/Library/LaunchAgents/$AGENT.plist"
 SUDOERS="/etc/sudoers.d/farmlog-restart"
-ME="$(id -un)"
+source "$REPO/scripts/mac/apps.sh"
 
 if [[ "${1:-}" == "--off" ]]; then
   launchctl bootout "gui/$(id -u)" "$PLIST" 2>/dev/null || true
@@ -23,15 +22,9 @@ fi
 
 echo "Setting up automatic updates (asks for your Mac password once)…"
 
-# Allow this user to restart the Farm Log service (and nothing else) without a password,
-# so the nightly update can restart it unattended.
-TMP="$(mktemp)"
-echo "$ME ALL=(root) NOPASSWD: /bin/launchctl kickstart -k system/$LABEL" > "$TMP"
-if ! sudo visudo -cf "$TMP" >/dev/null; then
-  echo "Couldn't create the restart permission. Nothing was changed."; rm -f "$TMP"; exit 1
-fi
-sudo install -m 440 -o root -g wheel "$TMP" "$SUDOERS"
-rm -f "$TMP"
+# Allow this user to restart the apps' services (and nothing else) without a password,
+# so the nightly update can restart them unattended.
+write_restart_permission || exit 1
 
 mkdir -p "$HOME/Library/LaunchAgents" "$HOME/FarmLog/logs"
 cat > "$PLIST" <<PLISTEOF

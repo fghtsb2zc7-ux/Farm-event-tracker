@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rough Cut Dezigns Orders</title>
+<meta name="description" content="Orders, customers and products for Rough Cut Dezigns woodworking and 3D printing.">
+<meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151412" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Orders">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Questrial&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+<link rel="stylesheet" href="/css/shop.css">
+</head>
+<body class="signed-out">
+
+<div class="login" id="login" hidden>
+  <form class="login-card" id="loginForm" novalidate>
+    <span class="wordmark rc-mark" role="img" aria-label="Rough Cut Dezigns"><span class="wm-top"><span class="rc-rough">rough</span><span class="rc-cut">cut</span></span><span class="wm-farms">dezigns</span></span>
+    <h1>Sign in</h1>
+    <p>Use the email and password set up for you. You'll stay signed in on this device.</p>
+    <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" autocomplete="username" inputmode="email" required></div>
+    <div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" autocomplete="current-password" required></div>
+    <button class="btn primary" type="submit">Sign in</button>
+    <p class="meta" id="loginMsg" role="status"></p>
+    <p class="meta">Forgot your password? Ask the owner to reset it.</p>
+  </form>
+</div>
+
+<div class="acct-menu" id="acctMenu" hidden>
+  <b id="acctName"></b>
+  <span class="meta" id="acctEmail"></span>
+  <p class="tip-install">To put Orders on your home screen: on iPhone, tap Share then Add to Home Screen. On Android, tap the menu then Install app.</p>
+  <button class="btn outline sm" type="button" id="signOut">Sign out</button>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <a class="wordmark rc-mark" href="#orders" data-view="orders" aria-label="Rough Cut Dezigns: orders"><span class="wm-top"><span class="rc-rough">rough</span><span class="rc-cut">cut</span></span><span class="wm-farms">dezigns</span></a>
+    <p class="brand-sub" id="todayLabel"></p>
+  </div>
+  <nav class="nav" aria-label="Main">
+    <a href="#orders" data-view="orders" aria-current="page"><svg class="icon sm" viewBox="0 0 24 24" data-i="receipt"></svg>Orders</a>
+    <a href="#calendar" data-view="calendar"><svg class="icon sm" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+    <a href="#customers" data-view="customers"><svg class="icon sm" viewBox="0 0 24 24" data-i="users"></svg>Customers</a>
+    <a href="#products" data-view="products"><svg class="icon sm" viewBox="0 0 24 24" data-i="package"></svg>Products</a>
+  </nav>
+  <button class="btn primary sm desk-only" type="button" data-new-order><svg class="icon sm" viewBox="0 0 24 24" data-i="plus"></svg>New order</button>
+  <button class="avatar" id="avatar" type="button" aria-label="Your account"><svg class="icon sm" viewBox="0 0 24 24" data-i="user"></svg></button>
+</header>
+
+<div class="beta-bar" id="betaBar">
+  <span class="status-dot" id="statusDot"></span>
+  <span id="statusText">Connecting…</span>
+</div>
+
+<!-- Orders -->
+<section class="view" id="v-orders">
+  <div class="stats wide-stats" id="stats"></div>
+  <div class="unit">
+    <div class="unit-head">
+      <svg class="icon" viewBox="0 0 24 24" data-i="receipt"></svg>
+      <div><h2>Orders</h2><p>Every order with its customer, pickup or ship date, and what's still owed.</p></div>
+    </div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Show" id="oFilter">
+        <button type="button" data-f="active" aria-pressed="true">Active</button><button type="button" data-f="unpaid" aria-pressed="false">Unpaid</button><button type="button" data-f="done" aria-pressed="false">Completed</button><button type="button" data-f="all" aria-pressed="false">All</button>
+      </div>
+      <div class="search"><svg class="icon sm" viewBox="0 0 24 24" data-i="search"></svg><input id="oSearch" type="search" placeholder="Search customer or item" aria-label="Search orders"></div>
+    </div>
+    <div id="oList"></div>
+  </div>
+</section>
+
+<!-- Order editor (the "cart") -->
+<section class="view" id="v-order" hidden>
+  <div class="editor-head">
+    <button class="btn ghost" type="button" id="edBack"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-left"></svg>Back</button>
+    <h2 id="edTitle">New order</h2>
+  </div>
+  <div class="editor">
+    <div class="ed-col">
+      <div class="unit">
+        <div class="unit-head"><svg class="icon" viewBox="0 0 24 24" data-i="user"></svg><div><h2>Customer</h2><p>Pick a saved customer or add a new one.</p></div></div>
+        <div class="field combo">
+          <label for="c-name">Name</label>
+          <input id="c-name" autocomplete="off" placeholder="Start typing a name">
+          <div class="combo-list" id="custMatches" hidden></div>
+        </div>
+        <div id="custLinked" class="linked" hidden></div>
+        <div class="two">
+          <div class="field"><label for="c-phone">Phone</label><input id="c-phone" type="tel" autocomplete="off"></div>
+          <div class="field"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="off"></div>
+        </div>
+      </div>
+      <div class="unit">
+        <div class="unit-head"><svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg><div><h2>Pickup or shipping</h2><p>When and how the order leaves the shop.</p></div></div>
+        <div class="seg" role="group" aria-label="Pickup or ship" id="fulSeg">
+          <button type="button" data-ful="pickup" aria-pressed="true"><svg class="icon sm" viewBox="0 0 24 24" data-i="store"></svg> Pickup</button><button type="button" data-ful="ship" aria-pressed="false"><svg class="icon sm" viewBox="0 0 24 24" data-i="truck"></svg> Ship</button>
+        </div>
+        <div class="two">
+          <div class="field"><label for="o-date" id="dateLabel">Pickup date</label><input id="o-date" type="date"></div>
+          <div class="field"><label for="o-time">Time (optional)</label><input id="o-time" type="time"></div>
+        </div>
+        <div class="field" id="addrField" hidden><label for="c-address">Shipping address</label><textarea id="c-address" rows="3"></textarea></div>
+        <div class="two">
+          <div class="field"><label for="o-status">Status</label>
+            <select id="o-status"><option value="new">Ordered</option><option value="making">In progress</option><option value="ready">Ready</option><option value="done">Completed</option><option value="cancelled">Cancelled</option></select></div>
+        </div>
+        <div class="field"><label for="o-notes">Order notes</label><textarea id="o-notes" rows="2" placeholder="Anything to remember about this order"></textarea></div>
+      </div>
+    </div>
+    <div class="ed-col">
+      <div class="unit">
+        <div class="unit-head"><svg class="icon" viewBox="0 0 24 24" data-i="package"></svg><div><h2>Add items</h2><p>Pick a category, then an option. Prices come from Products and can be changed here.</p></div></div>
+        <div class="field"><span class="label">Category</span><div class="chips" id="pickCats"></div></div>
+        <div class="field" id="pickOptsField" hidden><span class="label">Option</span><div class="chips" id="pickOpts"></div></div>
+        <div id="pickMore" hidden class="pick-more">
+          <div class="field"><span class="label">Quantity</span>
+            <div class="stepper"><button type="button" data-step="-1" aria-label="One fewer"><svg class="icon sm" viewBox="0 0 24 24" data-i="minus"></svg></button><input id="pickQty" type="number" min="1" value="1" inputmode="numeric" aria-label="Quantity"><button type="button" data-step="1" aria-label="One more"><svg class="icon sm" viewBox="0 0 24 24" data-i="plus"></svg></button></div></div>
+          <div class="field"><label for="pickPrice">Price each ($)</label><input id="pickPrice" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          <div class="field wide"><label for="pickNote">Details (optional)</label><input id="pickNote" placeholder="Wording, colour, design, file name…"></div>
+          <button class="btn primary wide" type="button" id="pickAdd"><svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg>Add to order</button>
+        </div>
+      </div>
+      <div class="unit">
+        <div class="unit-head"><svg class="icon" viewBox="0 0 24 24" data-i="receipt"></svg><div><h2>This order</h2><p>Change quantities or prices, or remove items.</p></div></div>
+        <div id="cart"></div>
+        <div class="totals" id="totals"></div>
+        <div class="two">
+          <div class="field" id="shipCostField" hidden><label for="o-shipping">Shipping ($)</label><input id="o-shipping" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+          <div class="field"><label for="o-paid">Paid so far ($)</label><input id="o-paid" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+        </div>
+        <div class="ed-actions">
+          <button class="btn primary" type="button" id="edSave"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg>Save order</button>
+          <button class="btn outline" type="button" id="edCancel">Cancel</button>
+          <span class="spacer"></span>
+          <button class="del-btn" type="button" id="edDelete" hidden><svg class="icon sm" viewBox="0 0 24 24" data-i="trash-2"></svg>Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Calendar -->
+<section class="view" id="v-calendar" hidden>
+  <div class="unit">
+    <div class="unit-head"><svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg><div><h2>Calendar</h2><p>Pickups and shipments by day. Select a day to see its orders.</p></div></div>
+    <div class="toolbar">
+      <div class="month-nav">
+        <button class="btn ghost" type="button" id="calPrev" aria-label="Previous month"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-left"></svg></button>
+        <h3 id="calLabel"></h3>
+        <button class="btn ghost" type="button" id="calNext" aria-label="Next month"><svg class="icon" viewBox="0 0 24 24" data-i="chevron-right"></svg></button>
+      </div>
+      <div class="type-legend"><span style="--c:var(--t-pickup)"><svg class="icon" viewBox="0 0 24 24" data-i="store"></svg>Pickup</span><span style="--c:var(--t-spray)"><svg class="icon" viewBox="0 0 24 24" data-i="truck"></svg>Ship</span></div>
+    </div>
+    <div class="cal-scroll"><div class="cal" id="cal"></div></div>
+    <div id="calDay"></div>
+  </div>
+</section>
+
+<!-- Customers -->
+<section class="view" id="v-customers" hidden>
+  <div class="unit">
+    <div class="unit-head"><svg class="icon" viewBox="0 0 24 24" data-i="users"></svg><div><h2>Customers</h2><p>Everyone who has ordered, with their orders and what they owe.</p></div>
+      <span class="spacer"></span><button class="btn outline sm" type="button" id="addCust"><svg class="icon sm" viewBox="0 0 24 24" data-i="plus"></svg>Add customer</button></div>
+    <div class="search"><svg class="icon sm" viewBox="0 0 24 24" data-i="search"></svg><input id="cSearch" type="search" placeholder="Search name, phone or email" aria-label="Search customers"></div>
+    <div id="cList"></div>
+  </div>
+</section>
+
+<!-- Products -->
+<section class="view" id="v-products" hidden>
+  <div class="products-layout">
+    <div class="unit wide">
+      <div class="unit-head"><svg class="icon" viewBox="0 0 24 24" data-i="package"></svg><div><h2>Products</h2><p>Categories and their options, each with a price. Changes save as you go.</p></div></div>
+      <div id="catList" class="cat-list"></div>
+      <div class="add-cat">
+        <input id="newCat" placeholder="New category, e.g. Cutting boards" aria-label="New category name">
+        <button class="btn outline" type="button" id="addCat"><svg class="icon sm" viewBox="0 0 24 24" data-i="plus"></svg>Add category</button>
+      </div>
+    </div>
+    <div class="unit">
+      <div class="unit-head"><svg class="icon" viewBox="0 0 24 24" data-i="settings"></svg><div><h2>Shop settings</h2><p>Your shop's name and sales tax.</p></div></div>
+      <div class="field"><label for="s-name">Shop name</label><input id="s-name"></div>
+      <div class="two">
+        <div class="field"><label for="s-taxname">Tax name</label><input id="s-taxname" placeholder="HST"></div>
+        <div class="field"><label for="s-taxrate">Tax rate (%)</label><input id="s-taxrate" type="number" min="0" max="50" step="0.01" inputmode="decimal"></div>
+      </div>
+      <p class="meta">Leave the tax rate at 0 if you don't charge sales tax. It applies to items and shipping on new orders and orders you edit.</p>
+      <button class="btn outline" type="button" id="exportBtn"><svg class="icon sm" viewBox="0 0 24 24" data-i="download"></svg>Download all data</button>
+    </div>
+    <div class="unit" id="sheetsUnit" hidden>
+      <div class="unit-head"><svg class="icon" viewBox="0 0 24 24" data-i="file-spreadsheet"></svg><div><h2>Google Sheets links</h2><p>Live copies of your orders for your own sheets and charts.</p></div></div>
+      <p class="meta">Make a new Google Sheet, click cell A1, paste a formula and press Enter. It refreshes about once an hour. Anyone with a link can open that file, so share them carefully. A copy is also saved on the Mac mini each night.</p>
+      <div id="sheetLinks" class="sheet-links"></div>
+    </div>
+  </div>
+</section>
+
+<nav class="tabbar" aria-label="Main">
+  <a href="#orders" data-view="orders" aria-current="page"><svg class="icon" viewBox="0 0 24 24" data-i="receipt"></svg>Orders</a>
+  <a href="#calendar" data-view="calendar"><svg class="icon" viewBox="0 0 24 24" data-i="calendar-days"></svg>Calendar</a>
+  <button class="add" type="button" data-new-order><span class="plus"><svg class="icon" viewBox="0 0 24 24" data-i="plus"></svg></span>New</button>
+  <a href="#customers" data-view="customers"><svg class="icon" viewBox="0 0 24 24" data-i="users"></svg>Customers</a>
+  <a href="#products" data-view="products"><svg class="icon" viewBox="0 0 24 24" data-i="package"></svg>Products</a>
+</nav>
+<div class="toast" id="toast" role="status"><svg class="icon" viewBox="0 0 24 24" data-i="check"></svg><span id="toastText"></span></div>
+
+<script src="/vendor/pocketbase.umd.js"></script>
+<script src="/js/adapter.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

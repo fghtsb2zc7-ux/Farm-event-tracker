@@ -1,10 +1,11 @@
 #!/bin/bash
-# Nightly automatic update for the Farm Log (installed by enable-auto-update.sh).
+# Nightly automatic update for the apps on this Mac (installed by enable-auto-update.sh):
+# the Farm Log, plus Rough Cut Dezigns Orders once it's set up.
 #
 #  1. Checks GitHub for a newer version of the branch this folder is on.
-#  2. If there is one, installs it and restarts the Farm Log.
-#  3. Checks the Farm Log answers again. If it doesn't within 90 seconds, puts the previous
-#     version back and restarts again, so the farm is never left with a broken app.
+#  2. If there is one, installs it and restarts every installed app.
+#  3. Checks each app answers again. If any doesn't within 90 seconds, puts the previous
+#     version back and restarts again, so nobody is left with a broken app.
 #
 # Everything is written to ~/FarmLog/logs/update.log. Safe to run by hand any time:
 #   bash scripts/mac/auto-update.sh
@@ -20,23 +21,33 @@ fi
 
 trap 'rm -f "$0"' EXIT  # tidy up the temporary copy
 
-LABEL="ca.fehrgrownfarms.farmlog"
 REPO="${FARMLOG_REPO}"
 LOG="${FARMLOG_UPDATE_LOG:-$HOME/FarmLog/logs/update.log}"
-HEALTH_URL="${FARMLOG_HEALTH_URL:-http://127.0.0.1:8090/api/health}"
-RESTART_CMD="${FARMLOG_RESTART_CMD:-sudo -n /bin/launchctl kickstart -k system/$LABEL}"
 WAIT_SECONDS="${FARMLOG_WAIT_SECONDS:-90}"
 
 mkdir -p "$(dirname "$LOG")"
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S')  $*" >> "$LOG"; }
-healthy() {
+# Which apps to restart (FARMLOG_APPS overrides, for testing) and how.
+load_apps() { source "$REPO/scripts/mac/apps.sh"; APPS="${FARMLOG_APPS:-$(installed_apps)}"; APPS="${APPS:-farm}"; }
+restart_one() {
+  if [[ -n "${FARMLOG_RESTART_CMD:-}" ]]; then $FARMLOG_RESTART_CMD "$LABEL"; else sudo -n /bin/launchctl kickstart -k "system/$LABEL"; fi
+}
+healthy_one() {
   for _ in $(seq 1 "$WAIT_SECONDS"); do
-    curl -fs "$HEALTH_URL" >/dev/null 2>&1 && return 0
+    curl -fs "http://127.0.0.1:$PORT/api/health" >/dev/null 2>&1 && return 0
     sleep 1
   done
   return 1
 }
-restart() { $RESTART_CMD >> "$LOG" 2>&1; }
+restart() {  # restart every app; fails if any can't be restarted
+  local a
+  for a in $APPS; do app_config "$a" >> "$LOG"; restart_one >> "$LOG" 2>&1 || { log "Couldn't restart the $APP_NAME."; return 1; }; done
+}
+healthy() {  # every app answers; logs which one doesn't
+  local a ok=0
+  for a in $APPS; do app_config "$a" >> "$LOG"; healthy_one || { log "The $APP_NAME isn't answering (see $HOME_DIR/logs/$LOG_NAME)."; ok=1; }; done
+  return $ok
+}
 
 cd "$REPO" || { log "ERROR: project folder $REPO not found"; exit 1; }
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
@@ -63,14 +74,15 @@ if ! git merge --ff-only --quiet "origin/$BRANCH" >> "$LOG" 2>&1; then
   exit 0
 fi
 log "Installed ${NEW:0:7} ($(git log -1 --format=%s "$NEW"))."
+load_apps
 
 if ! restart; then
-  log "ERROR: couldn't restart the Farm Log. Run: bash scripts/mac/enable-auto-update.sh (it sets up permission to restart)."
+  log "ERROR: couldn't restart ($APPS). Run: bash scripts/mac/enable-auto-update.sh (it sets up permission to restart)."
   exit 1
 fi
 
 if healthy; then
-  log "Farm Log restarted and running."
+  log "Restarted and running: $APPS."
   exit 0
 fi
 
@@ -80,6 +92,6 @@ restart
 if healthy; then
   log "Previous version restored and running. The failed update will be tried again when a newer version is available."
 else
-  log "ERROR: the Farm Log isn't answering even on the previous version. Check ~/FarmLog/logs/farmlog.log."
+  log "ERROR: still not answering even on the previous version. Check the log files named above."
 fi
 exit 1
