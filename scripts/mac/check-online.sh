@@ -6,11 +6,10 @@
 set -uo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/apps.sh"
 
-TS="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
-[[ -x "$TS" ]] || TS="$(command -v tailscale || true)"
+TS="$(ts_bin)"
 [[ -n "$TS" ]] || { echo "Tailscale isn't installed on this Mac."; exit 1; }
 
-HOST="$("$TS" status --json 2>/dev/null | grep -o '"DNSName": *"[^"]*"' | head -n 1 | sed -E 's/.*"([^"]*)"$/\1/; s/\.$//')"
+HOST="$(ts_host)"
 [[ -n "$HOST" ]] || { echo "Tailscale isn't signed in or running on this Mac. Open the Tailscale app and sign in."; exit 1; }
 echo "This Mac's Tailscale name: $HOST"
 echo
@@ -19,12 +18,7 @@ FUNNEL="$("$TS" funnel status 2>&1)"
 echo "$FUNNEL" | sed 's/^/  /'
 echo
 
-# The public address other devices look up (asks public DNS servers, not Tailscale's private one).
-PUBLIC_IP=""
-for dns in 1.1.1.1 8.8.8.8; do
-  PUBLIC_IP="$(dig +short +time=3 +tries=1 @"$dns" "$HOST" A 2>/dev/null | grep -E '^[0-9]+(\.[0-9]+){3}$' | head -n 1)"
-  [[ -n "$PUBLIC_IP" ]] && break
-done
+PUBLIC_IP="$(public_ip "$HOST")"
 
 PROBLEM=0
 APPS="$(installed_apps)"; APPS="${APPS:-farm}"

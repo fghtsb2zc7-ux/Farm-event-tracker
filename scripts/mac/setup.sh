@@ -128,9 +128,10 @@ if [[ ! "$ANSWER" =~ ^[Nn] ]]; then
   echo "Done. (The display can still turn off.)"
 fi
 
-# Nightly auto-updates already on? Let them restart this app too.
-if [[ -f "$HOME/Library/LaunchAgents/ca.fehrgrownfarms.farmlog.update.plist" ]]; then
-  write_restart_permission && echo "Nightly automatic updates will include the $APP_NAME."
+# Nightly auto-updates or the watchdog already on? Let them restart this app too.
+if [[ -f "$HOME/Library/LaunchAgents/ca.fehrgrownfarms.farmlog.update.plist" ]] ||
+   [[ -f "$HOME/Library/LaunchAgents/ca.fehrgrownfarms.apphub.watchdog.plist" ]]; then
+  write_restart_permission && echo "Nightly updates and the watchdog will include the $APP_NAME."
 fi
 
 say "The $APP_NAME is running on this Mac."

@@ -148,3 +148,7 @@ It follows the branch the project folder is on, and only runs while you're logge
 ## A second app on this Mac
 
 Rough Cut Dezigns Orders runs beside the Farm Log on port 8091 and is shared at the same address with `/shop/` on the end. See [SHOP-SETUP.md](SHOP-SETUP.md). The update scripts above update and restart both.
+
+## Texts when something goes wrong
+
+The App Hub watchdog checks every app each minute, restarts any that stop, and texts your iPhone about problems it can't fix. See [APP-HUB-SETUP.md](APP-HUB-SETUP.md).

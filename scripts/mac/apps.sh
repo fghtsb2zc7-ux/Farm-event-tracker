@@ -40,3 +40,29 @@ write_restart_permission() (  # subshell: leaves the caller's app settings alone
   sudo install -m 440 -o root -g wheel "$tmp" /etc/sudoers.d/farmlog-restart
   rm -f "$tmp"
 )
+
+# Where the App Hub keeps its settings, state and logs (watchdog, alerts).
+HUB_DIR="${HUB_DIR:-$HOME/AppHub}"
+
+# Tailscale's command-line tool (the one inside the app, so it matches the running version).
+ts_bin() {
+  local ts="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+  [[ -x "$ts" ]] || ts="$(command -v tailscale || true)"
+  echo "$ts"
+}
+
+# This Mac's public Tailscale name, e.g. fehr-farm.tail1234.ts.net (empty if Tailscale isn't signed in).
+ts_host() {
+  local ts; ts="$(ts_bin)"; [[ -n "$ts" ]] || return 0
+  "$ts" status --json 2>/dev/null | grep -o '"DNSName": *"[^"]*"' | head -n 1 | sed -E 's/.*"([^"]*)"$/\1/; s/\.$//'
+}
+
+# The address other devices look up for a name (asks public DNS servers, not Tailscale's private one).
+public_ip() {
+  local dns ip=""
+  for dns in 1.1.1.1 8.8.8.8; do
+    ip="$(dig +short +time=3 +tries=1 @"$dns" "$1" A 2>/dev/null | grep -E '^[0-9]+(\.[0-9]+){3}$' | head -n 1)"
+    [[ -n "$ip" ]] && break
+  done
+  echo "$ip"
+}

@@ -2,6 +2,8 @@
 
 Status: **Approved direction, Phase 0 (design) in progress.** Decisions from review are in section 0. This plan sets the stack, the data model, and the build order, and it builds in a way to iterate on the design before the app is built.
 
+All the apps on the Mac mini (this one, Rough Cut Dezigns Orders, and those to come) are organized under the **App Hub**: see [HUB-PLAN.md](HUB-PLAN.md).
+
 ---
 
 ## Self-hosted version (in progress, from 2026-09-24)

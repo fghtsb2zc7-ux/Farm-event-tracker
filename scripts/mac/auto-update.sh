@@ -19,14 +19,21 @@ if [[ -z "${FARMLOG_UPDATE_COPY:-}" ]]; then
   FARMLOG_UPDATE_COPY=1 FARMLOG_REPO="$(cd "$(dirname "$0")/../.." && pwd)" exec /bin/bash "$COPY" "$@"
 fi
 
-trap 'rm -f "$0"' EXIT  # tidy up the temporary copy
-
 REPO="${FARMLOG_REPO}"
 LOG="${FARMLOG_UPDATE_LOG:-$HOME/FarmLog/logs/update.log}"
 WAIT_SECONDS="${FARMLOG_WAIT_SECONDS:-90}"
+HUB="${HUB_DIR:-$HOME/AppHub}"
+UPDATING="$HUB/state/updating"  # tells the watchdog the restarts are on purpose
+
+trap 'rm -f "$0" "$UPDATING"' EXIT  # tidy up the temporary copy
 
 mkdir -p "$(dirname "$LOG")"
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S')  $*" >> "$LOG"; }
+# Texts your iPhone, once the watchdog's alerts are set up (enable-watchdog.sh).
+alert() {
+  [[ -f "$HUB/notify.conf" && -f "$REPO/scripts/mac/notify.sh" ]] || return 0
+  bash "$REPO/scripts/mac/notify.sh" "$1" >> "$LOG" 2>&1 || log "Couldn't send a text about it."
+}
 # Which apps to restart (FARMLOG_APPS overrides, for testing) and how.
 load_apps() { source "$REPO/scripts/mac/apps.sh"; APPS="${FARMLOG_APPS:-$(installed_apps)}"; APPS="${APPS:-farm}"; }
 restart_one() {
@@ -75,9 +82,11 @@ if ! git merge --ff-only --quiet "origin/$BRANCH" >> "$LOG" 2>&1; then
 fi
 log "Installed ${NEW:0:7} ($(git log -1 --format=%s "$NEW"))."
 load_apps
+[[ -d "$HUB/state" ]] && date +%s > "$UPDATING"
 
 if ! restart; then
   log "ERROR: couldn't restart ($APPS). Run: bash scripts/mac/enable-auto-update.sh (it sets up permission to restart)."
+  alert "⚠️ Tonight's app update couldn't restart the apps (missing permission). On the Mac mini, run: bash scripts/mac/enable-auto-update.sh"
   exit 1
 fi
 
@@ -91,7 +100,9 @@ git reset --quiet --hard "$OLD" >> "$LOG" 2>&1
 restart
 if healthy; then
   log "Previous version restored and running. The failed update will be tried again when a newer version is available."
+  alert "⚠️ Tonight's app update didn't start properly, so I put the previous version back. Everything is running as before."
 else
   log "ERROR: still not answering even on the previous version. Check the log files named above."
+  alert "⚠️ Tonight's app update failed, and the apps still aren't answering after putting the previous version back. The watchdog will keep trying to restart them."
 fi
 exit 1

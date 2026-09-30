@@ -15,7 +15,8 @@ source "$REPO/scripts/mac/apps.sh"
 if [[ "${1:-}" == "--off" ]]; then
   launchctl bootout "gui/$(id -u)" "$PLIST" 2>/dev/null || true
   rm -f "$PLIST"
-  sudo rm -f "$SUDOERS"
+  # The watchdog restarts apps with the same permission, so keep it while the watchdog is on.
+  [[ -f "$HOME/Library/LaunchAgents/ca.fehrgrownfarms.apphub.watchdog.plist" ]] || sudo rm -f "$SUDOERS"
   echo "Automatic updates are off. Update by hand with: bash scripts/mac/update.sh"
   exit 0
 fi
