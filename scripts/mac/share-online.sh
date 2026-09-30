@@ -4,6 +4,7 @@
 #
 # Run:  bash scripts/mac/share-online.sh          (Farm Log:  https://<mac>.<tailnet>.ts.net/)
 #       bash scripts/mac/share-online.sh shop     (Rough Cut Dezigns Orders:  https://<mac>.<tailnet>.ts.net/shop/)
+#       bash scripts/mac/share-online.sh hub      (App Hub control panel:     https://<mac>.<tailnet>.ts.net/hub/)
 # Stop sharing an app with:  tailscale funnel --https=443 --set-path=/shop off   (or without --set-path for the farm)
 
 set -euo pipefail

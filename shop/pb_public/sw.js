@@ -1,7 +1,7 @@
 // Rough Cut Dezigns Orders service worker: keeps the app itself on the phone so it opens without signal.
 // Order data is handled separately (cached by js/adapter.js; server calls under /api/ always go to the network).
 // Bump VERSION when releasing so phones pick up the new files.
-const VERSION = "shop-2026-09-28b";
+const VERSION = "shop-2026-09-30a";
 // Addresses are relative to where the app is served: the root of its own port, or …/shop/.
 const BASE = new URL("./", self.location.href).pathname;
 const SHELL = [

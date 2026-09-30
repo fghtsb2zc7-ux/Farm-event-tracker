@@ -53,6 +53,16 @@ resolved() {
   rm -f "$STATE/$key".*
 }
 
+# Hands a problem a restart didn't fix to the Claude agent, when it's set up (enable-agent.sh). Once per problem.
+AGENT_ON=""; [[ -f "$HUB_DIR/agent/agent.conf" ]] && AGENT_ON=1
+escalate() {  # KEY DESCRIPTION
+  [[ -n "$AGENT_ON" && ! -f "$STATE/$1.escalated" ]] || return 0
+  touch "$STATE/$1.escalated"
+  mkdir -p "$HUB_DIR/agent/escalations"
+  printf '{"app":"%s","name":"%s","text":"%s","log":"%s"}\n' "$APP" "$APP_NAME" "$2" "$HOME_DIR/logs/$LOG_NAME" > "$HUB_DIR/agent/escalations/$1.json"
+  log "Asked the Claude agent to look into it."
+}
+
 restart_app() {
   if [[ -n "${HUB_RESTART_CMD:-}" ]]; then $HUB_RESTART_CMD "$LABEL"; else sudo -n /bin/launchctl kickstart -k "system/$LABEL"; fi
 }
@@ -113,7 +123,10 @@ check_app() {
     if restart_app >> "$LOG" 2>&1; then log "Restarted the $APP_NAME (not answering for $n checks)."
     else log "Couldn't restart the $APP_NAME (reason above). If it says a password is required, run: bash scripts/mac/enable-watchdog.sh"; fi
   fi
-  (( n >= 3 )) && problem "$a-down" "$APP_NAME is down. I restarted it, but it still isn't answering. I'll keep trying and text you when it's back."
+  if (( n >= 3 )); then
+    problem "$a-down" "$APP_NAME is down. I restarted it, but it still isn't answering. ${AGENT_ON:+Claude is looking into it. }I'll keep trying and text you when it's back."
+    escalate "$a-down" "$APP_NAME is down: it isn't answering, even after the watchdog restarted it."
+  fi
 }
 
 for a in $APPS; do
@@ -125,7 +138,7 @@ done
 
 # ---- Every 5 minutes: can phones reach the running apps over the internet? ----
 check_public() {
-  local ts host ip a url n
+  local ts host ip a url n hint
   ts="$(ts_bin)"; [[ -n "$ts" ]] || return 0   # Tailscale not installed: apps aren't shared publicly
   if ! curl -fs --max-time 10 -o /dev/null https://www.apple.com/library/test/success.html; then
     [[ -f "$STATE/internet.since" ]] || { put internet.since "$NOW"; log "This Mac's internet connection is down."; }
@@ -160,7 +173,9 @@ check_public() {
       log "Phones can't reach $APP_NAME at $url. Re-applying its sharing setting."
       with_timeout "$ts" funnel --bg --https=443 --set-path="$FUNNEL_PATH" "http://127.0.0.1:$PORT" >> "$LOG" 2>&1
     else
-      problem "$a-public" "$APP_NAME is running on the Mac mini, but phones can't reach it over the internet. I re-applied its sharing setting and that didn't fix it. On the Mac mini, run: bash scripts/mac/check-online.sh"
+      hint="On the Mac mini, run: bash scripts/mac/check-online.sh"; [[ -n "$AGENT_ON" ]] && hint="Claude is looking into it."
+      problem "$a-public" "$APP_NAME is running on the Mac mini, but phones can't reach it over the internet. I re-applied its sharing setting and that didn't fix it. $hint"
+      escalate "$a-public" "$APP_NAME is running on the Mac mini, but phones can't reach it over the internet (Tailscale Funnel). Re-applying its sharing setting didn't help."
     fi
   done
 }

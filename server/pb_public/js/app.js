@@ -29,6 +29,8 @@ const TYPES = {
   harvest:  { name: "Harvest",  icon: "wheat",         c: "var(--t-harvest)",  what: "Crop",             extra: [["Amount", "e.g. 40 bins"], ["Destination", "optional"]] },
   garden:   { name: "Garden",   icon: "shovel",        c: "var(--t-garden)",   what: "Task",             extra: [] },
 };
+// Event type names changed in the App Hub control panel (colors come in through its theme.css).
+Object.entries((window.HUB_LOOK && window.HUB_LOOK.labels && window.HUB_LOOK.labels.types) || {}).forEach(([k, v]) => { if (TYPES[k] && v && v.name) TYPES[k].name = v.name; });
 const KINDS = { ...TYPES, order: { name: "Order pickup", icon: "shopping-basket", c: "var(--t-pickup)" } };
 const DEFAULT_CROPS = ["Strawberries", "Cucumbers", "Garlic", "Garden", "Fall Produce"];
 

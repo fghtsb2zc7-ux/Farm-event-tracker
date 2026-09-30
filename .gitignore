@@ -2,3 +2,4 @@
 pb_data/
 *.db
 .DS_Store
+__pycache__/

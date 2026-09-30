@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<script>
+  // Served at …/hub? Add the trailing slash so the page's relative file addresses resolve inside /hub/.
+  if (!location.pathname.endsWith("/") && !/\.[a-z]+$/i.test(location.pathname)) location.replace(location.pathname + "/" + location.search + location.hash);
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>App Hub</title>
+<meta name="description" content="Control panel for the apps on the Mac mini.">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131416" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="App Hub">
+<link rel="manifest" href="api/hub/manifest">
+<link rel="icon" type="image/png" sizes="32x32" href="api/hub/icon/32">
+<link rel="apple-touch-icon" href="api/hub/icon/180">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/hub.css">
+</head>
+<body class="signed-out">
+
+<div class="login" id="login" hidden>
+  <form class="login-card" id="loginForm" novalidate>
+    <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1.5"/><rect width="7" height="7" x="14" y="3" rx="1.5"/><rect width="7" height="7" x="14" y="14" rx="1.5"/><rect width="7" height="7" x="3" y="14" rx="1.5"/></svg></span>
+    <h1>App Hub</h1>
+    <p>The control panel for the apps on the Mac mini. Sign in with the admin email and password you chose when setting it up.</p>
+    <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" autocomplete="username" inputmode="email" required></div>
+    <div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" autocomplete="current-password" required></div>
+    <button class="btn primary wide" type="submit">Sign in</button>
+    <p class="meta" id="loginMsg" role="status"></p>
+  </form>
+</div>
+
+<div class="shell" id="shell" hidden>
+  <header class="top">
+    <div class="brand"><span class="mark sm" aria-hidden="true"><svg viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1.5"/><rect width="7" height="7" x="14" y="3" rx="1.5"/><rect width="7" height="7" x="14" y="14" rx="1.5"/><rect width="7" height="7" x="3" y="14" rx="1.5"/></svg></span>App Hub</div>
+    <nav class="tabs" id="tabs" aria-label="Sections">
+      <button type="button" data-tab="apps" aria-current="page"><i data-ico="grid"></i><span>Apps</span></button>
+      <button type="button" data-tab="look"><i data-ico="palette"></i><span>Look</span></button>
+      <button type="button" data-tab="lists"><i data-ico="list"></i><span>Lists</span></button>
+      <button type="button" data-tab="ask"><i data-ico="chat"></i><span>Ask Claude</span></button>
+      <button type="button" data-tab="history"><i data-ico="history"></i><span>History</span></button>
+    </nav>
+    <button class="icon-btn" type="button" id="signOut" title="Sign out" aria-label="Sign out"><i data-ico="logout"></i></button>
+  </header>
+
+  <main>
+    <!-- Apps: what's running, and the watchdog's recent activity -->
+    <section class="view" id="view-apps">
+      <div class="summary" id="summary"></div>
+      <div class="app-grid" id="appGrid"></div>
+      <div class="card">
+        <div class="card-head"><h2>Recent activity</h2><span class="meta">From the watchdog and nightly updates</span></div>
+        <ol class="events" id="events"></ol>
+      </div>
+    </section>
+
+    <!-- Look: colors, fonts, logo and icon, with a live preview of the real app -->
+    <section class="view" id="view-look" hidden>
+      <div class="picker-row"><label for="lookApp">App</label><select id="lookApp"></select></div>
+      <div class="look-layout">
+        <div class="look-settings">
+          <div class="card">
+            <div class="card-head"><h2>Name</h2></div>
+            <div class="field"><label for="lk-name">App name</label><input id="lk-name" maxlength="60"><span class="hint">Shown in the browser tab.</span></div>
+            <div class="field"><label for="lk-short">Home-screen name</label><input id="lk-short" maxlength="20"><span class="hint">Under the icon on phones. Keep it short.</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Colors</h2><button class="link-btn" type="button" id="resetColors">Back to original</button></div>
+            <div class="presets" id="presets" aria-label="Ready-made color sets"></div>
+            <div class="colors" id="colors"></div>
+            <p class="warn-note" id="contrastWarn" hidden></p>
+            <p class="hint">In dark mode the backgrounds stay dark, and your colors are lightened so they stay easy to read.</p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Fonts</h2></div>
+            <div class="font-pick" id="fontBody"></div>
+            <div class="font-pick" id="fontHeading"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Corners</h2><span class="meta" id="radiusVal"></span></div>
+            <div class="slider"><span>Square</span><input type="range" id="lk-radius" min="0" max="24" step="1" aria-label="Corner roundness"><span>Round</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Logo and icon</h2></div>
+            <div class="pic-row">
+              <div class="pic logo" id="logoPic"></div>
+              <div class="pic-text"><b>Logo</b><span class="hint">Replaces the name at the top of the app. A wide picture with a see-through background works best.</span>
+                <div class="pic-btns"><label class="btn outline sm"><i data-ico="upload"></i>Choose picture<input type="file" accept="image/*" id="logoFile" hidden></label><button class="btn ghost sm" type="button" id="logoRemove">Remove</button></div></div>
+            </div>
+            <div class="pic-row">
+              <div class="pic icon" id="iconPic"></div>
+              <div class="pic-text"><b>Home-screen icon</b><span class="hint">A square picture. Phones that already added the app may need to remove and add it again to show a new icon.</span>
+                <div class="pic-btns"><label class="btn outline sm"><i data-ico="upload"></i>Choose picture<input type="file" accept="image/*" id="iconFile" hidden></label><button class="btn ghost sm" type="button" id="iconRemove">Remove</button></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="look-preview">
+          <div class="preview-head"><b>Preview</b><span class="meta">The real app, with your changes</span></div>
+          <div class="phone"><iframe id="previewFrame" title="Preview of the app" loading="lazy"></iframe></div>
+        </div>
+      </div>
+      <div class="savebar" id="lookSave" hidden>
+        <span>Unsaved changes</span>
+        <button class="btn ghost" type="button" id="lookDiscard">Discard</button>
+        <button class="btn primary" type="button" id="lookSaveBtn">Save</button>
+      </div>
+    </section>
+
+    <!-- Lists: dropdown choices kept in each app -->
+    <section class="view" id="view-lists" hidden>
+      <div class="picker-row"><label for="listApp">App</label><select id="listApp"></select></div>
+      <p class="lead">Drag <i data-ico="grip" class="inline"></i> to reorder. Changes reach everyone using the app as soon as you save.</p>
+      <div id="lists"></div>
+    </section>
+
+    <!-- Ask Claude -->
+    <section class="view" id="view-ask" hidden>
+      <div class="agent-bar" id="agentBar"></div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="approve" id="approve" hidden>
+        <span>Claude is waiting for your go-ahead.</span>
+        <button class="btn ghost sm" type="button" data-say="No, don't do that.">No</button>
+        <button class="btn primary sm" type="button" data-say="Yes, go ahead.">Yes, go ahead</button>
+      </div>
+      <form class="composer" id="composer">
+        <textarea id="msg" rows="1" placeholder="Ask Claude about the apps…" aria-label="Message to Claude"></textarea>
+        <button class="btn primary icon-only" type="submit" aria-label="Send"><i data-ico="send"></i></button>
+      </form>
+    </section>
+
+    <!-- History: every change made here, with undo -->
+    <section class="view" id="view-history" hidden>
+      <div class="card">
+        <div class="card-head"><h2>Changes</h2><span class="meta">Made in this control panel</span></div>
+        <ol class="changes" id="changes"></ol>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button type="button" id="toastAction" hidden></button></div>
+
+<script src="vendor/pocketbase.umd.js"></script>
+<script src="vendor/sortable.min.js"></script>
+<script src="js/hub.js"></script>
+</body>
+</html>

@@ -20,7 +20,7 @@ If the Mac sends texts from **your** Apple ID, they arrive as messages from your
 2. On the Mac mini, open **Messages → Settings → iMessage** and sign in with that new Apple ID. This only changes Messages. The Mac's other iCloud settings stay as they are.
 3. On your iPhone, save that address as a contact named **App Hub**. Alerts then show as "App Hub".
 
-Later, this same conversation is where you'll text the Claude agent (Phase 3 in [HUB-PLAN.md](../HUB-PLAN.md)).
+This same conversation is where you text the Claude agent ([CLAUDE-AGENT-SETUP.md](CLAUDE-AGENT-SETUP.md)).
 
 ## 2. Make sure the Mac logs in by itself after a restart
 
@@ -83,3 +83,8 @@ New apps set up with `scripts/mac/setup.sh` are watched automatically. There's n
 | What the watchdog remembers between checks | `~/AppHub/state/` |
 | Watchdog history | `~/AppHub/logs/watchdog.log` |
 | The background job | `~/Library/LaunchAgents/ca.fehrgrownfarms.apphub.watchdog.plist` |
+
+## Next
+
+- [CONTROL-PANEL-SETUP.md](CONTROL-PANEL-SETUP.md): the control panel, to see every app and change their look and lists yourself.
+- [CLAUDE-AGENT-SETUP.md](CLAUDE-AGENT-SETUP.md): text the Mac mini to ask Claude about your apps or have them changed.

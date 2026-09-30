@@ -152,3 +152,5 @@ Rough Cut Dezigns Orders runs beside the Farm Log on port 8091 and is shared at 
 ## Texts when something goes wrong
 
 The App Hub watchdog checks every app each minute, restarts any that stop, and texts your iPhone about problems it can't fix. See [APP-HUB-SETUP.md](APP-HUB-SETUP.md).
+
+The App Hub also has a control panel for changing the apps' look and lists yourself ([CONTROL-PANEL-SETUP.md](CONTROL-PANEL-SETUP.md)) and a Claude agent you can text ([CLAUDE-AGENT-SETUP.md](CLAUDE-AGENT-SETUP.md)).

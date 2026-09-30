@@ -31,6 +31,9 @@ function armOrConfirm(btn, key, run, label = "Delete") {
 }
 
 const STATUS = { new: "Ordered", making: "In progress", ready: "Ready", done: "Completed", cancelled: "Cancelled" };
+// Stage names changed in the App Hub control panel.
+Object.entries((window.HUB_LOOK && window.HUB_LOOK.labels && window.HUB_LOOK.labels.statuses) || {}).forEach(([k, v]) => { if (STATUS[k] && v) STATUS[k] = String(v); });
+document.querySelectorAll("#o-status option").forEach(o => { if (STATUS[o.value]) o.textContent = STATUS[o.value]; });
 const ACTIVE = ["new", "making", "ready"];
 
 /* ── Shared state (filled live from the Mac mini) ─────────────────── */

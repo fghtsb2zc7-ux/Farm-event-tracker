@@ -1,11 +1,12 @@
 # Settings for each app this Mac mini runs, shared by the scripts in this folder.
 #   farm: Fehr Grown Farm Log         (port 8090, public at https://<mac>.<tailnet>.ts.net/)
 #   shop: Rough Cut Dezigns Orders    (port 8091, public at https://<mac>.<tailnet>.ts.net/shop/)
-# Both share the one standard https address (other ports such as :8443 are blocked on some networks);
-# Tailscale Funnel sends /shop/… to the shop with the /shop part removed.
+#   hub:  App Hub control panel       (port 8092, public at https://<mac>.<tailnet>.ts.net/hub/)
+# All share the one standard https address (other ports such as :8443 are blocked on some networks);
+# Tailscale Funnel sends /shop/… to the shop with the /shop part removed (and /hub/… to the hub).
 # Adding another app later: add a block below plus its own folder like server/ or shop/.
 
-ALL_APPS="farm shop"
+ALL_APPS="farm shop hub"
 
 app_config() {
   case "${1:-farm}" in
@@ -13,6 +14,8 @@ app_config() {
           HOME_DIR="$HOME/FarmLog"; SRC_DIR=server; LOG_NAME=farmlog.log ;;
     shop) APP=shop; APP_NAME="Rough Cut Dezigns Orders"; LABEL="ca.roughcutdezigns.orders"; PORT=8091; FUNNEL_PATH=/shop
           HOME_DIR="$HOME/ShopLog"; SRC_DIR=shop; LOG_NAME=shop.log ;;
+    hub)  APP=hub; APP_NAME="App Hub"; LABEL="ca.fehrgrownfarms.apphub"; PORT=8092; FUNNEL_PATH=/hub
+          HOME_DIR="$HOME/AppHub"; SRC_DIR=hub; LOG_NAME=hub.log ;;
     *) echo "Unknown app '$1'. Choose one of: $ALL_APPS"; return 1 ;;
   esac
 }
