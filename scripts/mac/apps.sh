@@ -69,3 +69,6 @@ public_ip() {
   done
   echo "$ip"
 }
+
+# The Docker services, if any (homeserver/services.sh).
+if [[ -f "$(dirname "${BASH_SOURCE[0]}")/../../homeserver/services.sh" ]]; then source "$(dirname "${BASH_SOURCE[0]}")/../../homeserver/services.sh"; fi

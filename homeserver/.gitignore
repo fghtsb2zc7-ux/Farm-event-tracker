@@ -1,0 +1,8 @@
+# Settings and secrets for each stack stay on the Mac mini, never in GitHub (this repo is public).
+.env
+*.env
+!.env.example
+# App data and Tailscale state live in ~/ServerData, but just in case something lands here:
+data/
+state/
+tailscale/
