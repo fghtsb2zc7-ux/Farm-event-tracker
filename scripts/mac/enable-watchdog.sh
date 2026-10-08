@@ -47,7 +47,7 @@ esac
 
 say "1/3  Where should alerts go?"
 echo "Type the iPhone number (like 519-555-1234) or the Apple ID email that gets your iMessages."
-OLD_TO="$(sed -n 's/^PHONE=//p' "$CONF" 2>/dev/null | tr -d '"' | head -n 1)"
+OLD_TO="$(sed -n 's/^PHONE=//p' "$CONF" 2>/dev/null | tr -d '"' | head -n 1 || true)"
 while true; do
   if [[ -n "$OLD_TO" ]]; then read -r -p "Send texts to [$OLD_TO]: " TO; TO="${TO:-$OLD_TO}"
   else read -r -p "Send texts to: " TO; fi
@@ -60,7 +60,7 @@ done
 echo
 echo "Optional: a free outside check that texts or emails you if the whole Mac mini goes offline"
 echo "(power cut, frozen). Paste a healthchecks.io ping URL, or just press Return to skip."
-OLD_HB="$(sed -n 's/^HEARTBEAT_URL=//p' "$CONF" 2>/dev/null | tr -d '"' | head -n 1)"
+OLD_HB="$(sed -n 's/^HEARTBEAT_URL=//p' "$CONF" 2>/dev/null | tr -d '"' | head -n 1 || true)"
 read -r -p "Ping URL${OLD_HB:+ [$OLD_HB]}: " HB; HB="${HB:-$OLD_HB}"
 
 mkdir -p "$HUB_DIR/state" "$HUB_DIR/logs"

@@ -52,7 +52,7 @@ ZIP="pocketbase_${PB_VERSION}_darwin_${ARCH}.zip"
 BASE_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}"
 curl -fL --progress-bar -o "$TMP/$ZIP" "$BASE_URL/$ZIP"
 curl -fsSL -o "$TMP/checksums.txt" "$BASE_URL/checksums.txt"
-EXPECTED="$(grep " $ZIP\$" "$TMP/checksums.txt" | awk '{print $1}')"
+EXPECTED="$(grep " $ZIP\$" "$TMP/checksums.txt" | awk '{print $1}' || true)"
 ACTUAL="$(shasum -a 256 "$TMP/$ZIP" | awk '{print $1}')"
 if [[ -z "$EXPECTED" || "$EXPECTED" != "$ACTUAL" ]]; then
   echo "The download didn't match PocketBase's published checksum. Stopping to be safe."; exit 1
