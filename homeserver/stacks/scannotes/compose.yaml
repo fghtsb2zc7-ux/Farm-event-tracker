@@ -1,0 +1,38 @@
+# Scan Notes (film lab tracker), release 0.4.0. Private to your devices: https://scannotes.taild086ea.ts.net
+# The image is built on this Mac from the private repo fehrkieran11-code/film-lab-tracker (~/Apps/film-lab-tracker):
+#   cd ~/Apps/film-lab-tracker && git pull && docker build --build-arg TARGETARCH=arm64 --build-arg APP_VERSION=<v> -t scan-notes:<v> .
+# then change the version below and run: bash homeserver/scripts/stack.sh up scannotes
+# Data (database, photos, its own nightly backups at 2:30 am) is in ~/ServerData/scannotes/data.
+# Shopify keys: ~/ServerData/secrets/scannotes/shopify.env (on this Mac only, never in GitHub).
+# Interim home until the lab's QNAP is ready.
+
+services:
+  scannotes-tailscale:
+    image: tailscale/tailscale:v1.102.5
+    hostname: scannotes
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?run this stack with homeserver/scripts/stack.sh}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - ${SERVERDATA}/scannotes/tailscale:/var/lib/tailscale
+      - ${STACK_CONFIG}/serve.json:/config/serve.json:ro
+    restart: unless-stopped
+
+  scan-notes:
+    image: scan-notes:0.4.0
+    network_mode: service:scannotes-tailscale
+    user: "501:20"                                   # owns ~/ServerData on this Mac
+    env_file:
+      - path: ${SERVERDATA}/secrets/scannotes/shopify.env
+        required: false                              # the Shopify sync waits until it's there
+    environment:
+      TZ: America/Toronto
+      SYNC_START_DATE: ${SYNC_START_DATE:-}
+    volumes:
+      - ${SERVERDATA}/scannotes/data:/pb/pb_data
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+    restart: unless-stopped

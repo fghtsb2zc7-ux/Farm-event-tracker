@@ -8,10 +8,13 @@
 #   photos   photos    https://photos.taild086ea.ts.net/api/server/ping   photos         no
 
 CONTAINER_SERVICES="
+ntfy          core   https://ntfy.taild086ea.ts.net/v1/health   ntfy     no
+uptime-kuma   core   https://status.taild086ea.ts.net/          status   no
+scan-notes    scannotes   https://scannotes.taild086ea.ts.net/api/health   scannotes   no
 "
 
 # Stacks that update.sh never updates by itself (update these by hand, after reading the release notes).
-NO_AUTO_UPDATE="photos"
+NO_AUTO_UPDATE="photos scannotes"   # scannotes: built on this Mac, see its compose.yaml
 
 # Prints one line per service, without the comments and blank lines.
 container_services() {

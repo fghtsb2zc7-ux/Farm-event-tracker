@@ -4,6 +4,7 @@
 #   bash homeserver/scripts/stack.sh down <stack>      stop it (its data in ~/ServerData stays)
 #   bash homeserver/scripts/stack.sh status [<stack>]  what's running
 #   bash homeserver/scripts/stack.sh logs <stack>      its recent log
+#   bash homeserver/scripts/stack.sh restart <stack> [<service>...]   restart without changing anything
 #   bash homeserver/scripts/stack.sh update <stack>    newer images, with automatic roll back (update.sh)
 # <stack> can be "all". "boot" starts Colima and then every stack (the login job runs this).
 
@@ -14,7 +15,7 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 export SERVERDATA="${SERVERDATA:-$HOME/ServerData}"
 TS_KEY_FILE="$SERVERDATA/secrets/ts-authkey"
 
-usage() { sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+usage() { sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 
 all_stacks() {
   local d
@@ -72,6 +73,9 @@ case "$CMD" in
   logs)
     [[ -n "$STACK" ]] || usage; need_docker; prepare "$STACK"; shift 2
     compose "$STACK" logs --tail 200 "$@" ;;
+  restart)
+    [[ -n "$STACK" ]] || usage; need_docker; prepare "$STACK"; shift 2
+    compose "$STACK" restart "$@" ;;
   update)
     [[ -n "$STACK" ]] || usage
     exec bash "$HS/scripts/update.sh" "$STACK" ;;

@@ -64,9 +64,11 @@ OLD_HB="$(sed -n 's/^HEARTBEAT_URL=//p' "$CONF" 2>/dev/null | tr -d '"' | head -
 read -r -p "Ping URL${OLD_HB:+ [$OLD_HB]}: " HB; HB="${HB:-$OLD_HB}"
 
 mkdir -p "$HUB_DIR/state" "$HUB_DIR/logs"
+OTHER="$(grep -vE '^(#|PHONE=|HEARTBEAT_URL=)' "$CONF" 2>/dev/null || true)"   # keeps the ntfy and email settings
 { echo "# App Hub alert settings. Change them by running: bash scripts/mac/enable-watchdog.sh"
   echo "PHONE=\"$TO\""
-  echo "HEARTBEAT_URL=\"$HB\""; } > "$CONF"
+  echo "HEARTBEAT_URL=\"$HB\""
+  if [[ -n "$OTHER" ]]; then echo "$OTHER"; fi; } > "$CONF"
 echo "Saved. Alerts go to $TO."
 
 say "2/3  Permission to restart the apps (asks for your Mac password)"

@@ -84,11 +84,22 @@ case "${1:-}" in
       elif curl -fs --max-time 5 "http://127.0.0.1:$PORT/api/health" >/dev/null 2>&1; then echo "$APP_NAME: running"
       else echo "$APP_NAME: NOT ANSWERING"; fi
     done
+    if declare -F container_services >/dev/null; then
+      while read -r name stack url _; do
+        if [[ -f "$STATE/$name.paused" ]]; then echo "$name (Docker): paused (not watched)"
+        elif curl -fs --max-time 10 -o /dev/null "$url"; then echo "$name (Docker): running"
+        else echo "$name (Docker): NOT ANSWERING"; fi
+      done < <(container_services)
+    fi
     echo; echo "Recent events (all in $LOG):"
     tail -n 15 "$LOG" 2>/dev/null | sed 's/^/  /' || echo "  none yet"
     exit 0 ;;
   --pause|--resume)
-    app_config "${2:-}" || exit 1
+    if declare -F container_services >/dev/null && container_services | awk '{print $1}' | grep -qx "${2:-}"; then
+      APP="$2"; APP_NAME="$2"   # a Docker service from homeserver/services.sh
+    else
+      app_config "${2:-}" || exit 1
+    fi
     if [[ "$1" == --pause ]]; then touch "$STATE/$APP.paused"; log "Paused watching the $APP_NAME."; echo "The watchdog is ignoring the $APP_NAME until: bash scripts/mac/watchdog.sh --resume $APP"
     else rm -f "$STATE/$APP.paused"; log "Resumed watching the $APP_NAME."; echo "The watchdog is watching the $APP_NAME again."; fi
     exit 0 ;;
@@ -136,6 +147,80 @@ for a in $APPS; do
   check_app
 done
 
+# ---- Docker services (homeserver/services.sh), once Docker's start-at-login is on ----
+DOCKER=/opt/homebrew/bin/docker
+STACK_SH="$REPO/homeserver/scripts/stack.sh"
+DOCKER_ON=""; [[ -f "$HOME/Library/LaunchAgents/ca.fehrgrownfarms.colima.plist" && -x "$DOCKER" ]] && DOCKER_ON=1
+
+# Like escalate, for a Docker service: Claude reads its log with stack.sh.
+escalate_container() {  # KEY NAME STACK DESCRIPTION
+  [[ -n "$AGENT_ON" && ! -f "$STATE/$1.escalated" ]] || return 0
+  touch "$STATE/$1.escalated"
+  mkdir -p "$HUB_DIR/agent/escalations"
+  printf '{"app":"%s","name":"%s","text":"%s","log":"bash homeserver/scripts/stack.sh logs %s","docker":true}\n' "$2" "$2" "$4" "$3" > "$HUB_DIR/agent/escalations/$1.json"
+  log "Asked the Claude agent to look into it."
+}
+
+check_containers() {
+  local n name stack url key
+  if ! with_timeout "$DOCKER" info >/dev/null 2>&1; then
+    n=$(( $(get docker-down.count) + 1 )); put docker-down.count "$n"
+    [[ -f "$STATE/docker-down.since" ]] || put docker-down.since "$NOW"
+    if (( n == 2 || n % 30 == 0 )); then
+      log "Docker isn't answering. Starting it again."
+      launchctl kickstart "gui/$(id -u)/ca.fehrgrownfarms.colima" >> "$LOG" 2>&1
+    fi
+    if (( n >= 5 )); then
+      problem docker-down "Docker (Colima) isn't running on the Mac mini, so ntfy, the status page and the other Docker apps are down. I tried starting it again. ${AGENT_ON:+Claude is looking into it. }"
+      escalate_container docker-down Docker core "Docker (Colima) isn't running on the Mac mini, even after the watchdog tried starting it again."
+    fi
+    return 0
+  fi
+  resolved docker-down "Docker is running again on the Mac mini"
+  while read -r name stack url _; do
+    [[ -n "$url" && ! -f "$STATE/$name.paused" ]] || continue
+    key="c-$name-down"
+    if curl -fs --max-time 10 -o /dev/null "$url"; then
+      if [[ -f "$STATE/$key.restarted" && ! -f "$STATE/$key.alerted" ]]; then
+        text "ℹ️ $name stopped answering, so I restarted it. It's working again."
+      fi
+      resolved "$key" "$name is back up"
+      continue
+    fi
+    [[ -f "$STATE/$key.since" ]] || put "$key.since" "$NOW"
+    n=$(( $(get "$key.count") + 1 )); put "$key.count" "$n"
+    if (( n == 1 )); then log "$name didn't answer. Checking again in a minute."; continue; fi
+    if (( n == 2 || n == 5 )); then
+      touch "$STATE/$key.restarted"
+      if with_timeout bash "$STACK_SH" restart "$stack" "$name" >> "$LOG" 2>&1; then log "Restarted $name (not answering for $n checks)."
+      else log "Couldn't restart $name (reason above)."; fi
+    elif (( n == 15 || n % 30 == 0 )); then
+      with_timeout bash "$STACK_SH" up "$stack" >> "$LOG" 2>&1 && log "Started the $stack stack again (for $name)."
+    fi
+    if (( n >= 3 )); then
+      problem "$key" "$name is down. I restarted it, but it still isn't answering. ${AGENT_ON:+Claude is looking into it. }I'll keep trying and tell you when it's back."
+      escalate_container "$key" "$name" "$stack" "$name (in the $stack stack) is down: it isn't answering at $url, even after the watchdog restarted it."
+    fi
+  done < <(declare -F container_services >/dev/null && container_services)
+}
+[[ -n "$DOCKER_ON" ]] && check_containers
+
+# ---- Every 5 minutes: server storage and the backup drive ----
+check_server() {
+  local used
+  used="$(df -P "${SERVER_DATA:-$HOME/ServerData}" 2>/dev/null | awk 'NR==2 {gsub("%","",$5); print $5}')"
+  if [[ -n "$used" ]] && (( used > ${HUB_MAX_USED_PERCENT:-85} )); then
+    problem serverdata-full "The Mac mini's storage (where ~/ServerData lives) is ${used}% full. Time to clear space or move things off." 86400
+  elif [[ -n "$used" ]]; then
+    resolved serverdata-full "The Mac mini's storage is back under control (${used}% full)"
+  fi
+  if [[ -d "${BACKUP_DRIVE:-/Volumes/ServerBackup}" ]]; then
+    resolved backup-drive "The ServerBackup drive is plugged in again"
+  else
+    problem backup-drive "The ServerBackup drive isn't plugged in (or isn't showing up), so tonight's backup can't run." 21600
+  fi
+}
+
 # ---- Every 5 minutes: can phones reach the running apps over the internet? ----
 check_public() {
   local ts host ip a url n hint
@@ -181,6 +266,7 @@ check_public() {
 }
 if (( NOW - $(get public.last) >= PUBLIC_EVERY )); then
   put public.last "$NOW"
+  check_server
   check_public
 fi
 

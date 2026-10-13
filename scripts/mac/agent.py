@@ -5,9 +5,11 @@ It picks up, one at a time:
   - texts you send the Mac mini (read from Messages by a small helper job, see enable-agent.sh)
   - messages typed in the control panel's "Ask Claude" tab
   - outages the watchdog couldn't fix by restarting (~/AppHub/agent/escalations/)
-and runs Claude Code in the project folder to answer, then replies the same way the message came in.
+and runs Claude Code in the project folder to answer, then replies the same way the message came in
+(outage findings go out through notify.sh: phone notification, email and/or iMessage).
 
-Claude can look at anything but changes nothing unless you said yes to its plan, except to fix an outage.
+Claude can look at anything but changes nothing unless you said yes to its plan, outages included:
+it investigates, tells you what it found and proposes a fix, then waits. (The watchdog's own restarts stay automatic.)
 After any change, this checks every app that was running still answers, and undoes the change if one doesn't.
 
 Settings: ~/AppHub/agent/agent.conf. History: ~/AppHub/logs/agent.log.
@@ -46,10 +48,17 @@ TALK_TOOLS = [
     "Bash(git log:*)", "Bash(git status:*)", "Bash(git diff:*)", "Bash(git show:*)",
     "Bash(curl -s http://127.0.0.1:*)", "Bash(curl -fs http://127.0.0.1:*)",
     "Bash(df:*)", "Bash(uptime)", "Bash(date)", "Bash(launchctl print:*)", "Bash(pmset -g:*)",
+    # Docker: look only
+    "Bash(bash homeserver/scripts/stack.sh status:*)", "Bash(bash homeserver/scripts/stack.sh logs:*)",
+    "Bash(docker ps:*)", "Bash(docker logs:*)", "Bash(docker inspect:*)", "Bash(docker stats --no-stream:*)",
+    "Bash(docker compose ps:*)", "Bash(docker compose logs:*)", "Bash(colima status:*)", "Bash(colima list:*)",
 ]
 # Tools for an approved change or an outage fix.
 WORK_TOOLS = ["Read", "Edit", "Write", "Glob", "Grep", "Bash", "WebSearch", "WebFetch"]
-NEVER = ["Bash(rm -rf:*)", "Bash(sudo rm:*)", "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(git reset --hard origin:*)"]
+NEVER = ["Bash(rm -rf:*)", "Bash(sudo rm:*)", "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(git reset --hard origin:*)",
+         # Docker commands that can destroy app data
+         "Bash(docker volume rm:*)", "Bash(docker volume prune:*)", "Bash(docker system prune:*)", "Bash(docker rm -v:*)",
+         "Bash(docker compose down -v:*)", "Bash(docker compose down --volumes:*)", "Bash(colima delete:*)", "Bash(colima prune:*)"]
 
 
 def log(msg):
@@ -242,15 +251,15 @@ class Agent:
                       "then reply with a short summary for the owner.]")
         else:
             e = item["esc"]
-            prompt = (f"[Fixing an outage. {now}. The watchdog reports:] {e.get('text')}\n"
+            prompt = (f"[Looking into an outage. {now}. The watchdog reports:] {e.get('text')}\n"
                       f"[App: {e.get('name')} (id {e.get('app')}). Its log: {e.get('log')}. The watchdog already restarted it. "
-                      "Find out why and fix it if you safely can, following the rules. Then write a short text for the owner: "
-                      "what was wrong, what you did, and whether it's working now.]")
+                      "Find out why, without changing anything. Then write a short message for the owner: what's wrong, "
+                      "and what you'd do to fix it. If a fix is needed, end with the [[NEEDS_YES]] line.]")
             self.hub("POST", "/api/hub/agent/runner/post", {"text": f"Watchdog: {e.get('text')} Claude is looking into it.", "role": "note", "source": "watchdog"})
 
-        if mode != "talk" and src == "imessage":
+        if mode == "work" and src == "imessage":
             self.text_owner("On it. I'll text you when it's done.")
-        before = self.snapshot() if mode != "talk" else None
+        before = self.snapshot() if mode == "work" else None
         self.busy = True
         self.heartbeat()
         try:
@@ -261,7 +270,7 @@ class Agent:
             answer += self.check_after(before, self.st.get("request", text) if mode == "work" else "outage fix")
         if MARKER in answer:
             answer = answer.replace(MARKER, "").strip() + "\n\nReply yes to go ahead, or no."
-            self.st["waitingForYes"] = mode == "talk"
+            self.st["waitingForYes"] = mode in ("talk", "fix")
             self.st["request"] = text  # names the change when it's saved
             self.save()
         self.reply(item, answer.strip() or "Done.")
@@ -272,7 +281,7 @@ class Agent:
         claude = self.conf.get("CLAUDE_BIN") or "claude"
         with open(os.path.join(REPO, "scripts", "mac", "agent-prompt.md"), encoding="utf-8") as f:
             system = f.read()
-        tools = TALK_TOOLS if mode == "talk" else WORK_TOOLS
+        tools = WORK_TOOLS if mode == "work" else TALK_TOOLS  # outages are investigated read-only
         cmd = [claude, "-p", "--output-format", "json", "--append-system-prompt", system,
                "--permission-mode", "dontAsk", "--allowedTools", ",".join(tools), "--disallowedTools", ",".join(NEVER),
                "--add-dir", HUB]
