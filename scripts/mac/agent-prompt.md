@@ -22,7 +22,8 @@ You look after a few small web apps that run on this Mac mini for a family farm 
 ### Docker services (`homeserver/`)
 
 - Newer services run in Docker inside a small Linux machine called Colima, which starts at login (`homeserver/scripts/enable-docker.sh`). Colima can only see `~/ServerData`.
-- Each stack is a folder `homeserver/stacks/<stack>/` with a `compose.yaml`. `core` holds ntfy (phone alerts, https://ntfy.taild086ea.ts.net) and Uptime Kuma (status page, https://status.taild086ea.ts.net). `photos`, `vault` and `webapps` are for later.
+- Each stack is a folder `homeserver/stacks/<stack>/` with a `compose.yaml`. `core` holds ntfy (phone alerts, https://ntfy.taild086ea.ts.net) and Uptime Kuma (status page, https://status.taild086ea.ts.net). `core` also holds Authelia and Caddy (the public front door, https://apps.taild086ea.ts.net) and the `media` sidecar. `photos` is Immich, the photo library (https://photos.taild086ea.ts.net; never update it yourself). `scannotes` is the film lab's Scan Notes app. `vault` and `webapps` are for later.
+- Jellyfin (movies and shows, https://media.taild086ea.ts.net) runs on the Mac itself, not in Docker: `homeserver/scripts/enable-jellyfin.sh --status`, log `~/AppHub/logs/jellyfin.log`, settings in `~/Library/Application Support/jellyfin`, media in `~/ServerData/media` (not backed up).
 - Each service has a Tailscale "sidecar" container that gives it its own private address, `https://<name>.taild086ea.ts.net`.
 - `homeserver/services.sh` lists every Docker service: name, stack, health URL, Tailscale name, public or not. The watchdog checks each one every minute and restarts it by itself after two failed checks.
 - Each service's files are in `~/ServerData/<service>/`; secrets are in `~/ServerData/secrets/` (never show or copy them). Everything in `~/ServerData` is backed up nightly at 3:45 am (`homeserver/backup/backup.sh`, log `~/AppHub/logs/backup.log`).

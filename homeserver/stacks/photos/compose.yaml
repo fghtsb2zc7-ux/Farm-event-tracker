@@ -1,0 +1,79 @@
+# photos: Immich, your own photo library. Private to your devices: https://photos.taild086ea.ts.net (never public).
+# Based on Immich's official docker-compose.yml for v3.3.1 (https://github.com/immich-app/immich/releases/tag/v3.3.1),
+# changed for this Mac: fixed version, Tailscale sidecar instead of a port, password from ~/ServerData/secrets,
+# photos in ~/ServerData/photos/library, the database in a Docker volume (not on the shared folder).
+# Never updated automatically (NO_AUTO_UPDATE in services.sh): read the release notes, change the version
+# in all three images below, then: bash homeserver/scripts/stack.sh up photos
+# Backups: Immich's own nightly database backup (library/backups), plus a fresh database copy made by
+# homeserver/backup/backup.sh just before the nightly backup.
+
+services:
+  photos-tailscale:
+    image: tailscale/tailscale:v1.102.5
+    hostname: photos
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?run this stack with homeserver/scripts/stack.sh}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - ${SERVERDATA}/photos/tailscale:/var/lib/tailscale
+      - ${STACK_CONFIG}/serve.json:/config/serve.json:ro
+    restart: unless-stopped
+
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:v3.3.1
+    network_mode: service:photos-tailscale
+    environment:
+      TZ: America/Toronto
+      DB_HOSTNAME: database
+      DB_USERNAME: postgres
+      DB_DATABASE_NAME: immich
+      DB_PASSWORD_FILE: /run/secrets/db-password
+      REDIS_HOSTNAME: redis
+    volumes:
+      - ${SERVERDATA}/photos/library:/data
+      - /etc/localtime:/etc/localtime:ro
+      - ${SERVERDATA}/secrets/photos/db-password:/run/secrets/db-password:ro
+    depends_on:
+      - redis
+      - database
+    healthcheck:
+      disable: false
+    restart: unless-stopped
+
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:v3.3.1
+    environment:
+      TZ: America/Toronto
+    volumes:
+      - model-cache:/cache
+    mem_limit: 3g                                    # smart search and faces; keeps memory for everything else
+    healthcheck:
+      disable: false
+    restart: unless-stopped
+
+  redis:
+    image: docker.io/valkey/valkey:9@sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d
+    healthcheck:
+      test: redis-cli ping | grep -q PONG || exit 1
+    restart: unless-stopped
+
+  database:
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: immich
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+    volumes:
+      - db:/var/lib/postgresql/data                  # Docker volume: databases don't belong on the shared folder
+      - ${SERVERDATA}/secrets/photos/db-password:/run/secrets/db-password:ro
+    shm_size: 128mb
+    healthcheck:
+      disable: false
+    restart: unless-stopped
+
+volumes:
+  model-cache:
+  db:

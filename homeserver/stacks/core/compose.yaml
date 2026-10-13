@@ -3,6 +3,8 @@
 #   uptime-kuma   status page       https://status.taild086ea.ts.net  (private to your devices)
 #   authelia      sign-in (password + 2nd step) for everything behind caddy
 #   caddy         the public front door  https://apps.taild086ea.ts.net  (on the internet, sign-in required)
+#   media         Tailscale address for Jellyfin  https://media.taild086ea.ts.net  (private; Jellyfin itself runs
+#                 on the Mac, not in Docker: homeserver/scripts/enable-jellyfin.sh)
 # Each has its own Tailscale sidecar. Start with: bash homeserver/scripts/stack.sh up core
 
 services:
@@ -103,6 +105,19 @@ services:
     volumes:
       - ${STACK_CONFIG}/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ${SERVERDATA}/apps/caddy-data:/data
+    restart: unless-stopped
+
+  media-tailscale:
+    image: tailscale/tailscale:v1.102.5
+    hostname: media
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?run this stack with homeserver/scripts/stack.sh}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - ${SERVERDATA}/media-tailscale:/var/lib/tailscale
+      - ${STACK_CONFIG}/serve-media.json:/config/serve.json:ro  # to Jellyfin on the Mac (host.lima.internal:8096)
     restart: unless-stopped
 
 networks:

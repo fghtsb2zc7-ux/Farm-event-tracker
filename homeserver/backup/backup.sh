@@ -2,8 +2,10 @@
 # Nightly encrypted backup of the apps' data to the ServerBackup drive, with restic (installed by enable-backup.sh).
 #
 #  1. Skips (and texts you) if the ServerBackup drive isn't plugged in.
-#  2. Runs any "before backup" steps (none yet; later: database dumps for new services).
-#  3. Backs up the Farm Log, the shop, the App Hub (once set up) and ~/ServerData.
+#  2. Copies the photo library's database out of Docker into ~/ServerData/dumps.
+#  3. Backs up the Farm Log, the shop, the App Hub (once set up), ~/ServerData and Jellyfin's settings.
+#     Not the movies, shows and music in ~/ServerData/media (too big; you can get them again), nor the
+#     photo library's thumbnails and converted videos (Immich makes them again from the originals).
 #  4. Keeps 14 daily, 8 weekly and 12 monthly copies and frees the space of older ones.
 #  5. On Sundays, checks that a sample of the backup can still be read back.
 #  6. Texts you if anything fails or the drive is over 80% full.
@@ -43,7 +45,21 @@ if [[ ! -f "$RESTIC_PASSWORD_FILE" ]]; then alert "the backup password file is m
 
 # ---- Before backup -------------------------------------------------------------------------------
 # Services whose live files can't be copied safely write a dump into ~/ServerData/dumps here first.
-# (None yet. Later, for example: the photo library's database and the password manager's database.)
+DUMPS="$SERVER_DATA/dumps"; mkdir -p "$DUMPS"
+DOCKER=/opt/homebrew/bin/docker
+
+# The photo library's (Immich's) database. It lives inside Docker, so copy it out. Immich also keeps its own
+# nightly copies in ~/ServerData/photos/library/backups.
+if [[ -x "$DOCKER" ]] && "$DOCKER" ps --format '{{.Names}}' 2>/dev/null | grep -qx photos-database-1; then
+  if "$DOCKER" exec photos-database-1 pg_dumpall --clean --if-exists --username=postgres 2>>"$LOG" | gzip > "$DUMPS/immich.sql.gz.tmp" \
+     && [[ -s "$DUMPS/immich.sql.gz.tmp" ]]; then
+    chmod 600 "$DUMPS/immich.sql.gz.tmp"; mv "$DUMPS/immich.sql.gz.tmp" "$DUMPS/immich.sql.gz"
+    log "Copied the photo library's database ($(du -h "$DUMPS/immich.sql.gz" | cut -f1))."
+  else
+    rm -f "$DUMPS/immich.sql.gz.tmp"
+    alert "couldn't copy the photo library's database before the backup. Last night's copy (if any) is still in the backup."
+  fi
+fi
 
 # ---- What to back up -----------------------------------------------------------------------------
 # Each app's pb_data includes PocketBase's own nightly backup zips (3:00 farm, 3:15 shop), which are
@@ -54,10 +70,15 @@ for a in $ALL_APPS; do
   [[ -d "$HOME_DIR/pb_data" ]] && SOURCES+=("$HOME_DIR/pb_data")
 done
 [[ -d "$SERVER_DATA" ]] && SOURCES+=("$SERVER_DATA")
+JELLYFIN="$HOME/Library/Application Support/jellyfin"   # Jellyfin's settings, users and watch history
+[[ -d "$JELLYFIN" ]] && SOURCES+=("$JELLYFIN")
 
 log "Backing up: ${SOURCES[*]/#$HOME/~}"
 if ! OUT="$(restic backup --no-scan --tag nightly \
       --exclude '*.tmp' --exclude '.DS_Store' --exclude "$SERVER_DATA/cache" \
+      --exclude "$SERVER_DATA/media" \
+      --exclude "$SERVER_DATA/photos/library/thumbs" --exclude "$SERVER_DATA/photos/library/encoded-video" \
+      --exclude "$JELLYFIN/metadata" --exclude "$JELLYFIN/log" \
       "${SOURCES[@]}" 2>&1)"; then
   echo "$OUT" >> "$LOG"
   alert "tonight's backup failed. See ~/AppHub/logs/backup.log"
