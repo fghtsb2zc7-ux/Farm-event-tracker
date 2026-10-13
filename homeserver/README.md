@@ -54,4 +54,25 @@ saved at `~/ServerData/secrets/ts-authkey`:
 3. On the Mac mini, run this, paste the key (nothing shows while you paste) and press Return:
    `(umask 077; read -rs KEY && printf '%s' "$KEY" > ~/ServerData/secrets/ts-authkey) && echo saved`
 
-Services are only reachable from your own devices for now (`"AllowFunnel": false` in `serve.json`).
+Services are only reachable from your own devices (`"AllowFunnel": false` in `serve.json`). The one exception
+is the public front door, `apps` in the core stack, which makes everyone sign in first (below).
+
+## How to host a new web app (for friends and family)
+
+Web apps go behind the front door at `https://apps.taild086ea.ts.net/<name>`, where everyone signs in with
+their own login and a second step (see `docs/ACCESS.md`).
+
+1. In `stacks/webapps/compose.yaml`, copy the commented example: the app's image with a version number,
+   `container_name: <name>`, its files under `${SERVERDATA}/<name>/`, and `networks: [web]`.
+2. In `stacks/core/config/caddy/Caddyfile`, copy the example `handle` block: change the path to `/<name>*`
+   and `reverse_proxy` to `<name>:<port>`. (The app has to work under a path like `/<name>`; most have a
+   "base URL" or "sub path" setting for it.)
+3. In `stacks/core/config/authelia/configuration.yml`, add a rule for who may open it, for example
+   `resources: ['^/<name>([/?].*)?$']` with `subject: ['group:family', 'group:friends']`.
+4. Start it: `bash homeserver/scripts/stack.sh up webapps`, then `bash homeserver/scripts/stack.sh up core`.
+5. Add a line for it to `services.sh` (health URL `https://apps.taild086ea.ts.net/<name>/...` won't work
+   because of the sign-in: use the app's own health page through `docker exec`, or leave the URL out), and a
+   monitor on the status page.
+
+An app that can't run under a path can get its own address instead: give it its own Tailscale sidecar
+(`templates/service-with-tailscale/`). It's then private to your devices unless you share it (docs/ACCESS.md).

@@ -1,0 +1,62 @@
+# Authelia: the sign-in in front of every app at https://apps.taild086ea.ts.net (see docs/ACCESS.md).
+# Secrets are not in this file: they're read from ~/ServerData/secrets (see compose.yaml).
+# People and their groups: ~/ServerData/authelia/data/users_database.yml, managed with homeserver/scripts/add-person.sh.
+
+server:
+  address: 'tcp://:9091/auth'
+
+log:
+  level: 'info'
+
+theme: 'auto'
+
+totp:
+  issuer: 'Fehr Home'
+
+webauthn:
+  display_name: 'Fehr Home'
+  enable_passkey_login: true
+
+authentication_backend:
+  file:
+    path: '/data/users_database.yml'
+    watch: true
+
+# Who may open which app. Everyone needs a password AND a second step (authenticator app or passkey).
+# Add one rule per app; groups are set per person with add-person.sh.
+access_control:
+  default_policy: 'deny'
+  rules:
+    # Example: the app at /recipes, for family and friends.
+    # - domain: 'apps.taild086ea.ts.net'
+    #   resources: ['^/recipes([/?].*)?$']
+    #   subject: ['group:family', 'group:friends']
+    #   policy: 'two_factor'
+    - domain: 'apps.taild086ea.ts.net'
+      policy: 'deny'
+
+session:
+  cookies:
+    - domain: 'apps.taild086ea.ts.net'
+      authelia_url: 'https://apps.taild086ea.ts.net/auth'
+      default_redirection_url: 'https://apps.taild086ea.ts.net/'
+  expiration: '12h'
+  inactivity: '2h'
+  remember_me: '1M'
+
+regulation:
+  max_retries: 5
+  find_time: '10m'
+  ban_time: '30m'
+
+storage:
+  local:
+    path: '/data/db.sqlite3'
+
+# Setup codes (for the second step and password resets) are emailed from the Gmail account in ~/AppHub/notify.conf.
+notifier:
+  smtp:
+    address: 'submission://smtp.gmail.com:587'
+    username: 'fehrkieran11@gmail.com'
+    sender: 'Fehr Home sign-in <fehrkieran11@gmail.com>'
+    subject: '{title}'

@@ -1,0 +1,61 @@
+// Tailscale access rules for the home server. The live copy is in the Tailscale admin console,
+// Access controls: paste this whole file there and Save. Explained in docs/ACCESS.md.
+//
+// Who's who:
+//   autogroup:member   you, and your own devices (Mac mini, iPhone, MacBook). Don't invite other people as
+//                      members: they would get everything. Share single apps with them instead (docs/ACCESS.md).
+//   tag:container      the apps' Tailscale sidecars (ntfy, status, scannotes, apps, later photos and vault)
+//   tag:lab            lab PCs, later: they reach Scan Notes only
+//   tag:sandbox        test machines, later: only you reach them, they reach nothing
+//   autogroup:shared   people you've shared one app with: that app's web page only
+{
+	"tagOwners": {
+		"tag:container": ["autogroup:admin"],
+		"tag:lab":       ["autogroup:admin"],
+		"tag:sandbox":   ["autogroup:admin"],
+	},
+
+	// Fixed Tailscale addresses (they don't change once a machine has joined).
+	"hosts": {
+		"mac-mini":  "100.116.173.69",
+		"scannotes": "100.124.17.82",
+	},
+
+	"grants": [
+		// You and your own devices: everything.
+		{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
+
+		// The apps may reach each other's web pages and the Mac mini's (the status page checks them all).
+		{"src": ["tag:container"], "dst": ["tag:container", "mac-mini"], "ip": ["443"]},
+
+		// Lab PCs: Scan Notes only.
+		{"src": ["tag:lab"], "dst": ["scannotes"], "ip": ["443"]},
+
+		// People you've shared one app with: its web page only.
+		{"src": ["autogroup:shared"], "dst": ["tag:container"], "ip": ["443"]},
+	],
+
+	// Tailscale SSH: only you, to your own devices, with a fresh sign-in check.
+	"ssh": [
+		{
+			"action": "check",
+			"src":    ["autogroup:member"],
+			"dst":    ["autogroup:self"],
+			"users":  ["autogroup:nonroot", "root"],
+		},
+	],
+
+	// Funnel (putting something on the public internet): your own devices (the farm and shop links on the
+	// Mac mini) and the apps' sidecars. Only the front door, apps.taild086ea.ts.net, actually turns it on
+	// ("AllowFunnel": true in its serve.json, homeserver/stacks/core/config/serve-apps.json).
+	"nodeAttrs": [
+		{"target": ["autogroup:member", "tag:container"], "attr": ["funnel"]},
+	],
+
+	// Checked by Tailscale every time you Save: if one fails, nothing is changed.
+	"tests": [
+		{"src": "tag:lab", "accept": ["scannotes:443"], "deny": ["mac-mini:22", "mac-mini:443", "mac-mini:5900"]},
+		{"src": "tag:sandbox", "deny": ["scannotes:443", "mac-mini:22", "mac-mini:443"]},
+		{"src": "tag:container", "accept": ["scannotes:443", "mac-mini:443"], "deny": ["mac-mini:22", "mac-mini:5900"]},
+	],
+}

@@ -45,6 +45,16 @@ prepare() {
 
 docker_ready() { docker info >/dev/null 2>&1; }
 
+# Starts a stack; one with no services yet (only examples) just has anything left over stopped.
+start_stack() {
+  if [[ -z "$(compose "$1" config --services 2>/dev/null)" ]]; then
+    compose "$1" down --remove-orphans 2>/dev/null || true
+    echo "$1 has no services yet."
+  else
+    compose "$1" up -d --remove-orphans
+  fi
+}
+
 need_docker() {
   docker_ready || { echo "Docker isn't running. Start it with: colima start"; exit 1; }
 }
@@ -57,7 +67,7 @@ case "$CMD" in
   up)
     [[ -n "$STACK" ]] || usage; need_docker
     for s in $(targets "$STACK"); do
-      echo "Starting $s..."; prepare "$s"; compose "$s" up -d --remove-orphans
+      echo "Starting $s..."; prepare "$s"; start_stack "$s"
     done ;;
   down)
     [[ -n "$STACK" ]] || usage; need_docker
@@ -86,7 +96,7 @@ case "$CMD" in
     need_docker
     for s in $(all_stacks); do
       echo "$(date '+%Y-%m-%d %H:%M:%S')  Starting $s"
-      ( prepare "$s" && compose "$s" up -d --remove-orphans ) || echo "$(date '+%Y-%m-%d %H:%M:%S')  Problem: $s didn't start"
+      ( prepare "$s" && start_stack "$s" ) || echo "$(date '+%Y-%m-%d %H:%M:%S')  Problem: $s didn't start"
     done
     echo "$(date '+%Y-%m-%d %H:%M:%S')  Done." ;;
   *) usage ;;

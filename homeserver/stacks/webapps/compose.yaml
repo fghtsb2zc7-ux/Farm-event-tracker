@@ -1,0 +1,18 @@
+# webapps: small web apps reached through the public front door https://apps.taild086ea.ts.net/<name>
+# (sign-in required). See "How to host a new web app" in homeserver/README.md.
+# Each app joins the homeserver-web network so caddy (in the core stack) can reach it by its container name.
+
+services: {}
+  # Example (copy, then add a route in core/config/caddy/Caddyfile and a rule in core/config/authelia/configuration.yml):
+  # recipes:
+  #   image: some/app:v1.2.3                       # always a version number, never "latest"
+  #   container_name: recipes                      # caddy reaches it as http://recipes:<port>
+  #   volumes:
+  #     - ${SERVERDATA}/recipes/data:/data         # its files, inside ~/ServerData (backed up nightly)
+  #   networks: [web]
+  #   restart: unless-stopped
+
+networks:
+  web:
+    name: homeserver-web
+    external: true

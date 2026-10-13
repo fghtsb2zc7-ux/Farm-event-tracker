@@ -1,6 +1,8 @@
 # core: the building blocks every other service relies on.
 #   ntfy          phone alerts      https://ntfy.taild086ea.ts.net    (private to your devices)
 #   uptime-kuma   status page       https://status.taild086ea.ts.net  (private to your devices)
+#   authelia      sign-in (password + 2nd step) for everything behind caddy
+#   caddy         the public front door  https://apps.taild086ea.ts.net  (on the internet, sign-in required)
 # Each has its own Tailscale sidecar. Start with: bash homeserver/scripts/stack.sh up core
 
 services:
@@ -64,3 +66,46 @@ services:
     volumes:
       - ${SERVERDATA}/uptime-kuma/data:/app/data
     restart: unless-stopped
+
+  # ---- The public front door and its sign-in (docs/ACCESS.md) ----
+  authelia:
+    image: authelia/authelia:4.39.28
+    environment:
+      TZ: America/Toronto
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /secrets/jwt
+      AUTHELIA_SESSION_SECRET_FILE: /secrets/session
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /secrets/storage
+      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: /smtp-password
+    volumes:
+      - ${STACK_CONFIG}/authelia/configuration.yml:/config/configuration.yml:ro
+      - ${SERVERDATA}/authelia/data:/data                       # people, 2nd-step devices, sessions
+      - ${SERVERDATA}/secrets/authelia:/secrets:ro
+      - ${SERVERDATA}/secrets/msmtp-password:/smtp-password:ro
+    restart: unless-stopped
+
+  apps-tailscale:
+    image: tailscale/tailscale:v1.102.5
+    hostname: apps
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?run this stack with homeserver/scripts/stack.sh}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - ${SERVERDATA}/apps/tailscale:/var/lib/tailscale
+      - ${STACK_CONFIG}/serve-apps.json:/config/serve.json:ro   # AllowFunnel: true (public)
+    networks: [default, web]
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.11.7-alpine
+    network_mode: service:apps-tailscale
+    volumes:
+      - ${STACK_CONFIG}/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${SERVERDATA}/apps/caddy-data:/data
+    restart: unless-stopped
+
+networks:
+  # Web apps in other stacks (homeserver/stacks/webapps) join this network so caddy can reach them.
+  web:
+    name: homeserver-web

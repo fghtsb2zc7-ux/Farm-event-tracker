@@ -1,0 +1,37 @@
+# The public front door: https://apps.taild086ea.ts.net (Tailscale Funnel), see docs/ACCESS.md.
+# Tailscale handles HTTPS; Caddy gets plain requests on :8080 and checks every visitor with Authelia first.
+# To add an app: copy the example block below (without the #), change the path and the container,
+# and add a rule for it in config/authelia/configuration.yml (who may open it).
+
+{
+	admin off
+	auto_https off
+}
+
+# Signs the visitor in (or sends them to the sign-in page) before any app.
+(signin) {
+	forward_auth authelia:9091 {
+		uri /auth/api/authz/forward-auth
+		header_up X-Forwarded-Proto https
+		copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
+	}
+}
+
+:8080 {
+	# The sign-in pages themselves.
+	handle /auth* {
+		reverse_proxy authelia:9091 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	# Example: an app at /recipes, for the groups allowed in configuration.yml.
+	# handle /recipes* {
+	# 	import signin
+	# 	reverse_proxy recipes:8080
+	# }
+
+	handle {
+		respond "Nothing here. Ask the person who invited you for the link to your app." 404
+	}
+}
