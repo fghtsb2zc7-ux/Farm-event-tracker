@@ -5,7 +5,8 @@
 | Farm Log | https://kierans-mac-mini.taild086ea.ts.net/ | Anyone with the link, then the Farm Log's own login |
 | Shop orders | https://kierans-mac-mini.taild086ea.ts.net/shop/ | Anyone with the link, then the shop's own login |
 | Web apps for friends and family | https://apps.taild086ea.ts.net/&lt;app&gt; | Only people you've given a login (password + second step), and only the apps their group allows |
-| ntfy, status page, Scan Notes, later photos and passwords | https://&lt;name&gt;.taild086ea.ts.net | Only your own devices with Tailscale on, or people you share that one app with |
+| Scan Notes for lab staff | https://scannotes.kieranfehr.com | Only emails on the staff list in Cloudflare Access (a one-time code by email), then their Scan Notes login. The admin dashboard (/_/) is refused there; use the Tailscale address for it. Turn off: `docker stop scannotes-cloudflared-1` |
+| ntfy, status page, Scan Notes, photos, movies, passwords | https://&lt;name&gt;.taild086ea.ts.net | Only your own devices with Tailscale on, or people you share that one app with |
 | The Mac mini itself (screen sharing, SSH, admin pages) | | Only your own devices |
 
 ## Way 1: a login for the web apps (easiest for them)

@@ -4,13 +4,15 @@
 // Who's who:
 //   autogroup:member   you, and your own devices (Mac mini, iPhone, MacBook). Don't invite other people as
 //                      members: they would get everything. Share single apps with them instead (docs/ACCESS.md).
-//   tag:container      the apps' Tailscale sidecars (ntfy, status, scannotes, apps, later photos and vault)
+//   tag:container      the private apps' Tailscale sidecars (ntfy, status, scannotes, photos, media, vault)
+//   tag:public         the one public sidecar: the front door, apps.taild086ea.ts.net
 //   tag:lab            lab PCs, later: they reach Scan Notes only
 //   tag:sandbox        test machines, later: only you reach them, they reach nothing
 //   autogroup:shared   people you've shared one app with: that app's web page only
 {
 	"tagOwners": {
 		"tag:container": ["autogroup:admin"],
+		"tag:public":    ["autogroup:admin"],
 		"tag:lab":       ["autogroup:admin"],
 		"tag:sandbox":   ["autogroup:admin"],
 	},
@@ -26,7 +28,8 @@
 		{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
 
 		// The apps may reach each other's web pages and the Mac mini's (the status page checks them all).
-		{"src": ["tag:container"], "dst": ["tag:container", "mac-mini"], "ip": ["443"]},
+		// The front door (public) reaches nothing on your network: its apps are in Docker next to it.
+		{"src": ["tag:container"], "dst": ["tag:container", "tag:public", "mac-mini"], "ip": ["443"]},
 
 		// Lab PCs: Scan Notes only.
 		{"src": ["tag:lab"], "dst": ["scannotes"], "ip": ["443"]},
@@ -45,11 +48,11 @@
 		},
 	],
 
-	// Funnel (putting something on the public internet): your own devices (the farm and shop links on the
-	// Mac mini) and the apps' sidecars. Only the front door, apps.taild086ea.ts.net, actually turns it on
-	// ("AllowFunnel": true in its serve.json, homeserver/stacks/core/config/serve-apps.json).
+	// Funnel (putting something on the public internet): only your own devices (the farm and shop links on
+	// the Mac mini) and the front door. The private apps (tag:container) can't, even by mistake, and their
+	// names aren't published on the internet.
 	"nodeAttrs": [
-		{"target": ["autogroup:member", "tag:container"], "attr": ["funnel"]},
+		{"target": ["autogroup:member", "tag:public"], "attr": ["funnel"]},
 	],
 
 	// Checked by Tailscale every time you Save: if one fails, nothing is changed.
@@ -57,5 +60,6 @@
 		{"src": "tag:lab", "accept": ["scannotes:443"], "deny": ["mac-mini:22", "mac-mini:443", "mac-mini:5900"]},
 		{"src": "tag:sandbox", "deny": ["scannotes:443", "mac-mini:22", "mac-mini:443"]},
 		{"src": "tag:container", "accept": ["scannotes:443", "mac-mini:443"], "deny": ["mac-mini:22", "mac-mini:5900"]},
+		{"src": "tag:public", "deny": ["scannotes:443", "mac-mini:22", "mac-mini:443", "mac-mini:5900"]},
 	],
 }

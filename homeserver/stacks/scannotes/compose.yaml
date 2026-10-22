@@ -1,4 +1,8 @@
-# Scan Notes (film lab tracker), release 0.4.0. Private to your devices: https://scannotes.taild086ea.ts.net
+# Scan Notes (film lab tracker); version: see the image tag below.
+#   Staff, from anywhere:  https://scannotes.kieranfehr.com   (Cloudflare Tunnel + Access: only emails on the
+#                          staff list get in; the admin dashboard /_/ answers "not found" from there)
+#   Your devices:          https://scannotes.taild086ea.ts.net (Tailscale; the admin dashboard works here)
+# Cloudflare setup and how to turn the tunnel off: ~/Apps/film-lab-tracker/deploy/CLOUDFLARE.md
 # The image is built on this Mac from the private repo fehrkieran11-code/film-lab-tracker (~/Apps/film-lab-tracker):
 #   cd ~/Apps/film-lab-tracker && git pull && docker build --build-arg TARGETARCH=arm64 --build-arg APP_VERSION=<v> -t scan-notes:<v> .
 # then change the version below and run: bash homeserver/scripts/stack.sh up scannotes
@@ -18,10 +22,13 @@ services:
     volumes:
       - ${SERVERDATA}/scannotes/tailscale:/var/lib/tailscale
       - ${STACK_CONFIG}/serve.json:/config/serve.json:ro
+    networks:
+      default:
+        aliases: [scan-notes]                        # the app shares this container's network: scan-notes:8090
     restart: unless-stopped
 
   scan-notes:
-    image: scan-notes:0.4.0
+    image: scan-notes:0.5.0                         # release 0.5.0 (6720489), built Oct 21 2026
     network_mode: service:scannotes-tailscale
     user: "501:20"                                   # owns ~/ServerData on this Mac
     env_file:
@@ -35,4 +42,19 @@ services:
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "5" }
+    restart: unless-stopped
+
+  # The Cloudflare tunnel: connects out to Cloudflare (no router ports opened), and forwards
+  # scannotes.kieranfehr.com to http://scan-notes:8090 only (set in the Cloudflare dashboard).
+  # Turn it off: docker stop scannotes-cloudflared-1 (or delete the tunnel in Cloudflare).
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.3
+    command: tunnel --no-autoupdate --metrics 0.0.0.0:20241 run
+    ports:
+      - "127.0.0.1:20241:20241"                      # http://127.0.0.1:20241/ready: the watchdog checks the tunnel is connected
+    env_file:
+      - path: ${SERVERDATA}/secrets/scannotes/cloudflared.env   # TUNNEL_TOKEN (on this Mac only)
+        required: true
+    depends_on:
+      - scan-notes
     restart: unless-stopped

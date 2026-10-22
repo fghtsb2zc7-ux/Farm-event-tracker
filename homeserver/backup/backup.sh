@@ -61,6 +61,11 @@ if [[ -x "$DOCKER" ]] && "$DOCKER" ps --format '{{.Names}}' 2>/dev/null | grep -
   fi
 fi
 
+# The password manager: a fresh, checked copy of its database (it's also backed up every hour).
+if [[ -d "$SERVER_DATA/vault/data" ]]; then
+  bash "$REPO/homeserver/backup/vault-backup.sh" --copy-only || alert "couldn't copy the password manager's database. Its hourly backups still have recent copies."
+fi
+
 # ---- What to back up -----------------------------------------------------------------------------
 # Each app's pb_data includes PocketBase's own nightly backup zips (3:00 farm, 3:15 shop), which are
 # always consistent, so this runs after them at 3:45.
@@ -74,11 +79,13 @@ JELLYFIN="$HOME/Library/Application Support/jellyfin"   # Jellyfin's settings, u
 [[ -d "$JELLYFIN" ]] && SOURCES+=("$JELLYFIN")
 
 log "Backing up: ${SOURCES[*]/#$HOME/~}"
-if ! OUT="$(restic backup --no-scan --tag nightly \
+if ! OUT="$(restic backup --retry-lock 10m --no-scan --tag nightly \
       --exclude '*.tmp' --exclude '.DS_Store' --exclude "$SERVER_DATA/cache" \
       --exclude "$SERVER_DATA/media" \
       --exclude "$SERVER_DATA/photos/library/thumbs" --exclude "$SERVER_DATA/photos/library/encoded-video" \
       --exclude "$JELLYFIN/metadata" --exclude "$JELLYFIN/log" \
+      --exclude "$SERVER_DATA/vault/data/db.sqlite3" --exclude "$SERVER_DATA/vault/data/db.sqlite3-wal" \
+      --exclude "$SERVER_DATA/vault/data/db.sqlite3-shm" --exclude "$SERVER_DATA/vault/data/icon_cache" \
       "${SOURCES[@]}" 2>&1)"; then
   echo "$OUT" >> "$LOG"
   alert "tonight's backup failed. See ~/AppHub/logs/backup.log"
