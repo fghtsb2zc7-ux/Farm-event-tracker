@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
 
   scan-notes:
-    image: scan-notes:0.5.0                         # release 0.5.0 (6720489), built Oct 21 2026
+    image: scan-notes:0.6.0                         # release 0.6.0 (764f3a3), built Oct 22 2026
     network_mode: service:scannotes-tailscale
     user: "501:20"                                   # owns ~/ServerData on this Mac
     env_file:
