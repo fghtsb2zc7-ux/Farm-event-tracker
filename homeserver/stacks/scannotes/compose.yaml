@@ -5,7 +5,7 @@
 # Cloudflare setup and how to turn the tunnel off: ~/Apps/film-lab-tracker/deploy/CLOUDFLARE.md
 # The image is built on this Mac from the private repo fehrkieran11-code/film-lab-tracker (~/Apps/film-lab-tracker):
 #   cd ~/Apps/film-lab-tracker && git pull && docker build --build-arg TARGETARCH=arm64 --build-arg APP_VERSION=<v> -t scan-notes:<v> .
-# then change the version below and run: bash homeserver/scripts/stack.sh up scannotes
+# then set SCAN_NOTES_VERSION=<v> in .env next to this file and run: bash homeserver/scripts/stack.sh up scannotes
 # Data (database, photos, its own nightly backups at 2:30 am) is in ~/ServerData/scannotes/data.
 # Shopify keys: ~/ServerData/secrets/scannotes/shopify.env (on this Mac only, never in GitHub).
 # Interim home until the lab's QNAP is ready.
@@ -28,12 +28,18 @@ services:
     restart: unless-stopped
 
   scan-notes:
-    image: scan-notes:0.7.0                         # release 0.7.0 (38af5f3), built Oct 23 2026
+    image: scan-notes:${SCAN_NOTES_VERSION:-0.8.0}  # release 0.8.0 (b0390c4), built Nov 14 2026; set in .env next to this file
     network_mode: service:scannotes-tailscale
     user: "501:20"                                   # owns ~/ServerData on this Mac
     env_file:
       - path: ${SERVERDATA}/secrets/scannotes/shopify.env
         required: false                              # the Shopify sync waits until it's there
+      # Client delivery (0.8.0, see ~/Apps/film-lab-tracker/deploy/DELIVERY.md). Off on this Mac: these
+      # files don't exist and no order folders are mounted, so the "To send" tab stays empty (Test mode).
+      - path: ${SERVERDATA}/secrets/scannotes/smtp.env
+        required: false                              # outgoing email (SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD…)
+      - path: ${SERVERDATA}/secrets/scannotes/filebrowser.env
+        required: false                              # share links (FB_URL, FB_TOKEN, FB_PUBLIC_URL)
     environment:
       TZ: America/Toronto
       SYNC_START_DATE: ${SYNC_START_DATE:-}
