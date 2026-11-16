@@ -45,6 +45,33 @@ services:
       SYNC_START_DATE: ${SYNC_START_DATE:-}
     volumes:
       - ${SERVERDATA}/scannotes/data:/pb/pb_data
+      # Order folders for the "To send" queue. Delivery is off on this Mac, so this is an empty
+      # placeholder (read-only): "Check folders now" finds nothing instead of an error. When delivery
+      # is set up, point this at the WORKING share and drop :ro (see DELIVERY.md).
+      - ${SERVERDATA}/scannotes/orders:/orders:ro
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+    restart: unless-stopped
+
+  # Client downloads for the delivery queue: FileBrowser Quantum serves the share links Scan Notes
+  # creates on Send. Tailnet only (https://scannotes.taild086ea.ts.net:8443, see config/serve.json);
+  # NOT on the Cloudflare tunnel. Order folders are read-only. Admin login:
+  # ~/ServerData/secrets/scannotes/filebrowser-admin.env. Scan Notes' API token: filebrowser.env.
+  filebrowser:
+    image: gtstef/filebrowser:2.0.2-stable-slim
+    user: "501:20"
+    ports:
+      - "127.0.0.1:3081:80"                          # on this Mac only
+    env_file:
+      - path: ${SERVERDATA}/secrets/scannotes/filebrowser-admin.env
+        required: true
+    environment:
+      FILEBROWSER_CONFIG: /config/config.yaml
+    volumes:
+      - ${SERVERDATA}/scannotes/orders:/orders:ro
+      - ${SERVERDATA}/scannotes/filebrowser-data:/home/filebrowser/data
+      - ${STACK_CONFIG}/filebrowser.yaml:/config/config.yaml:ro
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "5" }

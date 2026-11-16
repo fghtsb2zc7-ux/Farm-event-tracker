@@ -1,0 +1,15 @@
+# FileBrowser Quantum for client deliveries (share links to finished orders).
+# Scan Notes creates the shares through the API; staff don't need to use FileBrowser itself.
+# The order folders are mounted read-only at /orders. Admin password: FILEBROWSER_ADMIN_PASSWORD.
+server:
+  cacheDir: /home/filebrowser/data/tmp
+  sources:
+    - path: /orders
+      name: orders
+      config:
+        readOnly: true
+        defaultEnabled: true
+frontend:
+  name: "Scan Notes"
+http:
+  port: 80
