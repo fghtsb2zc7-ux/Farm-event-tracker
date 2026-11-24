@@ -406,6 +406,39 @@ def page(title: str, body: str) -> str:
             f'<style>{CSS}</style></head><body><main>{body}</main></body></html>')
 
 
+def first_paragraph(html: str) -> str:
+    """The article's first real paragraph (the email shows only this)."""
+    paras = re.findall(r"(?is)<p\b[^>]*>.*?</p>", html)
+    for p in paras:
+        if words(p) >= 20:
+            return p
+    return next((p for p in paras if words(p)), "")
+
+
+def email_teaser(a: dict, day: date, i: int) -> str:
+    """First paragraph plus a Read more button to the full story on the paper's page
+    (full text, also for newsletters); falls back to the original link."""
+    esc = htmlmod.escape
+    base = os.environ.get("PAPER_URL", "").rstrip("/")
+    href = f"{base}/{day.isoformat()}/#a{i}" if base else a.get("url", "")
+    btn = (f'<p><a href="{esc(href)}" style="display:inline-block;padding:8px 16px;border-radius:6px;'
+           f'background:#222;color:#fff;text-decoration:none;font-family:-apple-system,Helvetica,'
+           f'Arial,sans-serif;font-size:15px">Read more</a></p>') if href else ""
+    return clean_body(first_paragraph(a["html"])) + btn
+
+
+def email_text(cfg: dict, day: date, arts: list[dict]) -> str:
+    """Plain-text version of the email: headline, first paragraph, Read more link."""
+    base = os.environ.get("PAPER_URL", "").rstrip("/")
+    out = [f"{cfg['paper_title']}, {day:%A, %B} {day.day}", "",
+           "Today's paper is attached as an EPUB. Open it in Apple Books.", ""]
+    for i, a in enumerate(arts):
+        para = htmlmod.unescape(re.sub(r"(?s)<[^>]+>", "", first_paragraph(a["html"]))).strip()
+        href = f"{base}/{day.isoformat()}/#a{i}" if base else a.get("url", "")
+        out += [a["title"], para] + ([f"Read more: {href}"] if href else []) + [""]
+    return "\n".join(out)
+
+
 def edition_html(cfg: dict, day: date, no: int, arts: list[dict], epub_name: str, for_email=False) -> str:
     esc = htmlmod.escape
     stamp = f"{day:%A, %B} {day.day}, {day.year} · No. {no}"
@@ -422,8 +455,8 @@ def edition_html(cfg: dict, day: date, no: int, arts: list[dict], epub_name: str
         link = (f' · <a href="{esc(a["url"])}">original</a>' if a.get("url") else "")
         body += (f'<article id="a{i}"><h2>{esc(a["title"])}</h2>'
                  f'<div class="meta">{esc(a.get("source") or a["domain"])} · {mins} min{link}</div>'
-                 f'{clean_body(a["html"])}'
-                 + ("" if for_email else '<p class="top"><a href="#">Back to top</a></p>')
+                 + (email_teaser(a, day, i) if for_email else
+                    f'{clean_body(a["html"])}<p class="top"><a href="#">Back to top</a></p>')
                  + "</article>")
     return page(f'{cfg["paper_title"]}, {day:%b} {day.day}', body)
 
@@ -478,6 +511,7 @@ def cmd_build(day: "date | None" = None) -> int:
         return 1
     (ed / "index.html").write_text(edition_html(cfg, day, no, arts, epub.name))
     (STATE / "email.html").write_text(edition_html(cfg, day, no, arts, epub.name, for_email=True))
+    (STATE / "email.txt").write_text(email_text(cfg, day, arts))
     (ed / "edition.json").write_text(json.dumps({
         "number": no, "built": datetime.now().isoformat(timespec="seconds"),
         "titles": [a["title"] for a in arts], "sources": [a.get("source") for a in arts],
@@ -519,7 +553,9 @@ def send_email(subject: str, html: str, attachment: "Path | None") -> None:
         return
     msg = EmailMessage()
     msg["Subject"], msg["From"], msg["To"] = subject, f"Morning Paper <{user}>", to
-    msg.set_content("Today's Morning Paper is attached as an EPUB. Open it in Apple Books.")
+    txt = STATE / "email.txt"
+    msg.set_content(txt.read_text() if txt.exists() else
+                    "Today's Morning Paper is attached as an EPUB. Open it in Apple Books.")
     msg.add_alternative(html, subtype="html")
     if attachment and attachment.exists():
         msg.add_attachment(attachment.read_bytes(), maintype="application", subtype="epub+zip",
