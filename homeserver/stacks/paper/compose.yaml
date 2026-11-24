@@ -1,0 +1,67 @@
+# paper: Morning Paper, a daily 4-article paper for your iPhone (EPUB + phone page, ntfy push + email).
+# PRIVATE ONLY: https://paper.taild086ea.ts.net, reachable from your own Tailscale devices.
+# No Funnel, no Cloudflare, no host port. App code: homeserver/apps/morning-paper (INSTALL.md, YOUR-STEPS.md).
+# - Builds at BUILD_AT, delivers at DELIVER_AT (push to ntfy topic in paper.env, email to MAIL_TO).
+# - Settings and the Gmail app password: ~/ServerData/secrets/morning-paper/paper.env (this Mac only).
+# - Sources: ~/ServerData/morning-paper/sources.json (edit freely, applies at the next run).
+# - Data (issues, state, log): ~/ServerData/morning-paper. Backed up every night.
+# - Test issue now: bash homeserver/scripts/stack.sh up paper, then
+#   docker exec paper-builder-1 python /app/paper.py run
+
+services:
+  paper-tailscale:
+    image: tailscale/tailscale:v1.102.5
+    hostname: paper
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?run this stack with homeserver/scripts/stack.sh}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - ${SERVERDATA}/morning-paper/tailscale:/var/lib/tailscale
+      - ${STACK_CONFIG}/serve.json:/config/serve.json:ro     # "AllowFunnel": false
+    restart: unless-stopped
+
+  # The phone page and EPUBs, read-only, on the paper Tailscale name only.
+  web:
+    image: nginx:1.27-alpine
+    network_mode: service:paper-tailscale
+    depends_on: [paper-tailscale]
+    volumes:
+      - ${SERVERDATA}/morning-paper/site:/usr/share/nginx/html:ro
+      - ${STACK_CONFIG}/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    read_only: true
+    tmpfs: [/var/cache/nginx, /var/run, /tmp]
+    restart: unless-stopped
+
+  # Builds and delivers the paper on its own schedule (no ports). Joins the core stack's network
+  # only to reach ntfy directly at http://ntfy-tailscale.
+  builder:
+    build: ../../apps/morning-paper
+    image: morning-paper-builder:1.0.0
+    user: "501:20"                                   # owns ~/ServerData on this Mac
+    env_file:
+      - path: ${SERVERDATA}/secrets/morning-paper/paper.env
+        required: true
+    environment:
+      TZ: America/Toronto
+      HOME: /tmp
+      BUILD_AT: "06:00"
+      DELIVER_AT: "06:30"
+    volumes:
+      - ${SERVERDATA}/morning-paper:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+    networks: [default, core]
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+    restart: unless-stopped
+
+networks:
+  core:
+    name: core_default
+    external: true

@@ -1,0 +1,9 @@
+{
+  "url": "https://example.com/a/one",
+  "title": "Example Article One",
+  "domain": "example.com",
+  "published": "2099-01-01",
+  "saved": "2099-01-01T00:00:00+00:00",
+  "image": null,
+  "html": "<p>First paragraph of the first fixture article. It has several sentences. Here is another one.</p><p>Second paragraph.</p>"
+}

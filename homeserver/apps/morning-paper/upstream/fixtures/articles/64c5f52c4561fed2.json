@@ -1,0 +1,9 @@
+{
+  "url": "https://example.org/b/two",
+  "title": "Example Article Two",
+  "domain": "example.org",
+  "published": "2099-01-01",
+  "saved": "2099-01-01T00:00:00+00:00",
+  "image": null,
+  "html": "<p>The second fixture article starts here. It is short but valid.</p>"
+}

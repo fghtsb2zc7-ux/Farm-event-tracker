@@ -205,6 +205,18 @@ check_containers() {
 }
 [[ -n "$DOCKER_ON" ]] && check_containers
 
+# ---- After 7:00 am: was today's Morning Paper built? (homeserver/stacks/paper) ----
+check_paper() {
+  local dir="${SERVER_DATA:-$HOME/ServerData}/morning-paper"
+  [[ -d "$dir/site" ]] || return 0
+  if [[ -f "$dir/site/$(date +%F)/edition.json" ]]; then
+    resolved paper-missing "Today's Morning Paper is there now"
+  elif (( 10#$(date +%H) >= 7 && 10#$(date +%H) < 12 )); then   # 7–noon: after that the paper is skipped for the day
+    problem paper-missing "Today's Morning Paper wasn't built (no edition for $(date +%F)). See ~/ServerData/morning-paper/state/paper.log or: docker logs paper-builder-1" 86400
+  fi
+}
+check_paper
+
 # ---- Every 5 minutes: server storage and the backup drive ----
 check_server() {
   local used

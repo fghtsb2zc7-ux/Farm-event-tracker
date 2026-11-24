@@ -1,0 +1,12 @@
+trafilatura>=1.12
+ebooklib>=0.18
+requests>=2.31
+Pillow>=10.1
+lxml>=5
+# Optional: the face filter for lead images (set lead_image_avoid_faces to false to skip it)
+opencv-python-headless>=4.8
+numpy>=1.26
+# Optional: TikTok collection reading in the interest model
+yt-dlp
+# Tests
+pytest>=8

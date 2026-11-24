@@ -1,0 +1,26 @@
+{
+  "_comment": "Morning Paper sources. Edit freely; changes apply at the next run.",
+  "paper_title": "The Morning Paper",
+  "paper_tagline": "All the Reads Worth Your Time",
+  "articles_per_edition": 4,
+  "min_words": 250,
+  "max_item_age_hours": 36,
+  "keep_days": 14,
+
+  "_priority": "Order to take one item from each source, repeated until the paper is full.",
+  "priority": ["Financial Times", "The Economist", "404 Media", "Substack", "Reuters"],
+
+  "newsletters": [
+    {"name": "Financial Times", "from": ["@ft.com"]},
+    {"name": "The Economist",   "from": ["@economist.com", "@e.economist.com"]},
+    {"name": "404 Media",       "from": ["@404media.co"]},
+    {"name": "Substack",        "from": ["@substack.com"]}
+  ],
+
+  "feeds": [
+    {"name": "404 Media", "url": "${FEED_404MEDIA}"},
+    {"name": "Reuters",   "url": "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-CA&gl=CA&ceid=CA:en"},
+    {"name": "Financial Times", "url": "https://www.ft.com/rss/home"},
+    {"name": "The Economist",   "url": "https://www.economist.com/latest/rss.xml"}
+  ]
+}
